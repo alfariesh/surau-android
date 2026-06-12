@@ -60,7 +60,7 @@ fun SurauButton(
         modifier = modifier,
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.onBackground,
+            containerColor = MaterialTheme.colorScheme.primary,
         ),
         contentPadding = contentPadding,
         content = content,
@@ -126,7 +126,7 @@ fun SurauOutlinedButton(
         modifier = modifier,
         enabled = enabled,
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.onBackground,
+            contentColor = MaterialTheme.colorScheme.primary,
         ),
         border = BorderStroke(
             width = SurauButtonDefaults.OutlinedButtonBorderWidth,
@@ -199,7 +199,7 @@ fun SurauTextButton(
         modifier = modifier,
         enabled = enabled,
         colors = ButtonDefaults.textButtonColors(
-            contentColor = MaterialTheme.colorScheme.onBackground,
+            contentColor = MaterialTheme.colorScheme.primary,
         ),
         content = content,
     )

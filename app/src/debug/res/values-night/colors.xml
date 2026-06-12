@@ -18,5 +18,5 @@
     <!-- Allow users to distinguish between build variants by having a different background color
     for the launcher icon. See the NiA upstream discussion. -->
     <color name="ic_launcher_background_tint">#FFFFFF</color>
-    <color name="ic_launcher_foreground_tint">#FFA23F16</color>
+    <color name="ic_launcher_foreground_tint">#F2BF42</color>
 </resources>

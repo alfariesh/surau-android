@@ -51,7 +51,10 @@ fun SurahEntity.asExternalModel() = Surah(
     nameArabic = nameArabic,
     nameLatin = nameLatin,
     nameTranslation = nameTranslation,
-    revelationType = if (revelationType.equals("madaniyah", ignoreCase = true)) {
+    // The backend sends "madinah"/"makkah" (some sources use "madaniyah"/"makkiyah").
+    revelationType = if (revelationType.startsWith("madin", ignoreCase = true) ||
+        revelationType.startsWith("madan", ignoreCase = true)
+    ) {
         RevelationType.MADANIYAH
     } else {
         RevelationType.MAKKIYAH
