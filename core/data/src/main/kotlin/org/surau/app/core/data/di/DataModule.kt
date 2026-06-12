@@ -16,12 +16,14 @@
 
 package org.surau.app.core.data.di
 
+import org.surau.app.core.data.auth.SessionTokenProvider
 import org.surau.app.core.data.repository.OfflineFirstUserDataRepository
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.data.util.ConnectivityManagerNetworkMonitor
 import org.surau.app.core.data.util.NetworkMonitor
 import org.surau.app.core.data.util.TimeZoneBroadcastMonitor
 import org.surau.app.core.data.util.TimeZoneMonitor
+import org.surau.app.core.network.auth.AuthTokenProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -35,6 +37,11 @@ abstract class DataModule {
     internal abstract fun bindsUserDataRepository(
         userDataRepository: OfflineFirstUserDataRepository,
     ): UserDataRepository
+
+    @Binds
+    internal abstract fun bindsAuthTokenProvider(
+        sessionTokenProvider: SessionTokenProvider,
+    ): AuthTokenProvider
 
     @Binds
     internal abstract fun bindsNetworkMonitor(

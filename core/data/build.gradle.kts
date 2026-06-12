@@ -32,6 +32,7 @@ dependencies {
     api(projects.core.network)
 
     implementation(projects.core.analytics)
+    implementation(libs.retrofit.core)
 
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlinx.serialization.json)

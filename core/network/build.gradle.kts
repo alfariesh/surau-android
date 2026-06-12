@@ -46,6 +46,8 @@ dependencies {
     implementation(libs.retrofit.kotlin.serialization)
 
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.retrofit.kotlin.serialization)
 }
 
 val backendUrl = providers.fileContents(
