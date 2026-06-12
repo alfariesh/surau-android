@@ -16,28 +16,49 @@
 
 package org.surau.app.core.data.repository
 
+import kotlinx.coroutines.flow.Flow
 import org.surau.app.core.analytics.AnalyticsHelper
 import org.surau.app.core.datastore.SurauPreferencesDataSource
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.UserData
-import kotlinx.coroutines.flow.Flow
+import org.surau.app.core.model.data.quran.ReaderMode
 import javax.inject.Inject
 
 internal class OfflineFirstUserDataRepository @Inject constructor(
-    private val niaPreferencesDataSource: SurauPreferencesDataSource,
+    private val surauPreferencesDataSource: SurauPreferencesDataSource,
     private val analyticsHelper: AnalyticsHelper,
 ) : UserDataRepository {
 
     override val userData: Flow<UserData> =
-        niaPreferencesDataSource.userData
+        surauPreferencesDataSource.userData
 
     override suspend fun setDarkThemeConfig(darkThemeConfig: DarkThemeConfig) {
-        niaPreferencesDataSource.setDarkThemeConfig(darkThemeConfig)
+        surauPreferencesDataSource.setDarkThemeConfig(darkThemeConfig)
         analyticsHelper.logDarkThemeConfigChanged(darkThemeConfig.name)
     }
 
     override suspend fun setDynamicColorPreference(useDynamicColor: Boolean) {
-        niaPreferencesDataSource.setDynamicColorPreference(useDynamicColor)
+        surauPreferencesDataSource.setDynamicColorPreference(useDynamicColor)
         analyticsHelper.logDynamicColorPreferenceChanged(useDynamicColor)
+    }
+
+    override suspend fun setReaderMode(readerMode: ReaderMode) {
+        surauPreferencesDataSource.setReaderMode(readerMode)
+    }
+
+    override suspend fun setTranslationSourceId(translationSourceId: String?) {
+        surauPreferencesDataSource.setTranslationSourceId(translationSourceId)
+    }
+
+    override suspend fun setRecitationId(recitationId: String?) {
+        surauPreferencesDataSource.setRecitationId(recitationId)
+    }
+
+    override suspend fun setArabicFontScale(scale: Float) {
+        surauPreferencesDataSource.setArabicFontScale(scale)
+    }
+
+    override suspend fun setWelcomeShown(shown: Boolean) {
+        surauPreferencesDataSource.setWelcomeShown(shown)
     }
 }

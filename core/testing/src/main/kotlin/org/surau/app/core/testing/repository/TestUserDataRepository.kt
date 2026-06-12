@@ -58,6 +58,36 @@ class TestUserDataRepository : UserDataRepository {
         }
     }
 
+    override suspend fun setReaderMode(readerMode: ReaderMode) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(readerMode = readerMode))
+        }
+    }
+
+    override suspend fun setTranslationSourceId(translationSourceId: String?) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(translationSourceId = translationSourceId))
+        }
+    }
+
+    override suspend fun setRecitationId(recitationId: String?) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(recitationId = recitationId))
+        }
+    }
+
+    override suspend fun setArabicFontScale(scale: Float) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(arabicFontScale = scale))
+        }
+    }
+
+    override suspend fun setWelcomeShown(shown: Boolean) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(welcomeShown = shown))
+        }
+    }
+
     /**
      * A test-only API to allow setting of user data directly.
      */

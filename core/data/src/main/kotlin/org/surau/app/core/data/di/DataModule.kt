@@ -17,8 +17,16 @@
 package org.surau.app.core.data.di
 
 import org.surau.app.core.data.auth.SessionTokenProvider
+import org.surau.app.core.data.repository.AuthRepository
+import org.surau.app.core.data.repository.DefaultAuthRepository
+import org.surau.app.core.data.repository.DefaultUserRepository
+import org.surau.app.core.data.repository.OfflineFirstQuranProgressRepository
+import org.surau.app.core.data.repository.OfflineFirstQuranRepository
 import org.surau.app.core.data.repository.OfflineFirstUserDataRepository
+import org.surau.app.core.data.repository.QuranProgressRepository
+import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.UserDataRepository
+import org.surau.app.core.data.repository.UserRepository
 import org.surau.app.core.data.util.ConnectivityManagerNetworkMonitor
 import org.surau.app.core.data.util.NetworkMonitor
 import org.surau.app.core.data.util.TimeZoneBroadcastMonitor
@@ -42,6 +50,26 @@ abstract class DataModule {
     internal abstract fun bindsAuthTokenProvider(
         sessionTokenProvider: SessionTokenProvider,
     ): AuthTokenProvider
+
+    @Binds
+    internal abstract fun bindsAuthRepository(
+        authRepository: DefaultAuthRepository,
+    ): AuthRepository
+
+    @Binds
+    internal abstract fun bindsUserRepository(
+        userRepository: DefaultUserRepository,
+    ): UserRepository
+
+    @Binds
+    internal abstract fun bindsQuranRepository(
+        quranRepository: OfflineFirstQuranRepository,
+    ): QuranRepository
+
+    @Binds
+    internal abstract fun bindsQuranProgressRepository(
+        quranProgressRepository: OfflineFirstQuranProgressRepository,
+    ): QuranProgressRepository
 
     @Binds
     internal abstract fun bindsNetworkMonitor(

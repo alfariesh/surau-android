@@ -38,16 +38,16 @@ class OfflineFirstUserDataRepositoryTest {
 
     private lateinit var subject: OfflineFirstUserDataRepository
 
-    private lateinit var niaPreferencesDataSource: SurauPreferencesDataSource
+    private lateinit var surauPreferencesDataSource: SurauPreferencesDataSource
 
     private val analyticsHelper = NoOpAnalyticsHelper()
 
     @Before
     fun setup() {
-        niaPreferencesDataSource = SurauPreferencesDataSource(InMemoryDataStore(UserPreferences.getDefaultInstance()))
+        surauPreferencesDataSource = SurauPreferencesDataSource(InMemoryDataStore(UserPreferences.getDefaultInstance()))
 
         subject = OfflineFirstUserDataRepository(
-            niaPreferencesDataSource = niaPreferencesDataSource,
+            surauPreferencesDataSource = surauPreferencesDataSource,
             analyticsHelper,
         )
     }
@@ -82,7 +82,7 @@ class OfflineFirstUserDataRepositoryTest {
             )
             assertEquals(
                 true,
-                niaPreferencesDataSource
+                surauPreferencesDataSource
                     .userData
                     .map { it.useDynamicColor }
                     .first(),
@@ -102,7 +102,7 @@ class OfflineFirstUserDataRepositoryTest {
             )
             assertEquals(
                 DarkThemeConfig.DARK,
-                niaPreferencesDataSource
+                surauPreferencesDataSource
                     .userData
                     .map { it.darkThemeConfig }
                     .first(),

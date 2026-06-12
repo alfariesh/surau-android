@@ -51,7 +51,7 @@ import org.surau.app.core.database.util.InstantConverter
 @TypeConverters(
     InstantConverter::class,
 )
-internal abstract class SurauDatabase : RoomDatabase() {
+abstract class SurauDatabase : RoomDatabase() {
     abstract fun surahDao(): SurahDao
     abstract fun ayahDao(): AyahDao
     abstract fun translationSourceDao(): TranslationSourceDao

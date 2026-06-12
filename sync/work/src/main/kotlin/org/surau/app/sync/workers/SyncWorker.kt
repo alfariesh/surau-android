@@ -24,25 +24,25 @@ import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkerParameters
-import org.surau.app.core.common.network.Dispatcher
-import org.surau.app.core.common.network.SurauDispatchers.IO
-import org.surau.app.sync.initializers.SyncConstraints
-import org.surau.app.sync.initializers.syncForegroundInfo
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import org.surau.app.core.common.network.Dispatcher
+import org.surau.app.core.common.network.SurauDispatchers.IO
+import org.surau.app.core.data.repository.QuranProgressRepository
+import org.surau.app.sync.initializers.SyncConstraints
+import org.surau.app.sync.initializers.syncForegroundInfo
 
 /**
- * Syncs user data with the backend.
- *
- * Currently a no-op placeholder: the Quran reading-progress sync is wired in here once the
- * progress repository lands.
+ * Reconciles the user's reading progress with the backend: pulls a newer remote position or
+ * pushes a pending local one. A no-op for guests.
  */
 @HiltWorker
 internal class SyncWorker @AssistedInject constructor(
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters,
+    private val quranProgressRepository: QuranProgressRepository,
     @Dispatcher(IO) private val ioDispatcher: CoroutineDispatcher,
 ) : CoroutineWorker(appContext, workerParams) {
 
@@ -51,6 +51,9 @@ internal class SyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result = withContext(ioDispatcher) {
         traceAsync("Sync", 0) {
+            // reconcile() is best-effort and swallows transient failures internally, so a
+            // completed run is always a success; the next app start retries anyway.
+            quranProgressRepository.reconcile()
             Result.success()
         }
     }

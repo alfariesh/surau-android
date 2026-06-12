@@ -16,15 +16,24 @@
 
 package org.surau.app.core.data.test
 
-import org.surau.app.core.data.di.DataModule
-import org.surau.app.core.data.repository.UserDataRepository
-import org.surau.app.core.data.test.repository.FakeUserDataRepository
-import org.surau.app.core.data.util.NetworkMonitor
-import org.surau.app.core.data.util.TimeZoneMonitor
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
+import org.surau.app.core.data.di.DataModule
+import org.surau.app.core.data.repository.AuthRepository
+import org.surau.app.core.data.repository.QuranProgressRepository
+import org.surau.app.core.data.repository.QuranRepository
+import org.surau.app.core.data.repository.UserDataRepository
+import org.surau.app.core.data.repository.UserRepository
+import org.surau.app.core.data.test.repository.FakeAuthRepository
+import org.surau.app.core.data.test.repository.FakeQuranProgressRepository
+import org.surau.app.core.data.test.repository.FakeQuranRepository
+import org.surau.app.core.data.test.repository.FakeUserDataRepository
+import org.surau.app.core.data.test.repository.FakeUserRepository
+import org.surau.app.core.data.util.NetworkMonitor
+import org.surau.app.core.data.util.TimeZoneMonitor
+import org.surau.app.core.network.auth.AuthTokenProvider
 
 @Module
 @TestInstallIn(
@@ -36,6 +45,31 @@ internal interface TestDataModule {
     fun bindsUserDataRepository(
         userDataRepository: FakeUserDataRepository,
     ): UserDataRepository
+
+    @Binds
+    fun bindsAuthRepository(
+        authRepository: FakeAuthRepository,
+    ): AuthRepository
+
+    @Binds
+    fun bindsUserRepository(
+        userRepository: FakeUserRepository,
+    ): UserRepository
+
+    @Binds
+    fun bindsQuranRepository(
+        quranRepository: FakeQuranRepository,
+    ): QuranRepository
+
+    @Binds
+    fun bindsQuranProgressRepository(
+        quranProgressRepository: FakeQuranProgressRepository,
+    ): QuranProgressRepository
+
+    @Binds
+    fun bindsAuthTokenProvider(
+        authTokenProvider: FakeAuthTokenProvider,
+    ): AuthTokenProvider
 
     @Binds
     fun bindsNetworkMonitor(

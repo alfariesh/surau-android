@@ -16,31 +16,50 @@
 
 package org.surau.app.core.data.test.repository
 
+import kotlinx.coroutines.flow.Flow
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.datastore.SurauPreferencesDataSource
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.UserData
-import kotlinx.coroutines.flow.Flow
+import org.surau.app.core.model.data.quran.ReaderMode
 import javax.inject.Inject
 
 /**
- * Fake implementation of the [UserDataRepository].
- *
- * This allows us to run the app with fake data, without needing an internet connection or working
- * backend.
+ * Fake implementation of the [UserDataRepository] backed directly by the preferences DataStore,
+ * with no analytics side effects.
  */
 class FakeUserDataRepository @Inject constructor(
-    private val niaPreferencesDataSource: SurauPreferencesDataSource,
+    private val surauPreferencesDataSource: SurauPreferencesDataSource,
 ) : UserDataRepository {
 
     override val userData: Flow<UserData> =
-        niaPreferencesDataSource.userData
+        surauPreferencesDataSource.userData
 
     override suspend fun setDarkThemeConfig(darkThemeConfig: DarkThemeConfig) {
-        niaPreferencesDataSource.setDarkThemeConfig(darkThemeConfig)
+        surauPreferencesDataSource.setDarkThemeConfig(darkThemeConfig)
     }
 
     override suspend fun setDynamicColorPreference(useDynamicColor: Boolean) {
-        niaPreferencesDataSource.setDynamicColorPreference(useDynamicColor)
+        surauPreferencesDataSource.setDynamicColorPreference(useDynamicColor)
+    }
+
+    override suspend fun setReaderMode(readerMode: ReaderMode) {
+        surauPreferencesDataSource.setReaderMode(readerMode)
+    }
+
+    override suspend fun setTranslationSourceId(translationSourceId: String?) {
+        surauPreferencesDataSource.setTranslationSourceId(translationSourceId)
+    }
+
+    override suspend fun setRecitationId(recitationId: String?) {
+        surauPreferencesDataSource.setRecitationId(recitationId)
+    }
+
+    override suspend fun setArabicFontScale(scale: Float) {
+        surauPreferencesDataSource.setArabicFontScale(scale)
+    }
+
+    override suspend fun setWelcomeShown(shown: Boolean) {
+        surauPreferencesDataSource.setWelcomeShown(shown)
     }
 }

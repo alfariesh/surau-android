@@ -35,6 +35,10 @@ dependencies {
     implementation(libs.retrofit.core)
 
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.room.runtime)
+    testImplementation(libs.room.ktx)
     testImplementation(libs.kotlinx.serialization.json)
     testImplementation(projects.core.datastoreTest)
     testImplementation(projects.core.testing)

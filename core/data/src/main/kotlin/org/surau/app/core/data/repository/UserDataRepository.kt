@@ -16,9 +16,10 @@
 
 package org.surau.app.core.data.repository
 
+import kotlinx.coroutines.flow.Flow
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.UserData
-import kotlinx.coroutines.flow.Flow
+import org.surau.app.core.model.data.quran.ReaderMode
 
 interface UserDataRepository {
 
@@ -36,4 +37,29 @@ interface UserDataRepository {
      * Sets the preferred dynamic color config.
      */
     suspend fun setDynamicColorPreference(useDynamicColor: Boolean)
+
+    /**
+     * Sets how the Quran reader lays out ayahs.
+     */
+    suspend fun setReaderMode(readerMode: ReaderMode)
+
+    /**
+     * Sets the preferred Quran translation source, or `null` to use the backend default.
+     */
+    suspend fun setTranslationSourceId(translationSourceId: String?)
+
+    /**
+     * Sets the preferred recitation (milestone 2), or `null` to use the backend default.
+     */
+    suspend fun setRecitationId(recitationId: String?)
+
+    /**
+     * Sets the Arabic font scale (1.0 = default).
+     */
+    suspend fun setArabicFontScale(scale: Float)
+
+    /**
+     * Marks the first-launch welcome screen as shown.
+     */
+    suspend fun setWelcomeShown(shown: Boolean)
 }
