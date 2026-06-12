@@ -30,7 +30,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration.Indefinite
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,7 +37,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -52,8 +50,10 @@ import org.surau.app.R
 import org.surau.app.core.designsystem.component.SurauBackground
 import org.surau.app.core.navigation.Navigator
 import org.surau.app.core.navigation.toEntries
+import org.surau.app.feature.quran.impl.navigation.quranHomeEntry
+import org.surau.app.feature.quran.impl.navigation.quranSearchEntry
+import org.surau.app.feature.quran.impl.navigation.surahReaderEntry
 import org.surau.app.feature.settings.impl.SettingsDialog
-import org.surau.app.navigation.PlaceholderHomeNavKey
 
 @Composable
 fun SurauApp(
@@ -112,17 +112,12 @@ fun SurauApp(
                     .windowInsetsPadding(WindowInsets.safeDrawing),
             ) {
                 val entryProvider = entryProvider<NavKey> {
-                    entry<PlaceholderHomeNavKey> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.app_name),
-                                style = MaterialTheme.typography.headlineLarge,
-                            )
-                        }
-                    }
+                    quranHomeEntry(
+                        navigator = navigator,
+                        onSettingsClick = { showSettingsDialog = true },
+                    )
+                    surahReaderEntry(navigator)
+                    quranSearchEntry(navigator)
                 }
 
                 NavDisplay(

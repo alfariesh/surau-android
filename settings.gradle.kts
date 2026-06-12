@@ -64,6 +64,8 @@ include(":core:screenshot-testing")
 include(":core:testing")
 include(":core:ui")
 
+include(":feature:quran:api")
+include(":feature:quran:impl")
 include(":feature:settings:impl")
 include(":lint")
 include(":sync:work")

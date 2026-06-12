@@ -21,13 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import org.surau.app.R
 import org.surau.app.core.designsystem.icon.SurauIcons
-import kotlinx.serialization.Serializable
-
-/**
- * Temporary home destination while the Quran feature is under construction.
- */
-@Serializable
-object PlaceholderHomeNavKey : NavKey
+import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 
 /**
  * Type for the top level navigation items in the application. Contains UI information about the
@@ -55,5 +49,5 @@ val HOME = TopLevelNavItem(
 )
 
 val TOP_LEVEL_NAV_ITEMS = mapOf<NavKey, TopLevelNavItem>(
-    PlaceholderHomeNavKey to HOME,
+    QuranHomeNavKey to HOME,
 )

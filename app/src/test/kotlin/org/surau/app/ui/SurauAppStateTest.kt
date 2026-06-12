@@ -22,7 +22,7 @@ import androidx.navigation3.runtime.NavBackStack
 import org.surau.app.core.navigation.NavigationState
 import org.surau.app.core.testing.util.TestNetworkMonitor
 import org.surau.app.core.testing.util.TestTimeZoneMonitor
-import org.surau.app.navigation.PlaceholderHomeNavKey
+import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import kotlinx.coroutines.flow.collect
@@ -57,10 +57,10 @@ class SurauAppStateTest {
     private lateinit var state: SurauAppState
 
     private fun testNavigationState() = NavigationState(
-        startKey = PlaceholderHomeNavKey,
-        topLevelStack = NavBackStack(PlaceholderHomeNavKey),
+        startKey = QuranHomeNavKey,
+        topLevelStack = NavBackStack(QuranHomeNavKey),
         subStacks = mapOf(
-            PlaceholderHomeNavKey to NavBackStack(PlaceholderHomeNavKey),
+            QuranHomeNavKey to NavBackStack(QuranHomeNavKey),
         ),
     )
 
@@ -79,8 +79,8 @@ class SurauAppStateTest {
             }
         }
 
-        assertEquals(PlaceholderHomeNavKey, state.navigationState.currentTopLevelKey)
-        assertEquals(PlaceholderHomeNavKey, state.navigationState.currentKey)
+        assertEquals(QuranHomeNavKey, state.navigationState.currentTopLevelKey)
+        assertEquals(QuranHomeNavKey, state.navigationState.currentKey)
     }
 
     @Test

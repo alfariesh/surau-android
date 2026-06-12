@@ -63,6 +63,8 @@ android {
 }
 
 dependencies {
+    implementation(projects.feature.quran.api)
+    implementation(projects.feature.quran.impl)
     implementation(projects.feature.settings.impl)
 
     implementation(projects.core.common)
