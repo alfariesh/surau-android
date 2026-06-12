@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 plugins {
-    alias(libs.plugins.nowinandroid.android.library)
-    alias(libs.plugins.nowinandroid.hilt)
+    alias(libs.plugins.surau.android.library)
+    alias(libs.plugins.surau.hilt)
 }
 
 android {
-    namespace = "com.google.samples.apps.nowinandroid.core.testing"
+    namespace = "org.surau.app.core.testing"
 }
 
 dependencies {

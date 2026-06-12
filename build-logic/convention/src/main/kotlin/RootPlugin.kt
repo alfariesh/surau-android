@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import com.google.samples.apps.nowinandroid.configureGraphTasks
-import com.google.samples.apps.nowinandroid.configureSpotlessForRootProject
+import org.surau.app.configureGraphTasks
+import org.surau.app.configureSpotlessForRootProject
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.configuration.BuildFeatures

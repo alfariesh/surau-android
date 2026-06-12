@@ -15,8 +15,8 @@
  */
 
 import com.android.build.api.dsl.TestExtension
-import com.google.samples.apps.nowinandroid.configureGradleManagedDevices
-import com.google.samples.apps.nowinandroid.configureKotlinAndroid
+import org.surau.app.configureGradleManagedDevices
+import org.surau.app.configureKotlinAndroid
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply

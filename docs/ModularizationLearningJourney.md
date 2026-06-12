@@ -67,7 +67,7 @@ The Now in Android app contains the following types of modules:
 
 ### The `app` module
 This contains app level and scaffolding classes that bind the rest of the codebase, such as
-`MainActivity`, `NiaApp` and app-level controlled navigation. A good example of this is the navigation setup through `NiaNavHost` and the bottom navigation bar setup through `TopLevelDestination`. The `app` module depends on all `feature` modules and required `core` modules.
+`MainActivity`, `SurauApp` and app-level controlled navigation. A good example of this is the navigation setup through `SurauNavHost` and the bottom navigation bar setup through `TopLevelDestination`. The `app` module depends on all `feature` modules and required `core` modules.
 
 ### Feature modules 
 These are feature-specific modules that handle a single responsibility in the app. For example, the `ForYou` feature handles all content and UI state for the "ForYou" screen. Feature modules aren't Gradle modules themselves, they are split into two submodules: 
@@ -103,8 +103,8 @@ For example, `sync`, `benchmark` and `test` modules, as well as `app-nia-catalog
    </td>
    <td>Brings everything together required for the app to function correctly. This includes UI scaffolding and navigation. 
    </td>
-   <td><code>NiaApp, MainActivity</code><br>
-   App-level controlled navigation via <code>NiaNavHost, NiaAppState, TopLevelDestination</code>
+   <td><code>SurauApp, MainActivity</code><br>
+   App-level controlled navigation via <code>SurauNavHost, SurauAppState, TopLevelDestination</code>
    </td>
   </tr>
   <tr>
@@ -150,7 +150,7 @@ For example, `sync`, `benchmark` and `test` modules, as well as `app-nia-catalog
    <td>Design system which includes Core UI components (many of which are customized Material 3 components), app theme and icons. The design system can be viewed by running the <code>app-nia-catalog</code> run configuration. 
    </td>
    <td>
-   <code>NiaIcons</code>    <code>NiaButton</code>    <code>NiaTheme</code> 
+   <code>SurauIcons</code>    <code>SurauButton</code>    <code>SurauTheme</code> 
    </td>
   </tr>
   <tr>
@@ -166,7 +166,7 @@ For example, `sync`, `benchmark` and `test` modules, as well as `app-nia-catalog
    </td>
    <td>Common classes shared between modules.
    </td>
-   <td><code>NiaDispatchers</code><br>
+   <td><code>SurauDispatchers</code><br>
    <code>Result</code>
    </td>
   </tr>
@@ -175,7 +175,7 @@ For example, `sync`, `benchmark` and `test` modules, as well as `app-nia-catalog
    </td>
    <td>Making network requests and handling responses from a remote data source.
    </td>
-   <td><code>RetrofitNiaNetworkApi</code>
+   <td><code>RetrofitSurauNetworkApi</code>
    </td>
   </tr>
   <tr>
@@ -183,7 +183,7 @@ For example, `sync`, `benchmark` and `test` modules, as well as `app-nia-catalog
    </td>
    <td>Testing dependencies, repositories and util classes.
    </td>
-   <td><code>NiaTestRunner</code><br>
+   <td><code>SurauTestRunner</code><br>
    <code>TestDispatcherRule</code>
    </td>
   </tr>
@@ -192,7 +192,7 @@ For example, `sync`, `benchmark` and `test` modules, as well as `app-nia-catalog
    </td>
    <td>Storing persistent data using DataStore.
    </td>
-   <td><code>NiaPreferences</code><br>
+   <td><code>SurauPreferences</code><br>
    <code>UserPreferencesSerializer</code>
    </td>
   </tr>
@@ -201,7 +201,7 @@ For example, `sync`, `benchmark` and `test` modules, as well as `app-nia-catalog
    </td>
    <td>Local database storage using Room.
    </td>
-   <td><code>NiaDatabase</code><br>
+   <td><code>SurauDatabase</code><br>
    <code>DatabaseMigrations</code><br>
    <code>Dao</code> classes
    </td>

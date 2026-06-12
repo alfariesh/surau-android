@@ -19,9 +19,9 @@ import java.io.StringReader
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.nowinandroid.android.library)
-    alias(libs.plugins.nowinandroid.android.library.jacoco)
-    alias(libs.plugins.nowinandroid.hilt)
+    alias(libs.plugins.surau.android.library)
+    alias(libs.plugins.surau.android.library.jacoco)
+    alias(libs.plugins.surau.hilt)
     id("kotlinx-serialization")
 }
 
@@ -29,7 +29,7 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    namespace = "com.google.samples.apps.nowinandroid.core.network"
+    namespace = "org.surau.app.core.network"
     testOptions.unitTests.isIncludeAndroidResources = true
 }
 

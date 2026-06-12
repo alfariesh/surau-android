@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import com.google.samples.apps.nowinandroid.configureKotlinJvm
-import com.google.samples.apps.nowinandroid.configureSpotlessForJvm
-import com.google.samples.apps.nowinandroid.libs
+import org.surau.app.configureKotlinJvm
+import org.surau.app.configureSpotlessForJvm
+import org.surau.app.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
@@ -28,7 +28,7 @@ abstract class JvmLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             apply(plugin = "org.jetbrains.kotlin.jvm")
-            apply(plugin = "nowinandroid.android.lint")
+            apply(plugin = "surau.android.lint")
 
             configureKotlinJvm()
             configureSpotlessForJvm()

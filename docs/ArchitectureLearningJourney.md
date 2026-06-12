@@ -82,7 +82,7 @@ Here's what's happening in each step. The easiest way to find the associated cod
    </td>
    <td>The user data repository obtains a stream of <code>UserData</code> objects from a local data source backed by Proto DataStore.
    </td>
-   <td><code>NiaPreferencesDataSource.userData</code>
+   <td><code>SurauPreferencesDataSource.userData</code>
    </td>
   </tr>
   <tr>
@@ -96,7 +96,7 @@ Here's what's happening in each step. The easiest way to find the associated cod
   <tr>
    <td>5
    </td>
-   <td><code>OfflineFirstNewsRepository</code> calls <code>RetrofitNiaNetwork</code> to execute the actual API request using <a href="https://square.github.io/retrofit/">Retrofit</a>.
+   <td><code>OfflineFirstNewsRepository</code> calls <code>RetrofitSurauNetwork</code> to execute the actual API request using <a href="https://square.github.io/retrofit/">Retrofit</a>.
    </td>
    <td><code>OfflineFirstNewsRepository.syncWith</code>
    </td>
@@ -104,17 +104,17 @@ Here's what's happening in each step. The easiest way to find the associated cod
   <tr>
    <td>6
    </td>
-   <td><code>RetrofitNiaNetwork</code> calls the REST API on the remote server.
+   <td><code>RetrofitSurauNetwork</code> calls the REST API on the remote server.
    </td>
-   <td><code>RetrofitNiaNetwork.getNewsResources</code>
+   <td><code>RetrofitSurauNetwork.getNewsResources</code>
    </td>
   </tr>
   <tr>
    <td>7
    </td>
-   <td><code>RetrofitNiaNetwork</code> receives the network response from the remote server.
+   <td><code>RetrofitSurauNetwork</code> receives the network response from the remote server.
    </td>
-   <td><code>RetrofitNiaNetwork.getNewsResources</code>
+   <td><code>RetrofitSurauNetwork.getNewsResources</code>
    </td>
   </tr>
   <tr>
@@ -222,7 +222,7 @@ A repository may depend on one or more data sources. For example, the `OfflineFi
    </td>
   </tr>
   <tr>
-   <td>NiaPreferencesDataSource
+   <td>SurauPreferencesDataSource
    </td>
    <td><a href="https://developer.android.com/topic/libraries/architecture/datastore">Proto DataStore</a>
    </td>
@@ -230,7 +230,7 @@ A repository may depend on one or more data sources. For example, the `OfflineFi
    </td>
   </tr>
   <tr>
-   <td>NiaNetworkDataSource
+   <td>SurauNetworkDataSource
    </td>
    <td>Remote API accessed using Retrofit
    </td>

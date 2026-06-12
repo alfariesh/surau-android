@@ -15,11 +15,11 @@
  */
 plugins {
     alias(libs.plugins.baselineprofile)
-    alias(libs.plugins.nowinandroid.android.test)
+    alias(libs.plugins.surau.android.test)
 }
 
 android {
-    namespace = "com.google.samples.apps.nowinandroid.benchmarks"
+    namespace = "org.surau.app.benchmarks"
 
     defaultConfig {
         minSdk = 28

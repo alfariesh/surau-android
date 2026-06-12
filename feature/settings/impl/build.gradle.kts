@@ -15,13 +15,13 @@
  */
 
 plugins {
-    alias(libs.plugins.nowinandroid.android.feature.impl)
-    alias(libs.plugins.nowinandroid.android.library.compose)
-    alias(libs.plugins.nowinandroid.android.library.jacoco)
+    alias(libs.plugins.surau.android.feature.impl)
+    alias(libs.plugins.surau.android.library.compose)
+    alias(libs.plugins.surau.android.library.jacoco)
 }
 
 android {
-    namespace = "com.google.samples.apps.nowinandroid.feature.settings.impl"
+    namespace = "org.surau.app.feature.settings.impl"
 }
 
 dependencies {

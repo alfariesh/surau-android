@@ -16,12 +16,12 @@
 
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.google.samples.apps.nowinandroid.configureGradleManagedDevices
-import com.google.samples.apps.nowinandroid.configureKotlinAndroid
-import com.google.samples.apps.nowinandroid.configurePrintApksTask
-import com.google.samples.apps.nowinandroid.configureSpotlessForAndroid
-import com.google.samples.apps.nowinandroid.disableUnnecessaryAndroidTests
-import com.google.samples.apps.nowinandroid.libs
+import org.surau.app.configureGradleManagedDevices
+import org.surau.app.configureKotlinAndroid
+import org.surau.app.configurePrintApksTask
+import org.surau.app.configureSpotlessForAndroid
+import org.surau.app.disableUnnecessaryAndroidTests
+import org.surau.app.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
@@ -34,7 +34,7 @@ abstract class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             apply(plugin = "com.android.library")
-            apply(plugin = "nowinandroid.android.lint")
+            apply(plugin = "surau.android.lint")
 
             extensions.configure<LibraryExtension> {
                 configureKotlinAndroid(this)

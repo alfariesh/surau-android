@@ -177,17 +177,17 @@ room = { id = "androidx.room", version.ref = "room" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
 # Plugins defined by this project
-nowinandroid-android-application = { id = "nowinandroid.android.application" }
-nowinandroid-android-application-compose = { id = "nowinandroid.android.application.compose" }
-nowinandroid-android-application-jacoco = { id = "nowinandroid.android.application.jacoco" }
-nowinandroid-android-feature-impl = { id = "nowinandroid.android.feature.impl" }
-nowinandroid-android-feature-api = { id = "nowinandroid.android.feature.api" }
-nowinandroid-android-library = { id = "nowinandroid.android.library" }
-nowinandroid-android-library-compose = { id = "nowinandroid.android.library.compose" }
-nowinandroid-android-library-jacoco = { id = "nowinandroid.android.library.jacoco" }
-nowinandroid-android-lint = { id = "nowinandroid.android.lint" }
-nowinandroid-android-room = { id = "nowinandroid.android.room" }
-nowinandroid-android-test = { id = "nowinandroid.android.test" }
-nowinandroid-hilt = { id = "nowinandroid.hilt" }
-nowinandroid-jvm-library = { id = "nowinandroid.jvm.library" }
-nowinandroid-root = { id = "nowinandroid.root" }
+surau-android-application = { id = "surau.android.application" }
+surau-android-application-compose = { id = "surau.android.application.compose" }
+surau-android-application-jacoco = { id = "surau.android.application.jacoco" }
+surau-android-feature-impl = { id = "surau.android.feature.impl" }
+surau-android-feature-api = { id = "surau.android.feature.api" }
+surau-android-library = { id = "surau.android.library" }
+surau-android-library-compose = { id = "surau.android.library.compose" }
+surau-android-library-jacoco = { id = "surau.android.library.jacoco" }
+surau-android-lint = { id = "surau.android.lint" }
+surau-android-room = { id = "surau.android.room" }
+surau-android-test = { id = "surau.android.test" }
+surau-hilt = { id = "surau.hilt" }
+surau-jvm-library = { id = "surau.jvm.library" }
+surau-root = { id = "surau.root" }
