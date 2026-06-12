@@ -66,7 +66,6 @@ class ButtonScreenshotTests {
         composeTestRule.captureMultiTheme(
             name = "Button",
             overrideFileName = "ButtonLeadingIcon",
-            shouldCompareAndroidTheme = false,
         ) { description ->
             Surface {
                 SurauButton(

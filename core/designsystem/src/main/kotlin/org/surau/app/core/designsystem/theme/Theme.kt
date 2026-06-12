@@ -20,7 +20,9 @@ import android.os.Build
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -33,82 +35,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 /**
- * Light default theme color scheme
+ * Light Surau color scheme
  */
 @VisibleForTesting
-val LightDefaultColorScheme = lightColorScheme(
-    primary = Purple40,
+val LightSurauColorScheme = lightColorScheme(
+    primary = Emerald40,
     onPrimary = Color.White,
-    primaryContainer = Purple90,
-    onPrimaryContainer = Purple10,
-    secondary = Orange40,
+    primaryContainer = Emerald90,
+    onPrimaryContainer = Emerald10,
+    secondary = Gold40,
     onSecondary = Color.White,
-    secondaryContainer = Orange90,
-    onSecondaryContainer = Orange10,
-    tertiary = Blue40,
-    onTertiary = Color.White,
-    tertiaryContainer = Blue90,
-    onTertiaryContainer = Blue10,
-    error = Red40,
-    onError = Color.White,
-    errorContainer = Red90,
-    onErrorContainer = Red10,
-    background = DarkPurpleGray99,
-    onBackground = DarkPurpleGray10,
-    surface = DarkPurpleGray99,
-    onSurface = DarkPurpleGray10,
-    surfaceVariant = PurpleGray90,
-    onSurfaceVariant = PurpleGray30,
-    inverseSurface = DarkPurpleGray20,
-    inverseOnSurface = DarkPurpleGray95,
-    outline = PurpleGray50,
-)
-
-/**
- * Dark default theme color scheme
- */
-@VisibleForTesting
-val DarkDefaultColorScheme = darkColorScheme(
-    primary = Purple80,
-    onPrimary = Purple20,
-    primaryContainer = Purple30,
-    onPrimaryContainer = Purple90,
-    secondary = Orange80,
-    onSecondary = Orange20,
-    secondaryContainer = Orange30,
-    onSecondaryContainer = Orange90,
-    tertiary = Blue80,
-    onTertiary = Blue20,
-    tertiaryContainer = Blue30,
-    onTertiaryContainer = Blue90,
-    error = Red80,
-    onError = Red20,
-    errorContainer = Red30,
-    onErrorContainer = Red90,
-    background = DarkPurpleGray10,
-    onBackground = DarkPurpleGray90,
-    surface = DarkPurpleGray10,
-    onSurface = DarkPurpleGray90,
-    surfaceVariant = PurpleGray30,
-    onSurfaceVariant = PurpleGray80,
-    inverseSurface = DarkPurpleGray90,
-    inverseOnSurface = DarkPurpleGray10,
-    outline = PurpleGray60,
-)
-
-/**
- * Light Android theme color scheme
- */
-@VisibleForTesting
-val LightAndroidColorScheme = lightColorScheme(
-    primary = Green40,
-    onPrimary = Color.White,
-    primaryContainer = Green90,
-    onPrimaryContainer = Green10,
-    secondary = DarkGreen40,
-    onSecondary = Color.White,
-    secondaryContainer = DarkGreen90,
-    onSecondaryContainer = DarkGreen10,
+    secondaryContainer = Gold90,
+    onSecondaryContainer = Gold10,
     tertiary = Teal40,
     onTertiary = Color.White,
     tertiaryContainer = Teal90,
@@ -129,18 +67,18 @@ val LightAndroidColorScheme = lightColorScheme(
 )
 
 /**
- * Dark Android theme color scheme
+ * Dark Surau color scheme
  */
 @VisibleForTesting
-val DarkAndroidColorScheme = darkColorScheme(
-    primary = Green80,
-    onPrimary = Green20,
-    primaryContainer = Green30,
-    onPrimaryContainer = Green90,
-    secondary = DarkGreen80,
-    onSecondary = DarkGreen20,
-    secondaryContainer = DarkGreen30,
-    onSecondaryContainer = DarkGreen90,
+val DarkSurauColorScheme = darkColorScheme(
+    primary = Emerald80,
+    onPrimary = Emerald20,
+    primaryContainer = Emerald30,
+    onPrimaryContainer = Emerald90,
+    secondary = Gold80,
+    onSecondary = Gold20,
+    secondaryContainer = Gold30,
+    onSecondaryContainer = Gold90,
     tertiary = Teal80,
     onTertiary = Teal20,
     tertiaryContainer = Teal30,
@@ -161,50 +99,29 @@ val DarkAndroidColorScheme = darkColorScheme(
 )
 
 /**
- * Light Android gradient colors
- */
-val LightAndroidGradientColors = GradientColors(container = DarkGreenGray95)
-
-/**
- * Dark Android gradient colors
- */
-val DarkAndroidGradientColors = GradientColors(container = Color.Black)
-
-/**
- * Light Android background theme
- */
-val LightAndroidBackgroundTheme = BackgroundTheme(color = DarkGreenGray95)
-
-/**
- * Dark Android background theme
- */
-val DarkAndroidBackgroundTheme = BackgroundTheme(color = Color.Black)
-
-/**
- * Now in Android theme.
+ * Surau theme.
+ *
+ * Material 3 Expressive theme with the Surau emerald & gold color schemes.
  *
  * @param darkTheme Whether the theme should use a dark color scheme (follows system by default).
- * @param androidTheme Whether the theme should use the Android theme color scheme instead of the
- *        default theme.
  * @param disableDynamicTheming If `true`, disables the use of dynamic theming, even when it is
- *        supported. This parameter has no effect if [androidTheme] is `true`.
+ *        supported.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SurauTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    androidTheme: Boolean = false,
     disableDynamicTheming: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     // Color scheme
     val colorScheme = when {
-        androidTheme -> if (darkTheme) DarkAndroidColorScheme else LightAndroidColorScheme
         !disableDynamicTheming && supportsDynamicTheming() -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        else -> if (darkTheme) DarkDefaultColorScheme else LightDefaultColorScheme
+        else -> if (darkTheme) DarkSurauColorScheme else LightSurauColorScheme
     }
     // Gradient colors
     val emptyGradientColors = GradientColors(container = colorScheme.surfaceColorAtElevation(2.dp))
@@ -214,21 +131,15 @@ fun SurauTheme(
         container = colorScheme.surface,
     )
     val gradientColors = when {
-        androidTheme -> if (darkTheme) DarkAndroidGradientColors else LightAndroidGradientColors
         !disableDynamicTheming && supportsDynamicTheming() -> emptyGradientColors
         else -> defaultGradientColors
     }
     // Background theme
-    val defaultBackgroundTheme = BackgroundTheme(
+    val backgroundTheme = BackgroundTheme(
         color = colorScheme.surface,
         tonalElevation = 2.dp,
     )
-    val backgroundTheme = when {
-        androidTheme -> if (darkTheme) DarkAndroidBackgroundTheme else LightAndroidBackgroundTheme
-        else -> defaultBackgroundTheme
-    }
     val tintTheme = when {
-        androidTheme -> TintTheme()
         !disableDynamicTheming && supportsDynamicTheming() -> TintTheme(colorScheme.primary)
         else -> TintTheme()
     }
@@ -238,8 +149,9 @@ fun SurauTheme(
         LocalBackgroundTheme provides backgroundTheme,
         LocalTintTheme provides tintTheme,
     ) {
-        MaterialTheme(
+        MaterialExpressiveTheme(
             colorScheme = colorScheme,
+            motionScheme = MotionScheme.expressive(),
             typography = SurauTypography,
             content = content,
         )

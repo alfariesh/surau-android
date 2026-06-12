@@ -166,7 +166,7 @@ fun BackgroundDynamic() {
 @ThemePreviews
 @Composable
 fun BackgroundAndroid() {
-    SurauTheme(androidTheme = true) {
+    SurauTheme {
         SurauBackground(Modifier.size(100.dp), content = {})
     }
 }
@@ -190,7 +190,7 @@ fun GradientBackgroundDynamic() {
 @ThemePreviews
 @Composable
 fun GradientBackgroundAndroid() {
-    SurauTheme(androidTheme = true) {
+    SurauTheme {
         SurauGradientBackground(Modifier.size(100.dp), content = {})
     }
 }

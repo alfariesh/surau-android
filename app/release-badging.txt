@@ -1,4 +1,4 @@
-package: name='org.surau.app' versionCode='1' versionName='0.1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+package: name='org.surau.app' versionCode='1' versionName='0.1.0' platformBuildVersionName='17' platformBuildVersionCode='37' compileSdkVersion='37' compileSdkVersionCodename='17'
 minSdkVersion:'23'
 targetSdkVersion:'36'
 uses-permission: name='android.permission.INTERNET'

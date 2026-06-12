@@ -27,30 +27,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.surau.app.core.designsystem.theme.BackgroundTheme
-import org.surau.app.core.designsystem.theme.DarkAndroidBackgroundTheme
-import org.surau.app.core.designsystem.theme.DarkAndroidColorScheme
-import org.surau.app.core.designsystem.theme.DarkAndroidGradientColors
-import org.surau.app.core.designsystem.theme.DarkDefaultColorScheme
+import org.surau.app.core.designsystem.theme.DarkSurauColorScheme
 import org.surau.app.core.designsystem.theme.GradientColors
-import org.surau.app.core.designsystem.theme.LightAndroidBackgroundTheme
-import org.surau.app.core.designsystem.theme.LightAndroidColorScheme
-import org.surau.app.core.designsystem.theme.LightAndroidGradientColors
-import org.surau.app.core.designsystem.theme.LightDefaultColorScheme
+import org.surau.app.core.designsystem.theme.LightSurauColorScheme
 import org.surau.app.core.designsystem.theme.LocalBackgroundTheme
 import org.surau.app.core.designsystem.theme.LocalGradientColors
 import org.surau.app.core.designsystem.theme.LocalTintTheme
 import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.designsystem.theme.TintTheme
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
 /**
  * Tests [SurauTheme] using different combinations of the theme mode parameters:
- * darkTheme, disableDynamicTheming, and androidTheme.
+ * darkTheme and disableDynamicTheming.
  *
  * It verifies that the various composition locals — [MaterialTheme], [LocalGradientColors] and
  * [LocalBackgroundTheme] — have the expected values for a given theme mode, as specified by the
@@ -63,14 +57,13 @@ class ThemeTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun darkThemeFalse_dynamicColorFalse_androidThemeFalse() {
+    fun darkThemeFalse_dynamicColorFalse() {
         composeTestRule.setContent {
             SurauTheme(
                 darkTheme = false,
                 disableDynamicTheming = true,
-                androidTheme = false,
             ) {
-                val colorScheme = LightDefaultColorScheme
+                val colorScheme = LightSurauColorScheme
                 assertColorSchemesEqual(colorScheme, MaterialTheme.colorScheme)
                 val gradientColors = defaultGradientColors(colorScheme)
                 assertEquals(gradientColors, LocalGradientColors.current)
@@ -83,14 +76,13 @@ class ThemeTest {
     }
 
     @Test
-    fun darkThemeTrue_dynamicColorFalse_androidThemeFalse() {
+    fun darkThemeTrue_dynamicColorFalse() {
         composeTestRule.setContent {
             SurauTheme(
                 darkTheme = true,
                 disableDynamicTheming = true,
-                androidTheme = false,
             ) {
-                val colorScheme = DarkDefaultColorScheme
+                val colorScheme = DarkSurauColorScheme
                 assertColorSchemesEqual(colorScheme, MaterialTheme.colorScheme)
                 val gradientColors = defaultGradientColors(colorScheme)
                 assertEquals(gradientColors, LocalGradientColors.current)
@@ -103,12 +95,11 @@ class ThemeTest {
     }
 
     @Test
-    fun darkThemeFalse_dynamicColorTrue_androidThemeFalse() {
+    fun darkThemeFalse_dynamicColorTrue() {
         composeTestRule.setContent {
             SurauTheme(
                 darkTheme = false,
                 disableDynamicTheming = false,
-                androidTheme = false,
             ) {
                 val colorScheme = dynamicLightColorSchemeWithFallback()
                 assertColorSchemesEqual(colorScheme, MaterialTheme.colorScheme)
@@ -123,12 +114,11 @@ class ThemeTest {
     }
 
     @Test
-    fun darkThemeTrue_dynamicColorTrue_androidThemeFalse() {
+    fun darkThemeTrue_dynamicColorTrue() {
         composeTestRule.setContent {
             SurauTheme(
                 darkTheme = true,
                 disableDynamicTheming = false,
-                androidTheme = false,
             ) {
                 val colorScheme = dynamicDarkColorSchemeWithFallback()
                 assertColorSchemesEqual(colorScheme, MaterialTheme.colorScheme)
@@ -142,96 +132,16 @@ class ThemeTest {
         }
     }
 
-    @Test
-    fun darkThemeFalse_dynamicColorFalse_androidThemeTrue() {
-        composeTestRule.setContent {
-            SurauTheme(
-                darkTheme = false,
-                disableDynamicTheming = true,
-                androidTheme = true,
-            ) {
-                val colorScheme = LightAndroidColorScheme
-                assertColorSchemesEqual(colorScheme, MaterialTheme.colorScheme)
-                val gradientColors = LightAndroidGradientColors
-                assertEquals(gradientColors, LocalGradientColors.current)
-                val backgroundTheme = LightAndroidBackgroundTheme
-                assertEquals(backgroundTheme, LocalBackgroundTheme.current)
-                val tintTheme = defaultTintTheme()
-                assertEquals(tintTheme, LocalTintTheme.current)
-            }
-        }
-    }
-
-    @Test
-    fun darkThemeTrue_dynamicColorFalse_androidThemeTrue() {
-        composeTestRule.setContent {
-            SurauTheme(
-                darkTheme = true,
-                disableDynamicTheming = true,
-                androidTheme = true,
-            ) {
-                val colorScheme = DarkAndroidColorScheme
-                assertColorSchemesEqual(colorScheme, MaterialTheme.colorScheme)
-                val gradientColors = DarkAndroidGradientColors
-                assertEquals(gradientColors, LocalGradientColors.current)
-                val backgroundTheme = DarkAndroidBackgroundTheme
-                assertEquals(backgroundTheme, LocalBackgroundTheme.current)
-                val tintTheme = defaultTintTheme()
-                assertEquals(tintTheme, LocalTintTheme.current)
-            }
-        }
-    }
-
-    @Test
-    fun darkThemeFalse_dynamicColorTrue_androidThemeTrue() {
-        composeTestRule.setContent {
-            SurauTheme(
-                darkTheme = false,
-                disableDynamicTheming = false,
-                androidTheme = true,
-            ) {
-                val colorScheme = LightAndroidColorScheme
-                assertColorSchemesEqual(colorScheme, MaterialTheme.colorScheme)
-                val gradientColors = LightAndroidGradientColors
-                assertEquals(gradientColors, LocalGradientColors.current)
-                val backgroundTheme = LightAndroidBackgroundTheme
-                assertEquals(backgroundTheme, LocalBackgroundTheme.current)
-                val tintTheme = defaultTintTheme()
-                assertEquals(tintTheme, LocalTintTheme.current)
-            }
-        }
-    }
-
-    @Test
-    fun darkThemeTrue_dynamicColorTrue_androidThemeTrue() {
-        composeTestRule.setContent {
-            SurauTheme(
-                darkTheme = true,
-                disableDynamicTheming = false,
-                androidTheme = true,
-            ) {
-                val colorScheme = DarkAndroidColorScheme
-                assertColorSchemesEqual(colorScheme, MaterialTheme.colorScheme)
-                val gradientColors = DarkAndroidGradientColors
-                assertEquals(gradientColors, LocalGradientColors.current)
-                val backgroundTheme = DarkAndroidBackgroundTheme
-                assertEquals(backgroundTheme, LocalBackgroundTheme.current)
-                val tintTheme = defaultTintTheme()
-                assertEquals(tintTheme, LocalTintTheme.current)
-            }
-        }
-    }
-
     @Composable
     private fun dynamicLightColorSchemeWithFallback(): ColorScheme = when {
         SDK_INT >= VERSION_CODES.S -> dynamicLightColorScheme(LocalContext.current)
-        else -> LightDefaultColorScheme
+        else -> LightSurauColorScheme
     }
 
     @Composable
     private fun dynamicDarkColorSchemeWithFallback(): ColorScheme = when {
         SDK_INT >= VERSION_CODES.S -> dynamicDarkColorScheme(LocalContext.current)
-        else -> DarkDefaultColorScheme
+        else -> DarkSurauColorScheme
     }
 
     private fun emptyGradientColors(colorScheme: ColorScheme): GradientColors =
@@ -261,7 +171,7 @@ class ThemeTest {
     }
 
     /**
-     * Workaround for the fact that the NiA design system specify all color scheme values.
+     * Workaround for the fact that the Surau design system specifies all color scheme values.
      */
     private fun assertColorSchemesEqual(
         expectedColorScheme: ColorScheme,
