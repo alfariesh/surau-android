@@ -16,10 +16,24 @@
 
 package org.surau.app.core.model.data
 
+import org.surau.app.core.model.data.quran.ReaderMode
+
 /**
- * Class summarizing user interface preferences.
+ * Locally stored user settings: app appearance plus Quran reader preferences.
+ *
+ * Reader preferences mirror the backend's user preferences for signed-in users; for guests they
+ * are local-only.
  */
 data class UserData(
     val darkThemeConfig: DarkThemeConfig,
     val useDynamicColor: Boolean,
-)
+    val readerMode: ReaderMode,
+    val translationSourceId: String?,
+    val recitationId: String?,
+    val arabicFontScale: Float,
+    val welcomeShown: Boolean,
+) {
+    companion object {
+        const val DEFAULT_ARABIC_FONT_SCALE = 1f
+    }
+}

@@ -1,0 +1,401 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "f6bc78a76a0948b55a2c965938a05cd7",
+    "entities": [
+      {
+        "tableName": "surahs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`surah_id` INTEGER NOT NULL, `name_arabic` TEXT NOT NULL, `name_latin` TEXT NOT NULL, `name_translation` TEXT NOT NULL, `revelation_type` TEXT NOT NULL, `ayah_count` INTEGER NOT NULL, `info` TEXT, `fetched_at` INTEGER NOT NULL, PRIMARY KEY(`surah_id`))",
+        "fields": [
+          {
+            "fieldPath": "surahId",
+            "columnName": "surah_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameArabic",
+            "columnName": "name_arabic",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameLatin",
+            "columnName": "name_latin",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameTranslation",
+            "columnName": "name_translation",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revelationType",
+            "columnName": "revelation_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ayahCount",
+            "columnName": "ayah_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "info",
+            "columnName": "info",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fetchedAt",
+            "columnName": "fetched_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "surah_id"
+          ]
+        }
+      },
+      {
+        "tableName": "ayahs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`surah_id` INTEGER NOT NULL, `ayah_number` INTEGER NOT NULL, `ayah_key` TEXT NOT NULL, `text_qpc_hafs` TEXT NOT NULL, `page_number` INTEGER, `juz_number` INTEGER, `hizb_number` INTEGER, PRIMARY KEY(`surah_id`, `ayah_number`))",
+        "fields": [
+          {
+            "fieldPath": "surahId",
+            "columnName": "surah_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ayahNumber",
+            "columnName": "ayah_number",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ayahKey",
+            "columnName": "ayah_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "textQpcHafs",
+            "columnName": "text_qpc_hafs",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pageNumber",
+            "columnName": "page_number",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "juzNumber",
+            "columnName": "juz_number",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "hizbNumber",
+            "columnName": "hizb_number",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "surah_id",
+            "ayah_number"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ayahs_ayah_key",
+            "unique": true,
+            "columnNames": [
+              "ayah_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_ayahs_ayah_key` ON `${TABLE_NAME}` (`ayah_key`)"
+          }
+        ]
+      },
+      {
+        "tableName": "translations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`surah_id` INTEGER NOT NULL, `ayah_number` INTEGER NOT NULL, `source_id` TEXT NOT NULL, `lang` TEXT NOT NULL, `text` TEXT NOT NULL, PRIMARY KEY(`surah_id`, `ayah_number`, `source_id`))",
+        "fields": [
+          {
+            "fieldPath": "surahId",
+            "columnName": "surah_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ayahNumber",
+            "columnName": "ayah_number",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceId",
+            "columnName": "source_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lang",
+            "columnName": "lang",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "surah_id",
+            "ayah_number",
+            "source_id"
+          ]
+        }
+      },
+      {
+        "tableName": "transliterations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`surah_id` INTEGER NOT NULL, `ayah_number` INTEGER NOT NULL, `source_id` TEXT NOT NULL, `lang` TEXT NOT NULL, `text` TEXT NOT NULL, PRIMARY KEY(`surah_id`, `ayah_number`))",
+        "fields": [
+          {
+            "fieldPath": "surahId",
+            "columnName": "surah_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ayahNumber",
+            "columnName": "ayah_number",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceId",
+            "columnName": "source_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lang",
+            "columnName": "lang",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "surah_id",
+            "ayah_number"
+          ]
+        }
+      },
+      {
+        "tableName": "translation_sources",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `lang` TEXT NOT NULL, `name` TEXT NOT NULL, `translator` TEXT, `coverage_percent` REAL, `is_default` INTEGER NOT NULL, `fetched_at` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lang",
+            "columnName": "lang",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "translator",
+            "columnName": "translator",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "coveragePercent",
+            "columnName": "coverage_percent",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "is_default",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fetchedAt",
+            "columnName": "fetched_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "juz",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`number` INTEGER NOT NULL, `ayah_count` INTEGER NOT NULL, `start_surah_id` INTEGER NOT NULL, `start_ayah_number` INTEGER NOT NULL, `start_surah_name` TEXT NOT NULL, `end_surah_id` INTEGER NOT NULL, `end_ayah_number` INTEGER NOT NULL, `end_surah_name` TEXT NOT NULL, PRIMARY KEY(`number`))",
+        "fields": [
+          {
+            "fieldPath": "number",
+            "columnName": "number",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ayahCount",
+            "columnName": "ayah_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startSurahId",
+            "columnName": "start_surah_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startAyahNumber",
+            "columnName": "start_ayah_number",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startSurahName",
+            "columnName": "start_surah_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endSurahId",
+            "columnName": "end_surah_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endAyahNumber",
+            "columnName": "end_ayah_number",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endSurahName",
+            "columnName": "end_surah_name",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "number"
+          ]
+        }
+      },
+      {
+        "tableName": "reading_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `ayah_key` TEXT NOT NULL, `updated_at` INTEGER NOT NULL, `pending_sync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ayahKey",
+            "columnName": "ayah_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pendingSync",
+            "columnName": "pending_sync",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "ayah_fetch_metadata",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`surah_id` INTEGER NOT NULL, `translation_source_id` TEXT NOT NULL, `fetched_at` INTEGER NOT NULL, PRIMARY KEY(`surah_id`, `translation_source_id`))",
+        "fields": [
+          {
+            "fieldPath": "surahId",
+            "columnName": "surah_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "translationSourceId",
+            "columnName": "translation_source_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fetchedAt",
+            "columnName": "fetched_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "surah_id",
+            "translation_source_id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f6bc78a76a0948b55a2c965938a05cd7')"
+    ]
+  }
+}

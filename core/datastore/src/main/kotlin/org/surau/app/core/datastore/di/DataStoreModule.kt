@@ -23,6 +23,8 @@ import androidx.datastore.dataStoreFile
 import org.surau.app.core.common.network.Dispatcher
 import org.surau.app.core.common.network.SurauDispatchers.IO
 import org.surau.app.core.common.network.di.ApplicationScope
+import org.surau.app.core.datastore.AuthSession
+import org.surau.app.core.datastore.AuthSessionSerializer
 import org.surau.app.core.datastore.UserPreferences
 import org.surau.app.core.datastore.UserPreferencesSerializer
 import dagger.Module
@@ -51,5 +53,21 @@ object DataStoreModule {
             scope = CoroutineScope(scope.coroutineContext + ioDispatcher),
         ) {
             context.dataStoreFile("user_preferences.pb")
+        }
+
+    @Provides
+    @Singleton
+    internal fun providesAuthSessionDataStore(
+        @ApplicationContext context: Context,
+        @Dispatcher(IO) ioDispatcher: CoroutineDispatcher,
+        @ApplicationScope scope: CoroutineScope,
+        authSessionSerializer: AuthSessionSerializer,
+    ): DataStore<AuthSession> =
+        DataStoreFactory.create(
+            serializer = authSessionSerializer,
+            scope = CoroutineScope(scope.coroutineContext + ioDispatcher),
+        ) {
+            // Excluded from Auto Backup via the app's backup/data extraction rules.
+            context.dataStoreFile("auth_session.pb")
         }
 }

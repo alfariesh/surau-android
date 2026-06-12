@@ -22,6 +22,7 @@ import org.surau.app.core.datastore.UserPreferences
 import org.surau.app.core.datastore.test.InMemoryDataStore
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.UserData
+import org.surau.app.core.model.data.quran.ReaderMode
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
@@ -58,6 +59,11 @@ class OfflineFirstUserDataRepositoryTest {
                 UserData(
                     darkThemeConfig = DarkThemeConfig.FOLLOW_SYSTEM,
                     useDynamicColor = false,
+                    readerMode = ReaderMode.ARABIC_TRANSLATION,
+                    translationSourceId = null,
+                    recitationId = null,
+                    arabicFontScale = UserData.DEFAULT_ARABIC_FONT_SCALE,
+                    welcomeShown = false,
                 ),
                 subject.userData.first(),
             )

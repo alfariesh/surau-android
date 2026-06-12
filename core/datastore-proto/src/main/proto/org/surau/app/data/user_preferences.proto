@@ -17,6 +17,7 @@
 syntax = "proto3";
 
 import "org/surau/app/data/dark_theme_config.proto";
+import "org/surau/app/data/reader_mode.proto";
 
 option java_package = "org.surau.app.core.datastore";
 option java_multiple_files = true;
@@ -30,5 +31,15 @@ message UserPreferences {
 
     bool use_dynamic_color = 19;
 
-    // NEXT AVAILABLE ID: 21
+    // Quran reader preferences.
+    ReaderModeProto reader_mode = 21;
+    string translation_source_id = 22;
+    string recitation_id = 23;
+    // Arabic font scale multiplied by 100 (100 = 1.0x). 0 means unset.
+    int32 arabic_font_scale_percent = 24;
+
+    // Whether the first-launch welcome screen has been shown.
+    bool welcome_shown = 25;
+
+    // NEXT AVAILABLE ID: 26
 }
