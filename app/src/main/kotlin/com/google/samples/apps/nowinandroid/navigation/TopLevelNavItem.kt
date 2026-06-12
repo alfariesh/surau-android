@@ -18,14 +18,16 @@ package com.google.samples.apps.nowinandroid.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation3.runtime.NavKey
 import com.google.samples.apps.nowinandroid.R
 import com.google.samples.apps.nowinandroid.core.designsystem.icon.NiaIcons
-import com.google.samples.apps.nowinandroid.feature.bookmarks.api.navigation.BookmarksNavKey
-import com.google.samples.apps.nowinandroid.feature.foryou.api.navigation.ForYouNavKey
-import com.google.samples.apps.nowinandroid.feature.interests.api.navigation.InterestsNavKey
-import com.google.samples.apps.nowinandroid.feature.bookmarks.api.R as bookmarksR
-import com.google.samples.apps.nowinandroid.feature.foryou.api.R as forYouR
-import com.google.samples.apps.nowinandroid.feature.search.api.R as searchR
+import kotlinx.serialization.Serializable
+
+/**
+ * Temporary home destination while the Quran feature is under construction.
+ */
+@Serializable
+object PlaceholderHomeNavKey : NavKey
 
 /**
  * Type for the top level navigation items in the application. Contains UI information about the
@@ -45,29 +47,13 @@ data class TopLevelNavItem(
     @StringRes val titleTextId: Int,
 )
 
-val FOR_YOU = TopLevelNavItem(
+val HOME = TopLevelNavItem(
     selectedIcon = NiaIcons.Upcoming,
     unselectedIcon = NiaIcons.UpcomingBorder,
-    iconTextId = forYouR.string.feature_foryou_api_title,
+    iconTextId = R.string.app_name,
     titleTextId = R.string.app_name,
 )
 
-val BOOKMARKS = TopLevelNavItem(
-    selectedIcon = NiaIcons.Bookmarks,
-    unselectedIcon = NiaIcons.BookmarksBorder,
-    iconTextId = bookmarksR.string.feature_bookmarks_api_title,
-    titleTextId = bookmarksR.string.feature_bookmarks_api_title,
-)
-
-val INTERESTS = TopLevelNavItem(
-    selectedIcon = NiaIcons.Grid3x3,
-    unselectedIcon = NiaIcons.Grid3x3,
-    iconTextId = searchR.string.feature_search_api_interests,
-    titleTextId = searchR.string.feature_search_api_interests,
-)
-
-val TOP_LEVEL_NAV_ITEMS = mapOf(
-    ForYouNavKey to FOR_YOU,
-    BookmarksNavKey to BOOKMARKS,
-    InterestsNavKey(null) to INTERESTS,
+val TOP_LEVEL_NAV_ITEMS = mapOf<NavKey, TopLevelNavItem>(
+    PlaceholderHomeNavKey to HOME,
 )

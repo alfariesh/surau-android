@@ -19,8 +19,10 @@ import com.google.samples.apps.nowinandroid.configureSpotlessForJvm
 import com.google.samples.apps.nowinandroid.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.withType
 
 abstract class JvmLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -30,6 +32,10 @@ abstract class JvmLibraryConventionPlugin : Plugin<Project> {
 
             configureKotlinJvm()
             configureSpotlessForJvm()
+            // Modules are allowed to have no unit tests (yet) without failing the build.
+            tasks.withType<Test>().configureEach {
+                failOnNoDiscoveredTests.set(false)
+            }
             dependencies {
                 "testImplementation"(libs.findLibrary("kotlin.test").get())
             }

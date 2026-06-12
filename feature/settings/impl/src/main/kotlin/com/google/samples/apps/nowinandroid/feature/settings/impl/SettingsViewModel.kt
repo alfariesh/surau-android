@@ -20,7 +20,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.samples.apps.nowinandroid.core.data.repository.UserDataRepository
 import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig
-import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand
 import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiState.Loading
 import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiState.Success
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,7 +40,6 @@ class SettingsViewModel @Inject constructor(
             .map { userData ->
                 Success(
                     settings = UserEditableSettings(
-                        brand = userData.themeBrand,
                         useDynamicColor = userData.useDynamicColor,
                         darkThemeConfig = userData.darkThemeConfig,
                     ),
@@ -52,12 +50,6 @@ class SettingsViewModel @Inject constructor(
                 started = WhileSubscribed(5.seconds.inWholeMilliseconds),
                 initialValue = Loading,
             )
-
-    fun updateThemeBrand(themeBrand: ThemeBrand) {
-        viewModelScope.launch {
-            userDataRepository.setThemeBrand(themeBrand)
-        }
-    }
 
     fun updateDarkThemeConfig(darkThemeConfig: DarkThemeConfig) {
         viewModelScope.launch {
@@ -76,7 +68,6 @@ class SettingsViewModel @Inject constructor(
  * Represents the settings which the user can edit within the app.
  */
 data class UserEditableSettings(
-    val brand: ThemeBrand,
     val useDynamicColor: Boolean,
     val darkThemeConfig: DarkThemeConfig,
 )

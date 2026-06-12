@@ -70,9 +70,7 @@ private fun Context.syncWorkNotification(): Notification {
         this,
         SYNC_NOTIFICATION_CHANNEL_ID,
     )
-        .setSmallIcon(
-            com.google.samples.apps.nowinandroid.core.notifications.R.drawable.core_notifications_ic_nia_notification,
-        )
+        .setSmallIcon(R.drawable.sync_work_notification_icon)
         .setContentTitle(getString(R.string.sync_work_notification_title))
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .build()

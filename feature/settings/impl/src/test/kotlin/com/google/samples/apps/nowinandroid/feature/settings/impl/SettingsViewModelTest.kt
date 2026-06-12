@@ -17,7 +17,6 @@
 package com.google.samples.apps.nowinandroid.feature.settings.impl
 
 import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.DARK
-import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.ANDROID
 import com.google.samples.apps.nowinandroid.core.testing.repository.TestUserDataRepository
 import com.google.samples.apps.nowinandroid.core.testing.util.MainDispatcherRule
 import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiState.Loading
@@ -54,13 +53,11 @@ class SettingsViewModelTest {
     fun stateIsSuccessAfterUserDataLoaded() = runTest {
         backgroundScope.launch(UnconfinedTestDispatcher()) { viewModel.settingsUiState.collect() }
 
-        userDataRepository.setThemeBrand(ANDROID)
         userDataRepository.setDarkThemeConfig(DARK)
 
         assertEquals(
             Success(
                 UserEditableSettings(
-                    brand = ANDROID,
                     darkThemeConfig = DARK,
                     useDynamicColor = false,
                 ),

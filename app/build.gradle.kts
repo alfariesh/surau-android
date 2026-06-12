@@ -65,16 +65,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.feature.interests.api)
-    implementation(projects.feature.interests.impl)
-    implementation(projects.feature.foryou.api)
-    implementation(projects.feature.foryou.impl)
-    implementation(projects.feature.bookmarks.api)
-    implementation(projects.feature.bookmarks.impl)
-    implementation(projects.feature.topic.api)
-    implementation(projects.feature.topic.impl)
-    implementation(projects.feature.search.api)
-    implementation(projects.feature.search.impl)
     implementation(projects.feature.settings.impl)
 
     implementation(projects.core.common)
@@ -82,6 +72,7 @@ dependencies {
     implementation(projects.core.designsystem)
     implementation(projects.core.data)
     implementation(projects.core.model)
+    implementation(projects.core.navigation)
     implementation(projects.core.analytics)
     implementation(projects.sync.work)
 

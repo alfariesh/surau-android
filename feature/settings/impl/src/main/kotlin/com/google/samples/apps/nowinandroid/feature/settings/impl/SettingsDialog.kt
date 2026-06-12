@@ -19,11 +19,7 @@
 package com.google.samples.apps.nowinandroid.feature.settings.impl
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,7 +40,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,9 +54,6 @@ import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig
 import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.DARK
 import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.FOLLOW_SYSTEM
 import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.LIGHT
-import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand
-import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.ANDROID
-import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.DEFAULT
 import com.google.samples.apps.nowinandroid.core.ui.TrackScreenViewEvent
 import com.google.samples.apps.nowinandroid.feature.settings.impl.R.string
 import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiState.Loading
@@ -76,7 +68,6 @@ fun SettingsDialog(
     SettingsDialog(
         onDismiss = onDismiss,
         settingsUiState = settingsUiState,
-        onChangeThemeBrand = viewModel::updateThemeBrand,
         onChangeDynamicColorPreference = viewModel::updateDynamicColorPreference,
         onChangeDarkThemeConfig = viewModel::updateDarkThemeConfig,
     )
@@ -87,7 +78,6 @@ fun SettingsDialog(
     settingsUiState: SettingsUiState,
     supportDynamicColor: Boolean = supportsDynamicTheming(),
     onDismiss: () -> Unit,
-    onChangeThemeBrand: (themeBrand: ThemeBrand) -> Unit,
     onChangeDynamicColorPreference: (useDynamicColor: Boolean) -> Unit,
     onChangeDarkThemeConfig: (darkThemeConfig: DarkThemeConfig) -> Unit,
 ) {
@@ -125,14 +115,11 @@ fun SettingsDialog(
                         SettingsPanel(
                             settings = settingsUiState.settings,
                             supportDynamicColor = supportDynamicColor,
-                            onChangeThemeBrand = onChangeThemeBrand,
                             onChangeDynamicColorPreference = onChangeDynamicColorPreference,
                             onChangeDarkThemeConfig = onChangeDarkThemeConfig,
                         )
                     }
                 }
-                HorizontalDivider(Modifier.padding(top = 8.dp))
-                LinksPanel()
             }
             TrackScreenViewEvent(screenName = "Settings")
         },
@@ -151,29 +138,14 @@ fun SettingsDialog(
     )
 }
 
-// [ColumnScope] is used for using the [ColumnScope.AnimatedVisibility] extension overload composable.
 @Composable
-private fun ColumnScope.SettingsPanel(
+private fun SettingsPanel(
     settings: UserEditableSettings,
     supportDynamicColor: Boolean,
-    onChangeThemeBrand: (themeBrand: ThemeBrand) -> Unit,
     onChangeDynamicColorPreference: (useDynamicColor: Boolean) -> Unit,
     onChangeDarkThemeConfig: (darkThemeConfig: DarkThemeConfig) -> Unit,
 ) {
-    SettingsDialogSectionTitle(text = stringResource(string.feature_settings_impl_theme))
-    Column(Modifier.selectableGroup()) {
-        SettingsDialogThemeChooserRow(
-            text = stringResource(string.feature_settings_impl_brand_default),
-            selected = settings.brand == DEFAULT,
-            onClick = { onChangeThemeBrand(DEFAULT) },
-        )
-        SettingsDialogThemeChooserRow(
-            text = stringResource(string.feature_settings_impl_brand_android),
-            selected = settings.brand == ANDROID,
-            onClick = { onChangeThemeBrand(ANDROID) },
-        )
-    }
-    AnimatedVisibility(visible = settings.brand == DEFAULT && supportDynamicColor) {
+    AnimatedVisibility(visible = supportDynamicColor) {
         Column {
             SettingsDialogSectionTitle(text = stringResource(string.feature_settings_impl_dynamic_color_preference))
             Column(Modifier.selectableGroup()) {
@@ -245,35 +217,6 @@ fun SettingsDialogThemeChooserRow(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun LinksPanel() {
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(
-            space = 16.dp,
-            alignment = Alignment.CenterHorizontally,
-        ),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        val uriHandler = LocalUriHandler.current
-        NiaTextButton(
-            onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) },
-        ) {
-            Text(text = stringResource(string.feature_settings_impl_privacy_policy))
-        }
-        NiaTextButton(
-            onClick = { uriHandler.openUri(BRAND_GUIDELINES_URL) },
-        ) {
-            Text(text = stringResource(string.feature_settings_impl_brand_guidelines))
-        }
-        NiaTextButton(
-            onClick = { uriHandler.openUri(FEEDBACK_URL) },
-        ) {
-            Text(text = stringResource(string.feature_settings_impl_feedback))
-        }
-    }
-}
-
 @Preview
 @Composable
 private fun PreviewSettingsDialog() {
@@ -282,12 +225,10 @@ private fun PreviewSettingsDialog() {
             onDismiss = {},
             settingsUiState = Success(
                 UserEditableSettings(
-                    brand = DEFAULT,
                     darkThemeConfig = FOLLOW_SYSTEM,
                     useDynamicColor = false,
                 ),
             ),
-            onChangeThemeBrand = {},
             onChangeDynamicColorPreference = {},
             onChangeDarkThemeConfig = {},
         )
@@ -301,13 +242,8 @@ private fun PreviewSettingsDialogLoading() {
         SettingsDialog(
             onDismiss = {},
             settingsUiState = Loading,
-            onChangeThemeBrand = {},
             onChangeDynamicColorPreference = {},
             onChangeDarkThemeConfig = {},
         )
     }
 }
-
-private const val PRIVACY_POLICY_URL = "https://policies.google.com/privacy"
-private const val BRAND_GUIDELINES_URL = "https://developer.android.com/distribute/marketing-tools/brand-guidelines"
-private const val FEEDBACK_URL = "https://goo.gle/nia-app-feedback"

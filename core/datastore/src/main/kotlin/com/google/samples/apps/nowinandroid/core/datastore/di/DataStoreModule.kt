@@ -23,7 +23,6 @@ import androidx.datastore.dataStoreFile
 import com.google.samples.apps.nowinandroid.core.common.network.Dispatcher
 import com.google.samples.apps.nowinandroid.core.common.network.NiaDispatchers.IO
 import com.google.samples.apps.nowinandroid.core.common.network.di.ApplicationScope
-import com.google.samples.apps.nowinandroid.core.datastore.IntToStringIdsMigration
 import com.google.samples.apps.nowinandroid.core.datastore.UserPreferences
 import com.google.samples.apps.nowinandroid.core.datastore.UserPreferencesSerializer
 import dagger.Module
@@ -50,9 +49,6 @@ object DataStoreModule {
         DataStoreFactory.create(
             serializer = userPreferencesSerializer,
             scope = CoroutineScope(scope.coroutineContext + ioDispatcher),
-            migrations = listOf(
-                IntToStringIdsMigration,
-            ),
         ) {
             context.dataStoreFile("user_preferences.pb")
         }

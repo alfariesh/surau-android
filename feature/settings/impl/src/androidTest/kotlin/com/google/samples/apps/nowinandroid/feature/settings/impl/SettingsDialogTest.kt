@@ -21,8 +21,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.DARK
-import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.ANDROID
-import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.DEFAULT
+import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.FOLLOW_SYSTEM
 import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiState.Loading
 import com.google.samples.apps.nowinandroid.feature.settings.impl.SettingsUiState.Success
 import org.junit.Rule
@@ -42,7 +41,6 @@ class SettingsDialogTest {
                 settingsUiState = Loading,
                 onDismiss = {},
                 onChangeDynamicColorPreference = {},
-                onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
             )
         }
@@ -58,57 +56,41 @@ class SettingsDialogTest {
             SettingsDialog(
                 settingsUiState = Success(
                     UserEditableSettings(
-                        brand = ANDROID,
-                        useDynamicColor = false,
                         darkThemeConfig = DARK,
+                        useDynamicColor = false,
                     ),
                 ),
-                onDismiss = { },
+                onDismiss = {},
                 onChangeDynamicColorPreference = {},
-                onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
             )
         }
 
-        // Check that all the possible settings are displayed.
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_brand_default)).assertExists()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_brand_android)).assertExists()
-        composeTestRule.onNodeWithText(
-            getString(R.string.feature_settings_impl_dark_mode_config_system_default),
-        ).assertExists()
+        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dark_mode_config_system_default)).assertExists()
         composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dark_mode_config_light)).assertExists()
         composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dark_mode_config_dark)).assertExists()
-
-        // Check that the correct settings are selected.
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_brand_android)).assertIsSelected()
         composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dark_mode_config_dark)).assertIsSelected()
     }
 
     @Test
-    fun whenStateIsSuccess_supportsDynamicColor_usesDefaultBrand_DynamicColorOptionIsDisplayed() {
+    fun whenStateIsSuccess_supportsDynamicColor_DynamicColorOptionIsDisplayed() {
         composeTestRule.setContent {
             SettingsDialog(
                 settingsUiState = Success(
                     UserEditableSettings(
-                        brand = DEFAULT,
-                        darkThemeConfig = DARK,
-                        useDynamicColor = false,
+                        darkThemeConfig = FOLLOW_SYSTEM,
+                        useDynamicColor = true,
                     ),
                 ),
                 supportDynamicColor = true,
                 onDismiss = {},
                 onChangeDynamicColorPreference = {},
-                onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
             )
         }
 
         composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_preference)).assertExists()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_yes)).assertExists()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_no)).assertExists()
-
-        // Check that the correct default dynamic color setting is selected.
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_no)).assertIsSelected()
+        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_yes)).assertIsSelected()
     }
 
     @Test
@@ -117,69 +99,17 @@ class SettingsDialogTest {
             SettingsDialog(
                 settingsUiState = Success(
                     UserEditableSettings(
-                        brand = ANDROID,
-                        darkThemeConfig = DARK,
+                        darkThemeConfig = FOLLOW_SYSTEM,
                         useDynamicColor = false,
                     ),
                 ),
+                supportDynamicColor = false,
                 onDismiss = {},
                 onChangeDynamicColorPreference = {},
-                onChangeThemeBrand = {},
                 onChangeDarkThemeConfig = {},
             )
         }
 
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_preference))
-            .assertDoesNotExist()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_yes)).assertDoesNotExist()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_no)).assertDoesNotExist()
-    }
-
-    @Test
-    fun whenStateIsSuccess_usesAndroidBrand_DynamicColorOptionIsNotDisplayed() {
-        composeTestRule.setContent {
-            SettingsDialog(
-                settingsUiState = Success(
-                    UserEditableSettings(
-                        brand = ANDROID,
-                        darkThemeConfig = DARK,
-                        useDynamicColor = false,
-                    ),
-                ),
-                onDismiss = {},
-                onChangeDynamicColorPreference = {},
-                onChangeThemeBrand = {},
-                onChangeDarkThemeConfig = {},
-            )
-        }
-
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_preference))
-            .assertDoesNotExist()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_yes)).assertDoesNotExist()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_no)).assertDoesNotExist()
-    }
-
-    @Test
-    fun whenStateIsSuccess_allLinksAreDisplayed() {
-        composeTestRule.setContent {
-            SettingsDialog(
-                settingsUiState = Success(
-                    UserEditableSettings(
-                        brand = ANDROID,
-                        darkThemeConfig = DARK,
-                        useDynamicColor = false,
-                    ),
-                ),
-                onDismiss = {},
-                onChangeDynamicColorPreference = {},
-                onChangeThemeBrand = {},
-                onChangeDarkThemeConfig = {},
-            )
-        }
-
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_privacy_policy)).assertExists()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_licenses)).assertExists()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_brand_guidelines)).assertExists()
-        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_feedback)).assertExists()
+        composeTestRule.onNodeWithText(getString(R.string.feature_settings_impl_dynamic_color_preference)).assertDoesNotExist()
     }
 }

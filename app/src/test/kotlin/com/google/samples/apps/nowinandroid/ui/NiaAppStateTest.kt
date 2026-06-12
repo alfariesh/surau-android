@@ -19,16 +19,10 @@ package com.google.samples.apps.nowinandroid.ui
 import androidx.compose.runtime.remember
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation3.runtime.NavBackStack
-import com.google.samples.apps.nowinandroid.core.data.repository.CompositeUserNewsResourceRepository
 import com.google.samples.apps.nowinandroid.core.navigation.NavigationState
-import com.google.samples.apps.nowinandroid.core.navigation.Navigator
-import com.google.samples.apps.nowinandroid.core.testing.repository.TestNewsRepository
-import com.google.samples.apps.nowinandroid.core.testing.repository.TestUserDataRepository
 import com.google.samples.apps.nowinandroid.core.testing.util.TestNetworkMonitor
 import com.google.samples.apps.nowinandroid.core.testing.util.TestTimeZoneMonitor
-import com.google.samples.apps.nowinandroid.feature.bookmarks.api.navigation.BookmarksNavKey
-import com.google.samples.apps.nowinandroid.feature.foryou.api.navigation.ForYouNavKey
-import com.google.samples.apps.nowinandroid.feature.interests.api.navigation.InterestsNavKey
+import com.google.samples.apps.nowinandroid.navigation.PlaceholderHomeNavKey
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import kotlinx.coroutines.flow.collect
@@ -59,67 +53,34 @@ class NiaAppStateTest {
 
     private val timeZoneMonitor = TestTimeZoneMonitor()
 
-    private val userNewsResourceRepository =
-        CompositeUserNewsResourceRepository(TestNewsRepository(), TestUserDataRepository())
-
     // Subject under test.
     private lateinit var state: NiaAppState
 
     private fun testNavigationState() = NavigationState(
-        startKey = ForYouNavKey,
-        topLevelStack = NavBackStack(ForYouNavKey),
+        startKey = PlaceholderHomeNavKey,
+        topLevelStack = NavBackStack(PlaceholderHomeNavKey),
         subStacks = mapOf(
-            ForYouNavKey to NavBackStack(ForYouNavKey),
-            BookmarksNavKey to NavBackStack(BookmarksNavKey),
+            PlaceholderHomeNavKey to NavBackStack(PlaceholderHomeNavKey),
         ),
     )
 
     @Test
     fun niaAppState_currentDestination() = runTest {
         val navigationState = testNavigationState()
-        val navigator = Navigator(navigationState)
 
         composeTestRule.setContent {
             state = remember(navigationState) {
                 NiaAppState(
                     coroutineScope = backgroundScope,
                     networkMonitor = networkMonitor,
-                    userNewsResourceRepository = userNewsResourceRepository,
                     timeZoneMonitor = timeZoneMonitor,
                     navigationState = navigationState,
                 )
             }
         }
 
-        assertEquals(ForYouNavKey, state.navigationState.currentTopLevelKey)
-        assertEquals(ForYouNavKey, state.navigationState.currentKey)
-
-        // Navigate to another destination once
-        navigator.navigate(BookmarksNavKey)
-
-        composeTestRule.waitForIdle()
-
-        assertEquals(BookmarksNavKey, state.navigationState.currentTopLevelKey)
-        assertEquals(BookmarksNavKey, state.navigationState.currentKey)
-    }
-
-    @Test
-    fun niaAppState_destinations() = runTest {
-        composeTestRule.setContent {
-            state = rememberNiaAppState(
-                networkMonitor = networkMonitor,
-                userNewsResourceRepository = userNewsResourceRepository,
-                timeZoneMonitor = timeZoneMonitor,
-            )
-        }
-
-        val navigationState = state.navigationState
-
-        assertEquals(3, navigationState.topLevelKeys.size)
-        assertEquals(
-            setOf(ForYouNavKey, BookmarksNavKey, InterestsNavKey(null)),
-            navigationState.topLevelKeys,
-        )
+        assertEquals(PlaceholderHomeNavKey, state.navigationState.currentTopLevelKey)
+        assertEquals(PlaceholderHomeNavKey, state.navigationState.currentKey)
     }
 
     @Test
@@ -128,7 +89,6 @@ class NiaAppStateTest {
             state = NiaAppState(
                 coroutineScope = backgroundScope,
                 networkMonitor = networkMonitor,
-                userNewsResourceRepository = userNewsResourceRepository,
                 timeZoneMonitor = timeZoneMonitor,
                 navigationState = testNavigationState(),
             )
@@ -148,7 +108,6 @@ class NiaAppStateTest {
             state = NiaAppState(
                 coroutineScope = backgroundScope,
                 networkMonitor = networkMonitor,
-                userNewsResourceRepository = userNewsResourceRepository,
                 timeZoneMonitor = timeZoneMonitor,
                 navigationState = testNavigationState(),
             )

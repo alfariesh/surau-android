@@ -24,9 +24,11 @@ import com.google.samples.apps.nowinandroid.disableUnnecessaryAndroidTests
 import com.google.samples.apps.nowinandroid.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.withType
 
 abstract class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -50,6 +52,10 @@ abstract class AndroidLibraryConventionPlugin : Plugin<Project> {
             extensions.configure<LibraryAndroidComponentsExtension> {
                 configurePrintApksTask(this)
                 disableUnnecessaryAndroidTests(target)
+            }
+            // Modules are allowed to have no unit tests (yet) without failing the build.
+            tasks.withType<Test>().configureEach {
+                failOnNoDiscoveredTests.set(false)
             }
             configureSpotlessForAndroid()
             dependencies {

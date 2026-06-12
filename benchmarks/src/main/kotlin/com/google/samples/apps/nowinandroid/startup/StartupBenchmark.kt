@@ -25,7 +25,6 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import com.google.samples.apps.nowinandroid.BaselineProfileMetrics
 import com.google.samples.apps.nowinandroid.PACKAGE_NAME
 import com.google.samples.apps.nowinandroid.allowNotifications
-import com.google.samples.apps.nowinandroid.foryou.forYouWaitForContent
 import com.google.samples.apps.nowinandroid.startActivityAndAllowNotifications
 import org.junit.Rule
 import org.junit.Test
@@ -70,6 +69,5 @@ class StartupBenchmark {
     ) {
         startActivityAndAllowNotifications()
         // Waits until the content is ready to capture Time To Full Display
-        forYouWaitForContent()
     }
 }
