@@ -33,10 +33,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -56,16 +53,17 @@ import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import org.surau.app.feature.quran.impl.navigation.quranHomeEntry
 import org.surau.app.feature.quran.impl.navigation.quranSearchEntry
 import org.surau.app.feature.quran.impl.navigation.surahReaderEntry
-import org.surau.app.feature.settings.impl.SettingsDialog
+import org.surau.app.feature.auth.api.navigation.navigateToLogin
+import org.surau.app.feature.settings.api.navigation.navigateToSettings
+import org.surau.app.feature.settings.impl.navigation.settingsEntry
 
 @Composable
 fun SurauApp(
     appState: SurauAppState,
     shouldShowWelcome: Boolean,
+    appVersionName: String,
     modifier: Modifier = Modifier,
 ) {
-    var showSettingsDialog by rememberSaveable { mutableStateOf(false) }
-
     SurauBackground(modifier = modifier) {
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -80,12 +78,6 @@ fun SurauApp(
                     duration = Indefinite,
                 )
             }
-        }
-
-        if (showSettingsDialog) {
-            SettingsDialog(
-                onDismiss = { showSettingsDialog = false },
-            )
         }
 
         val navigator = remember { Navigator(appState.navigationState) }
@@ -125,13 +117,18 @@ fun SurauApp(
                 val entryProvider = entryProvider<NavKey> {
                     quranHomeEntry(
                         navigator = navigator,
-                        onSettingsClick = { showSettingsDialog = true },
+                        onSettingsClick = navigator::navigateToSettings,
                     )
                     surahReaderEntry(navigator)
                     quranSearchEntry(navigator)
                     authEntries(
                         navigator = navigator,
                         onAuthFlowDone = { navigator.navigate(QuranHomeNavKey) },
+                    )
+                    settingsEntry(
+                        navigator = navigator,
+                        onSignInClick = navigator::navigateToLogin,
+                        appVersionName = appVersionName,
                     )
                 }
 

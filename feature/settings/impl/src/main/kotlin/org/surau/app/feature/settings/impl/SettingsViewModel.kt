@@ -18,33 +18,51 @@ package org.surau.app.feature.settings.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import org.surau.app.core.data.repository.UserDataRepository
-import org.surau.app.core.model.data.DarkThemeConfig
-import org.surau.app.feature.settings.impl.SettingsUiState.Loading
-import org.surau.app.feature.settings.impl.SettingsUiState.Success
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.surau.app.core.data.repository.AuthRepository
+import org.surau.app.core.data.repository.QuranRepository
+import org.surau.app.core.data.repository.UserDataRepository
+import org.surau.app.core.data.repository.UserRepository
+import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.auth.AuthState
+import org.surau.app.core.model.data.quran.ReaderMode
+import org.surau.app.core.model.data.quran.TranslationSource
+import org.surau.app.feature.settings.impl.SettingsUiState.Loading
+import org.surau.app.feature.settings.impl.SettingsUiState.Success
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository,
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
+    quranRepository: QuranRepository,
 ) : ViewModel() {
+
     val settingsUiState: StateFlow<SettingsUiState> =
-        userDataRepository.userData
-            .map { userData ->
-                Success(
-                    settings = UserEditableSettings(
-                        useDynamicColor = userData.useDynamicColor,
-                        darkThemeConfig = userData.darkThemeConfig,
-                    ),
-                )
-            }
+        combine(
+            userDataRepository.userData,
+            authRepository.authState,
+            quranRepository.observeTranslationSources(),
+        ) { userData, authState, translationSources ->
+            Success(
+                settings = UserEditableSettings(
+                    useDynamicColor = userData.useDynamicColor,
+                    darkThemeConfig = userData.darkThemeConfig,
+                    readerMode = userData.readerMode,
+                    translationSourceId = userData.translationSourceId,
+                    arabicFontScale = userData.arabicFontScale,
+                ),
+                authState = authState,
+                translationSources = translationSources,
+            )
+        }
             .stateIn(
                 scope = viewModelScope,
                 started = WhileSubscribed(5.seconds.inWholeMilliseconds),
@@ -62,6 +80,32 @@ class SettingsViewModel @Inject constructor(
             userDataRepository.setDynamicColorPreference(useDynamicColor)
         }
     }
+
+    fun updateReaderMode(readerMode: ReaderMode) {
+        viewModelScope.launch {
+            userDataRepository.setReaderMode(readerMode)
+            userRepository.pushReaderPreferences()
+        }
+    }
+
+    fun updateTranslationSource(sourceId: String) {
+        viewModelScope.launch {
+            userDataRepository.setTranslationSourceId(sourceId)
+            userRepository.pushReaderPreferences()
+        }
+    }
+
+    fun updateArabicFontScale(scale: Float) {
+        viewModelScope.launch {
+            userDataRepository.setArabicFontScale(scale)
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+        }
+    }
 }
 
 /**
@@ -70,9 +114,17 @@ class SettingsViewModel @Inject constructor(
 data class UserEditableSettings(
     val useDynamicColor: Boolean,
     val darkThemeConfig: DarkThemeConfig,
+    val readerMode: ReaderMode,
+    val translationSourceId: String?,
+    val arabicFontScale: Float,
 )
 
 sealed interface SettingsUiState {
     data object Loading : SettingsUiState
-    data class Success(val settings: UserEditableSettings) : SettingsUiState
+
+    data class Success(
+        val settings: UserEditableSettings,
+        val authState: AuthState,
+        val translationSources: List<TranslationSource>,
+    ) : SettingsUiState
 }

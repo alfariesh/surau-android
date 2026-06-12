@@ -146,6 +146,7 @@ class MainActivity : ComponentActivity() {
                     SurauApp(
                         appState = appState,
                         shouldShowWelcome = uiState.shouldShowWelcome,
+                        appVersionName = BuildConfig.VERSION_NAME,
                     )
                 }
             }

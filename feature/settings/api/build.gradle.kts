@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 The Android Open Source Project
+ * Copyright 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,13 @@
  */
 
 plugins {
-    alias(libs.plugins.surau.android.feature.impl)
-    alias(libs.plugins.surau.android.library.compose)
-    alias(libs.plugins.surau.android.library.jacoco)
+    alias(libs.plugins.surau.android.feature.api)
 }
 
 android {
-    namespace = "org.surau.app.feature.settings.impl"
+    namespace = "org.surau.app.feature.settings.api"
 }
 
 dependencies {
-    api(projects.feature.settings.api)
-
-    implementation(projects.core.data)
-    implementation(projects.core.model)
-
-    testImplementation(projects.core.dataTest)
-    testImplementation(projects.core.datastoreTest)
-    testImplementation(projects.core.testing)
-    testImplementation(libs.kotlinx.coroutines.test)
+    implementation(libs.kotlinx.serialization.json)
 }

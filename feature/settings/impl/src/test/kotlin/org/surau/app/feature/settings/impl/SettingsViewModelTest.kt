@@ -16,11 +16,6 @@
 
 package org.surau.app.feature.settings.impl
 
-import org.surau.app.core.model.data.DarkThemeConfig.DARK
-import org.surau.app.core.testing.repository.TestUserDataRepository
-import org.surau.app.core.testing.util.MainDispatcherRule
-import org.surau.app.feature.settings.impl.SettingsUiState.Loading
-import org.surau.app.feature.settings.impl.SettingsUiState.Success
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -28,25 +23,46 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.surau.app.core.data.test.repository.FakeAuthRepository
+import org.surau.app.core.data.test.repository.FakeQuranRepository
+import org.surau.app.core.data.test.repository.FakeUserDataRepository
+import org.surau.app.core.data.test.repository.FakeUserRepository
+import org.surau.app.core.datastore.SurauPreferencesDataSource
+import org.surau.app.core.datastore.UserPreferences
+import org.surau.app.core.datastore.test.InMemoryDataStore
+import org.surau.app.core.model.data.DarkThemeConfig.DARK
+import org.surau.app.core.model.data.auth.AuthState
+import org.surau.app.core.model.data.quran.ReaderMode
+import org.surau.app.core.testing.util.MainDispatcherRule
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class SettingsViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val userDataRepository = TestUserDataRepository()
+    private val userDataRepository = FakeUserDataRepository(
+        SurauPreferencesDataSource(InMemoryDataStore(UserPreferences.getDefaultInstance())),
+    )
+    private val authRepository = FakeAuthRepository()
+    private val quranRepository = FakeQuranRepository()
 
     private lateinit var viewModel: SettingsViewModel
 
     @Before
     fun setup() {
-        viewModel = SettingsViewModel(userDataRepository)
+        viewModel = SettingsViewModel(
+            userDataRepository = userDataRepository,
+            authRepository = authRepository,
+            userRepository = FakeUserRepository(),
+            quranRepository = quranRepository,
+        )
     }
 
     @Test
     fun stateIsInitiallyLoading() = runTest {
-        assertEquals(Loading, viewModel.settingsUiState.value)
+        assertEquals(SettingsUiState.Loading, viewModel.settingsUiState.value)
     }
 
     @Test
@@ -54,15 +70,26 @@ class SettingsViewModelTest {
         backgroundScope.launch(UnconfinedTestDispatcher()) { viewModel.settingsUiState.collect() }
 
         userDataRepository.setDarkThemeConfig(DARK)
+        userDataRepository.setReaderMode(ReaderMode.ARABIC_ONLY)
 
-        assertEquals(
-            Success(
-                UserEditableSettings(
-                    darkThemeConfig = DARK,
-                    useDynamicColor = false,
-                ),
-            ),
-            viewModel.settingsUiState.value,
-        )
+        val state = assertIs<SettingsUiState.Success>(viewModel.settingsUiState.value)
+        assertEquals(DARK, state.settings.darkThemeConfig)
+        assertEquals(ReaderMode.ARABIC_ONLY, state.settings.readerMode)
+        assertEquals(AuthState.Guest, state.authState)
+    }
+
+    @Test
+    fun logout_returnsToGuest() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher()) { viewModel.settingsUiState.collect() }
+        authRepository.login("user@surau.org", "password123")
+        userDataRepository.setDarkThemeConfig(DARK)
+
+        var state = assertIs<SettingsUiState.Success>(viewModel.settingsUiState.value)
+        assertIs<AuthState.Authenticated>(state.authState)
+
+        viewModel.logout()
+
+        state = assertIs<SettingsUiState.Success>(viewModel.settingsUiState.value)
+        assertEquals(AuthState.Guest, state.authState)
     }
 }

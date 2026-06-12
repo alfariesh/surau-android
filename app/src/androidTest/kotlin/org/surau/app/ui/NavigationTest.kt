@@ -16,18 +16,20 @@
 
 package org.surau.app.ui
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import org.surau.app.MainActivity
-import org.surau.app.R
+import androidx.compose.ui.test.performClick
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.surau.app.MainActivity
 
 /**
- * Boot smoke test for the app shell. Full navigation tests return with the Quran feature.
+ * End-to-end navigation smoke tests for the app shell, running against the fake data layer.
  */
 @HiltAndroidTest
 class NavigationTest {
@@ -44,15 +46,45 @@ class NavigationTest {
     @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    private val appName by composeTestRule.stringResource(R.string.app_name)
-
     @Before
     fun setup() = hiltRule.inject()
 
     @Test
-    fun firstScreen_isPlaceholderHome() {
+    fun firstLaunch_showsWelcome_thenGuestLandsOnQuranHome() {
         composeTestRule.apply {
-            onNodeWithText(appName).assertExists()
+            // Fresh install: the welcome screen offers guest reading first.
+            onNodeWithTag("welcome:guest").assertIsDisplayed()
+
+            onNodeWithTag("welcome:guest").performClick()
+
+            // Quran home with the fake surah list.
+            onNodeWithText("Al-Fatihah").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun quranHome_openSurah_readerShowsAyahs_backReturnsHome() {
+        composeTestRule.apply {
+            onNodeWithTag("welcome:guest").performClick()
+
+            onNodeWithText("Al-Fatihah").performClick()
+            onNodeWithTag("reader:ayahList").assertIsDisplayed()
+
+            onNodeWithTag("reader:back").performClick()
+            onNodeWithText("Al-Fatihah").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun quranHome_settings_showsAccountSection_signInOpensLogin() {
+        composeTestRule.apply {
+            onNodeWithTag("welcome:guest").performClick()
+
+            onNodeWithTag("quranHome:settings").performClick()
+            onNodeWithTag("settings:signIn").assertIsDisplayed()
+
+            onNodeWithTag("settings:signIn").performClick()
+            onNodeWithTag("login:submit").assertIsDisplayed()
         }
     }
 }
