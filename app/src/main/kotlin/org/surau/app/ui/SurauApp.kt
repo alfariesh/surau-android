@@ -50,6 +50,9 @@ import org.surau.app.R
 import org.surau.app.core.designsystem.component.SurauBackground
 import org.surau.app.core.navigation.Navigator
 import org.surau.app.core.navigation.toEntries
+import org.surau.app.feature.auth.api.navigation.WelcomeNavKey
+import org.surau.app.feature.auth.impl.navigation.authEntries
+import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import org.surau.app.feature.quran.impl.navigation.quranHomeEntry
 import org.surau.app.feature.quran.impl.navigation.quranSearchEntry
 import org.surau.app.feature.quran.impl.navigation.surahReaderEntry
@@ -58,6 +61,7 @@ import org.surau.app.feature.settings.impl.SettingsDialog
 @Composable
 fun SurauApp(
     appState: SurauAppState,
+    shouldShowWelcome: Boolean,
     modifier: Modifier = Modifier,
 ) {
     var showSettingsDialog by rememberSaveable { mutableStateOf(false) }
@@ -85,6 +89,13 @@ fun SurauApp(
         }
 
         val navigator = remember { Navigator(appState.navigationState) }
+
+        // First launch: offer guest/sign-in once. Never blocks later launches.
+        LaunchedEffect(shouldShowWelcome) {
+            if (shouldShowWelcome && appState.navigationState.currentKey == QuranHomeNavKey) {
+                navigator.navigate(WelcomeNavKey)
+            }
+        }
 
         Scaffold(
             modifier = Modifier.semantics {
@@ -118,6 +129,10 @@ fun SurauApp(
                     )
                     surahReaderEntry(navigator)
                     quranSearchEntry(navigator)
+                    authEntries(
+                        navigator = navigator,
+                        onAuthFlowDone = { navigator.navigate(QuranHomeNavKey) },
+                    )
                 }
 
                 NavDisplay(

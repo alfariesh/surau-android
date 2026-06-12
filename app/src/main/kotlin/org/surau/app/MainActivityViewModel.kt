@@ -47,6 +47,8 @@ sealed interface MainActivityUiState {
     data object Loading : MainActivityUiState
 
     data class Success(val userData: UserData) : MainActivityUiState {
+        override val shouldShowWelcome: Boolean = !userData.welcomeShown
+
         override val shouldDisableDynamicTheming = !userData.useDynamicColor
 
         override fun shouldUseDarkTheme(isSystemDarkTheme: Boolean) =
@@ -61,6 +63,11 @@ sealed interface MainActivityUiState {
      * Returns `true` if the state wasn't loaded yet and it should keep showing the splash screen.
      */
     fun shouldKeepSplashScreen() = this is Loading
+
+    /**
+     * Returns `true` if the first-launch welcome screen should be shown.
+     */
+    val shouldShowWelcome: Boolean get() = false
 
     /**
      * Returns `true` if the dynamic color is disabled.

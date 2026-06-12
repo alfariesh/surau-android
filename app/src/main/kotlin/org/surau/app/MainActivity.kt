@@ -133,6 +133,7 @@ class MainActivity : ComponentActivity() {
             )
 
             val currentTimeZone by appState.currentTimeZone.collectAsStateWithLifecycle()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
             CompositionLocalProvider(
                 LocalAnalyticsHelper provides analyticsHelper,
@@ -142,7 +143,10 @@ class MainActivity : ComponentActivity() {
                     darkTheme = themeSettings.darkTheme,
                     disableDynamicTheming = themeSettings.disableDynamicTheming,
                 ) {
-                    SurauApp(appState)
+                    SurauApp(
+                        appState = appState,
+                        shouldShowWelcome = uiState.shouldShowWelcome,
+                    )
                 }
             }
         }
