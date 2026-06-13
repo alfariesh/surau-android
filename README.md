@@ -50,6 +50,39 @@ Backend dapat dialihkan via `local.properties`:
 BACKEND_URL=http://10.0.2.2:8080/v1/
 ```
 
+## Penandatanganan rilis
+
+Build `release` ditandatangani dengan keystore sungguhan bila kredensialnya tersedia di
+`local.properties` (atau environment variable bernama sama). Bila tidak ada — misalnya di CI
+atau hasil clone baru — build otomatis jatuh ke kunci debug sehingga `assembleRelease` tetap
+berhasil. Keystore **tidak** disimpan di repo.
+
+Buat keystore sekali (simpan di luar repo), lalu daftarkan path & password-nya:
+
+```sh
+keytool -genkeypair -v -keystore ~/.surau/surau-release.jks -storetype PKCS12 \
+  -alias surau -keyalg RSA -keysize 2048 -validity 10000
+```
+
+```properties
+# local.properties (gitignored)
+RELEASE_STORE_FILE=/path/absolut/ke/surau-release.jks
+RELEASE_STORE_PASSWORD=...
+RELEASE_KEY_ALIAS=surau
+RELEASE_KEY_PASSWORD=...
+```
+
+> Keystore yang dipakai saat ini adalah **kunci pengembangan**; kunci upload Play Store yang
+> sebenarnya dibuat pada milestone rilis (M7).
+
+## Deep link reset password
+
+Tautan `https://surau.org/reset-password?token=…` (dari email reset kata sandi) membuka langsung
+layar atur ulang kata sandi dengan token terisi. Agar Android membuka aplikasi tanpa dialog
+pemilih, host `surau.org` harus menyajikan `/.well-known/assetlinks.json` berisi sidik jari
+SHA-256 sertifikat rilis (koordinasi dengan backend). Tanpa berkas itu, tautan tetap berfungsi
+lewat dialog pemilih aplikasi. Ambil sidik jari dengan `keytool -list -v -keystore <file>`.
+
 ## Lisensi & atribusi
 
 - Kode dilisensikan Apache License 2.0 (lihat [LICENSE](LICENSE)); sebagian besar fondasi

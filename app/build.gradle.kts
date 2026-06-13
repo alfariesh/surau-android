@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 import org.surau.app.SurauBuildType
+import java.io.StringReader
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.surau.android.application)
@@ -25,6 +27,22 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Release signing is sourced from local.properties (or matching env vars) so the keystore and its
+// passwords never enter version control. When unset — on CI or a fresh clone — the release build
+// falls back to the debug key so `assembleRelease` still works. See README → "Release signing".
+val localSigningProperties: Properties? = providers.fileContents(
+    isolated.rootProject.projectDirectory.file("local.properties"),
+).asText.map { text ->
+    Properties().apply { load(StringReader(text)) }
+}.orNull
+
+val signingProperty: (String) -> String? = { name ->
+    (localSigningProperties?.getProperty(name) ?: providers.environmentVariable(name).orNull)
+        ?.takeIf(String::isNotBlank)
+}
+
+val releaseStoreFilePath = signingProperty("RELEASE_STORE_FILE")
+
 android {
     defaultConfig {
         applicationId = "org.surau.app"
@@ -33,6 +51,19 @@ android {
 
         // Custom test runner to set up Hilt dependency graph
         testInstrumentationRunner = "org.surau.app.core.testing.SurauTestRunner"
+    }
+
+    signingConfigs {
+        // Only declared when a keystore is configured; otherwise the release build below reuses
+        // the debug key so a fresh clone or CI can still produce a (debug-signed) release APK.
+        if (releaseStoreFilePath != null) {
+            create("release") {
+                storeFile = file(releaseStoreFilePath)
+                storePassword = signingProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = signingProperty("RELEASE_KEY_ALIAS")
+                keyPassword = signingProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -46,10 +77,12 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),
                           "proguard-rules.pro")
 
-            // To publish on the Play store a private signing key is required, but to allow anyone
-            // who clones the code to sign and run the release variant, use the debug signing key.
-            // TODO: Abstract the signing configuration to a separate file to avoid hardcoding this.
-            signingConfig = signingConfigs.named("debug").get()
+            // Use the real release key when local.properties/env provide one (see README →
+            // "Release signing"); otherwise fall back to the debug key so anyone can still build
+            // and run the release variant.
+            signingConfig = signingConfigs.getByName(
+                if (releaseStoreFilePath != null) "release" else "debug",
+            )
         }
     }
 
