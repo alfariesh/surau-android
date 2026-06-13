@@ -30,8 +30,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.guava.await
@@ -60,6 +63,9 @@ class DefaultSurauPlayerController @Inject constructor(
     private val _state = MutableStateFlow(PlayerUiState())
     override val state: StateFlow<PlayerUiState> = _state.asStateFlow()
 
+    private val _surahCompletions = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    override val surahCompletions: SharedFlow<Int> = _surahCompletions.asSharedFlow()
+
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
     private var positionJob: Job? = null
@@ -87,10 +93,15 @@ class DefaultSurauPlayerController @Inject constructor(
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) = syncState()
 
         override fun onPlaybackStateChanged(playbackState: Int) {
-            if (playbackState == Player.STATE_ENDED && stopAtSurahEnd) {
-                stopAtSurahEnd = false
-                _state.update { it.copy(stopAtSurahEnd = false) }
-                controller?.pause()
+            if (playbackState == Player.STATE_ENDED) {
+                if (stopAtSurahEnd) {
+                    stopAtSurahEnd = false
+                    _state.update { it.copy(stopAtSurahEnd = false) }
+                    controller?.pause()
+                } else if (repeatRange == null) {
+                    // Natural end (not looping, not a sleep stop): signal for auto-advance.
+                    _state.value.surahId?.let { _surahCompletions.tryEmit(it) }
+                }
             }
             syncState()
         }

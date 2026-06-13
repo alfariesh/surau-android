@@ -45,6 +45,8 @@ message UserPreferences {
     // Flow Arabic font scale multiplied by 100 (100 = 1.0x). 0 means unset.
     int32 flow_arabic_font_scale_percent = 26;
     bool flow_show_translation = 27;
+    // Inverse of "auto-continue to the next surah" so the default (unset = false) means enabled.
+    bool flow_auto_continue_disabled = 28;
 
-    // NEXT AVAILABLE ID: 28
+    // NEXT AVAILABLE ID: 29
 }

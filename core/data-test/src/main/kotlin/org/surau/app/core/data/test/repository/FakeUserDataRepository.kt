@@ -67,6 +67,10 @@ class FakeUserDataRepository @Inject constructor(
         surauPreferencesDataSource.setFlowShowTranslation(show)
     }
 
+    override suspend fun setFlowAutoContinue(enabled: Boolean) {
+        surauPreferencesDataSource.setFlowAutoContinue(enabled)
+    }
+
     override suspend fun setWelcomeShown(shown: Boolean) {
         surauPreferencesDataSource.setWelcomeShown(shown)
     }

@@ -69,6 +69,11 @@ interface UserDataRepository {
     suspend fun setFlowShowTranslation(show: Boolean)
 
     /**
+     * Sets whether Flow auto-continues to the next surah when one finishes. Local-only.
+     */
+    suspend fun setFlowAutoContinue(enabled: Boolean)
+
+    /**
      * Marks the first-launch welcome screen as shown.
      */
     suspend fun setWelcomeShown(shown: Boolean)

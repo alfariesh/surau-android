@@ -60,6 +60,7 @@
     <string name="feature_quran_impl_flow_settings">Pengaturan Flow</string>
     <string name="feature_quran_impl_flow_font_size">Ukuran huruf</string>
     <string name="feature_quran_impl_flow_show_translation">Tampilkan terjemahan</string>
+    <string name="feature_quran_impl_flow_auto_continue">Lanjut otomatis</string>
     <string name="feature_quran_impl_repeat">Pengulangan</string>
     <string name="feature_quran_impl_repeat_action">Ulangi</string>
     <string name="feature_quran_impl_repeat_off">Mati</string>

@@ -16,7 +16,9 @@
 
 package org.surau.app.feature.quran.impl
 
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.surau.app.core.media.PlayerUiState
 import org.surau.app.core.media.RepeatScope
@@ -29,6 +31,9 @@ internal class FakeSurauPlayerController : SurauPlayerController {
 
     val playerState = MutableStateFlow(PlayerUiState())
     override val state: StateFlow<PlayerUiState> = playerState
+
+    val surahCompletionEvents = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    override val surahCompletions: SharedFlow<Int> = surahCompletionEvents
 
     data class PlayCall(val manifest: SurahAudioManifest, val surahName: String, val startAyah: Int)
 

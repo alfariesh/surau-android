@@ -64,6 +64,7 @@ class SurauPreferencesDataSource @Inject constructor(
                     it.flowArabicFontScalePercent / 100f
                 },
                 flowShowTranslation = it.flowShowTranslation,
+                flowAutoContinue = !it.flowAutoContinueDisabled,
             )
         }
 
@@ -125,6 +126,12 @@ class SurauPreferencesDataSource @Inject constructor(
     suspend fun setFlowShowTranslation(show: Boolean) {
         userPreferences.updateData {
             it.copy { this.flowShowTranslation = show }
+        }
+    }
+
+    suspend fun setFlowAutoContinue(enabled: Boolean) {
+        userPreferences.updateData {
+            it.copy { this.flowAutoContinueDisabled = !enabled }
         }
     }
 

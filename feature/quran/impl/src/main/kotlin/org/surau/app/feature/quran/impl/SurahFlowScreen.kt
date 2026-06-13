@@ -121,6 +121,7 @@ fun SurahFlowScreen(
     val playingAyah by viewModel.playingAyah.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val showTranslation by viewModel.showTranslation.collectAsStateWithLifecycle()
+    val autoContinue by viewModel.autoContinue.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val offlineMessage = stringResource(R.string.feature_quran_impl_audio_offline)
@@ -134,6 +135,7 @@ fun SurahFlowScreen(
         playerState = playerState,
         fontScale = fontScale,
         showTranslation = showTranslation,
+        autoContinue = autoContinue,
         onBackClick = onBackClick,
         onPlayPause = viewModel::onPlayPause,
         onNext = viewModel::onNext,
@@ -141,6 +143,7 @@ fun SurahFlowScreen(
         onSeekToAyah = viewModel::onSeekToAyah,
         onSetFontScale = viewModel::setFontScale,
         onToggleTranslation = viewModel::toggleTranslation,
+        onToggleAutoContinue = viewModel::toggleAutoContinue,
         onSetRepeat = viewModel::onSetRepeat,
         onSetSleepTimer = viewModel::onSetSleepTimer,
         snackbarHostState = snackbarHostState,
@@ -155,6 +158,7 @@ internal fun SurahFlowScreen(
     playerState: PlayerUiState,
     fontScale: Float,
     showTranslation: Boolean,
+    autoContinue: Boolean,
     onBackClick: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
@@ -162,6 +166,7 @@ internal fun SurahFlowScreen(
     onSeekToAyah: (Int) -> Unit,
     onSetFontScale: (Float) -> Unit,
     onToggleTranslation: () -> Unit,
+    onToggleAutoContinue: () -> Unit,
     onSetRepeat: (RepeatScope, Int) -> Unit,
     onSetSleepTimer: (SleepTimerOption) -> Unit,
     modifier: Modifier = Modifier,
@@ -202,6 +207,7 @@ internal fun SurahFlowScreen(
             playerState = playerState,
             fontScale = fontScale,
             showTranslation = showTranslation,
+            autoContinue = autoContinue,
             onBackClick = onBackClick,
             onPlayPause = onPlayPause,
             onNext = onNext,
@@ -209,6 +215,7 @@ internal fun SurahFlowScreen(
             onSeekToAyah = onSeekToAyah,
             onSetFontScale = onSetFontScale,
             onToggleTranslation = onToggleTranslation,
+            onToggleAutoContinue = onToggleAutoContinue,
             onSetRepeat = onSetRepeat,
             onSetSleepTimer = onSetSleepTimer,
             snackbarHostState = snackbarHostState,
@@ -225,6 +232,7 @@ private fun FlowSuccess(
     playerState: PlayerUiState,
     fontScale: Float,
     showTranslation: Boolean,
+    autoContinue: Boolean,
     onBackClick: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
@@ -232,6 +240,7 @@ private fun FlowSuccess(
     onSeekToAyah: (Int) -> Unit,
     onSetFontScale: (Float) -> Unit,
     onToggleTranslation: () -> Unit,
+    onToggleAutoContinue: () -> Unit,
     onSetRepeat: (RepeatScope, Int) -> Unit,
     onSetSleepTimer: (SleepTimerOption) -> Unit,
     snackbarHostState: SnackbarHostState,
@@ -266,6 +275,12 @@ private fun FlowSuccess(
             controller?.hide(WindowInsetsCompat.Type.systemBars())
         }
         onDispose { controller?.show(WindowInsetsCompat.Type.systemBars()) }
+    }
+
+    // Keep the screen awake while reciting (you're reading along); let it sleep when paused/left.
+    DisposableEffect(playerState.isPlaying) {
+        view.keepScreenOn = playerState.isPlaying
+        onDispose { view.keepScreenOn = false }
     }
 
     // Keep the active ayah centred. Wait for the list to be measured first so centring also works
@@ -368,10 +383,12 @@ private fun FlowSuccess(
         FlowSettingsSheet(
             fontScale = fontScale,
             showTranslation = showTranslation,
+            autoContinue = autoContinue,
             repeatScope = playerState.repeatScope,
             repeatCount = playerState.repeatCount,
             onFontScaleChange = onSetFontScale,
             onToggleTranslation = onToggleTranslation,
+            onToggleAutoContinue = onToggleAutoContinue,
             onSetRepeat = onSetRepeat,
             onDismiss = { showSettings = false },
         )
@@ -667,10 +684,12 @@ private fun formatTimer(ms: Long): String {
 private fun FlowSettingsSheet(
     fontScale: Float,
     showTranslation: Boolean,
+    autoContinue: Boolean,
     repeatScope: RepeatScope,
     repeatCount: Int,
     onFontScaleChange: (Float) -> Unit,
     onToggleTranslation: () -> Unit,
+    onToggleAutoContinue: () -> Unit,
     onSetRepeat: (RepeatScope, Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -698,6 +717,19 @@ private fun FlowSettingsSheet(
                     modifier = Modifier.weight(1f),
                 )
                 Switch(checked = showTranslation, onCheckedChange = { onToggleTranslation() })
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.feature_quran_impl_flow_auto_continue),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                Switch(checked = autoContinue, onCheckedChange = { onToggleAutoContinue() })
             }
 
             Text(

@@ -129,6 +129,7 @@ class QuranScreenshotTests {
                 ),
                 fontScale = 1f,
                 showTranslation = false,
+                autoContinue = true,
                 onBackClick = {},
                 onPlayPause = {},
                 onNext = {},
@@ -136,6 +137,7 @@ class QuranScreenshotTests {
                 onSeekToAyah = {},
                 onSetFontScale = {},
                 onToggleTranslation = {},
+                onToggleAutoContinue = {},
                 onSetRepeat = { _, _ -> },
                 onSetSleepTimer = {},
             )

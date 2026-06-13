@@ -119,6 +119,64 @@ class SurahFlowViewModelTest {
     }
 
     @Test
+    fun surahEnds_autoContinuesToNextSurah() = runTest {
+        audioRepository.manifest = QuranTestData.fatihahSurahModeManifest
+        viewModel(SurahFlowNavKey(surahId = 1))
+        advanceUntilIdle() // init plays surah 1
+
+        playerController.surahCompletionEvents.tryEmit(1)
+        advanceUntilIdle()
+
+        assertEquals(listOf(1, 2), audioRepository.audioManifestCalls)
+        assertEquals(2, playerController.playCalls.size)
+        assertEquals(1, playerController.playCalls[1].startAyah)
+    }
+
+    @Test
+    fun surahEnds_doesNotAdvance_whenAutoContinueOff() = runTest {
+        userDataRepository.setFlowAutoContinue(false)
+        viewModel(SurahFlowNavKey(surahId = 1))
+        advanceUntilIdle()
+
+        playerController.surahCompletionEvents.tryEmit(1)
+        advanceUntilIdle()
+
+        assertEquals(listOf(1), audioRepository.audioManifestCalls)
+    }
+
+    @Test
+    fun surahEnds_doesNotAdvance_pastLastSurah() = runTest {
+        viewModel(SurahFlowNavKey(surahId = 114))
+        advanceUntilIdle()
+
+        playerController.surahCompletionEvents.tryEmit(114)
+        advanceUntilIdle()
+
+        assertEquals(listOf(114), audioRepository.audioManifestCalls)
+    }
+
+    @Test
+    fun surahEnds_ignoresCompletionForADifferentSurah() = runTest {
+        viewModel(SurahFlowNavKey(surahId = 1))
+        advanceUntilIdle()
+
+        playerController.surahCompletionEvents.tryEmit(73) // not the shown surah
+        advanceUntilIdle()
+
+        assertEquals(listOf(1), audioRepository.audioManifestCalls)
+    }
+
+    @Test
+    fun toggleAutoContinue_persists() = runTest {
+        val viewModel = viewModel(SurahFlowNavKey(surahId = 1))
+
+        viewModel.toggleAutoContinue() // default is on → turns off
+        advanceUntilIdle()
+
+        assertEquals(false, userDataRepository.userData.first().flowAutoContinue)
+    }
+
+    @Test
     fun onSetRepeat_forwardsToController() = runTest {
         val viewModel = viewModel(SurahFlowNavKey(surahId = 1))
 
