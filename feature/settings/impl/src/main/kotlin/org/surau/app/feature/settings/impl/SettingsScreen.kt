@@ -62,6 +62,7 @@ import org.surau.app.core.designsystem.theme.supportsDynamicTheming
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.ReaderMode
+import org.surau.app.core.model.data.quran.Recitation
 import org.surau.app.core.model.data.quran.TranslationSource
 import org.surau.app.core.ui.TrackScreenViewEvent
 import org.surau.app.feature.settings.impl.SettingsUiState.Loading
@@ -86,6 +87,7 @@ fun SettingsScreen(
         onChangeDarkThemeConfig = viewModel::updateDarkThemeConfig,
         onChangeReaderMode = viewModel::updateReaderMode,
         onChangeTranslationSource = viewModel::updateTranslationSource,
+        onChangeRecitation = viewModel::updateRecitation,
         onChangeArabicFontScale = viewModel::updateArabicFontScale,
         modifier = modifier,
     )
@@ -104,6 +106,7 @@ internal fun SettingsScreen(
     onChangeTranslationSource: (String) -> Unit,
     onChangeArabicFontScale: (Float) -> Unit,
     modifier: Modifier = Modifier,
+    onChangeRecitation: (String) -> Unit = {},
     supportDynamicColor: Boolean = supportsDynamicTheming(),
 ) {
     TrackScreenViewEvent(screenName = "Settings")
@@ -174,6 +177,13 @@ internal fun SettingsScreen(
                         sources = uiState.translationSources,
                         selectedId = uiState.settings.translationSourceId,
                         onChangeTranslationSource = onChangeTranslationSource,
+                    )
+                }
+                if (uiState.recitations.isNotEmpty()) {
+                    RecitationChooser(
+                        recitations = uiState.recitations,
+                        selectedId = uiState.settings.recitationId,
+                        onChangeRecitation = onChangeRecitation,
                     )
                 }
 
@@ -402,6 +412,39 @@ private fun TranslationSourceChooser(
                     selected = source.id == effectiveSelected,
                     role = Role.RadioButton,
                     onClick = { onChangeTranslationSource(source.id) },
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecitationChooser(
+    recitations: List<Recitation>,
+    selectedId: String?,
+    onChangeRecitation: (String) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.feature_settings_impl_qari),
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.padding(top = 16.dp),
+    )
+    val effectiveSelected = selectedId ?: recitations.firstOrNull { it.isDefault }?.id
+    Column(Modifier.selectableGroup()) {
+        recitations.forEach { recitation ->
+            ListItem(
+                headlineContent = { Text(recitation.displayName) },
+                supportingContent = recitation.style?.let { { Text(it) } },
+                leadingContent = {
+                    RadioButton(
+                        selected = recitation.id == effectiveSelected,
+                        onClick = null,
+                    )
+                },
+                modifier = Modifier.selectable(
+                    selected = recitation.id == effectiveSelected,
+                    role = Role.RadioButton,
+                    onClick = { onChangeRecitation(recitation.id) },
                 ),
             )
         }

@@ -41,6 +41,7 @@
     <string name="feature_settings_impl_reader_mode_translation">Terjemahan</string>
     <string name="feature_settings_impl_reader_mode_arabic">Arab</string>
     <string name="feature_settings_impl_translation_source">Sumber terjemahan</string>
+    <string name="feature_settings_impl_qari">Qari</string>
     <string name="feature_settings_impl_arabic_font_scale">Ukuran huruf Arab</string>
     <string name="feature_settings_impl_section_about">Tentang</string>
     <string name="feature_settings_impl_version">Versi %1$s</string>
