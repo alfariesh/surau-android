@@ -56,6 +56,31 @@ val PlusJakartaSans = FontFamily(
 )
 
 /**
+ * Inter (variable font, OFL) — the Surau Latin typeface, matching the HeroUI Pro design tokens.
+ */
+private fun inter(weight: FontWeight, style: FontStyle = FontStyle.Normal) = Font(
+    resId = if (style == FontStyle.Italic) {
+        R.font.core_designsystem_inter_italic
+    } else {
+        R.font.core_designsystem_inter
+    },
+    weight = weight,
+    style = style,
+    variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight)),
+)
+
+val Inter = FontFamily(
+    inter(FontWeight.Light),
+    inter(FontWeight.Normal),
+    inter(FontWeight.Medium),
+    inter(FontWeight.SemiBold),
+    inter(FontWeight.Bold),
+    inter(FontWeight.Normal, FontStyle.Italic),
+    inter(FontWeight.Medium, FontStyle.Italic),
+    inter(FontWeight.Bold, FontStyle.Italic),
+)
+
+/**
  * Surau typography.
  *
  * [TextDirection.Content] is used so that mixed Arabic/Latin content lays out according to the
@@ -63,7 +88,7 @@ val PlusJakartaSans = FontFamily(
  */
 internal val SurauTypography = Typography(
     displayLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Normal,
         fontSize = 57.sp,
         lineHeight = 64.sp,
@@ -71,7 +96,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     displayMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Normal,
         fontSize = 45.sp,
         lineHeight = 52.sp,
@@ -79,7 +104,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     displaySmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Normal,
         fontSize = 36.sp,
         lineHeight = 44.sp,
@@ -87,7 +112,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     headlineLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.SemiBold,
         fontSize = 32.sp,
         lineHeight = 40.sp,
@@ -95,7 +120,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     headlineMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
@@ -103,7 +128,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     headlineSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
         lineHeight = 32.sp,
@@ -115,7 +140,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     titleLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Bold,
         fontSize = 22.sp,
         lineHeight = 28.sp,
@@ -127,7 +152,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     titleMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Bold,
         fontSize = 18.sp,
         lineHeight = 24.sp,
@@ -135,7 +160,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     titleSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
         lineHeight = 20.sp,
@@ -144,7 +169,7 @@ internal val SurauTypography = Typography(
     ),
     // Default text style
     bodyLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
@@ -156,7 +181,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     bodyMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
         lineHeight = 20.sp,
@@ -164,7 +189,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     bodySmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
         lineHeight = 16.sp,
@@ -173,7 +198,7 @@ internal val SurauTypography = Typography(
     ),
     // Used for Button
     labelLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
         lineHeight = 20.sp,
@@ -186,7 +211,7 @@ internal val SurauTypography = Typography(
     ),
     // Used for Navigation items
     labelMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
@@ -198,7 +223,7 @@ internal val SurauTypography = Typography(
         textDirection = TextDirection.Content,
     ),
     labelSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Medium,
         fontSize = 10.sp,
         lineHeight = 14.sp,

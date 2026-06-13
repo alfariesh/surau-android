@@ -1,0 +1,169 @@
+/*
+ * Copyright 2025 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.surau.app.core.designsystem.theme
+
+import androidx.compose.material3.ColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
+
+/**
+ * Extended HeroUI Pro semantic colors that Material 3's [ColorScheme] has no slot for.
+ *
+ * These complement [androidx.compose.material3.MaterialTheme.colorScheme] (which carries the
+ * standard M3 roles) with the additional tokens the Surau components need — interactive neutral
+ * surfaces, field chrome, separators, the segmented-control track, and the toast status families.
+ *
+ * Read them inside a composable via [LocalSurauColors] (e.g. `LocalSurauColors.current.separator`).
+ * Provided by [SurauTheme]; when dynamic theming is active they are derived from the live
+ * [ColorScheme] by [surauSemanticColorsFromScheme] so components still adapt to the wallpaper.
+ */
+@Immutable
+data class SurauSemanticColors(
+    val accent: Color,
+    val onAccent: Color,
+    val accentSoft: Color,
+    /** Neutral interactive background — switch-off track, segmented track base, subtle chips. */
+    val default: Color,
+    val surface: Color,
+    val surfaceSecondary: Color,
+    val surfaceTertiary: Color,
+    val surfaceHover: Color,
+    val overlay: Color,
+    val fieldBackground: Color,
+    val fieldBorder: Color,
+    val border: Color,
+    val separator: Color,
+    val muted: Color,
+    val scrollbar: Color,
+    /** HeroUI `--segment`: the raised sliding indicator fill for tabs (primary) and segmented control. */
+    val segment: Color,
+    val success: Color,
+    val onSuccess: Color,
+    val successContainer: Color,
+    val warning: Color,
+    val onWarning: Color,
+    val warningContainer: Color,
+    val danger: Color,
+    val onDanger: Color,
+    val dangerContainer: Color,
+)
+
+/** Static HeroUI Pro light semantic tokens. */
+internal val LightSurauSemanticColors = SurauSemanticColors(
+    accent = HeroLightAccent,
+    onAccent = Color.White,
+    accentSoft = HeroLightPrimaryContainer,
+    default = HeroLightDefault,
+    surface = HeroLightSurface,
+    surfaceSecondary = HeroLightSurfaceSecondary,
+    surfaceTertiary = HeroLightSurfaceTertiary,
+    surfaceHover = HeroLightSurfaceSecondary,
+    overlay = HeroLightSurface,
+    fieldBackground = HeroLightSurface,
+    fieldBorder = HeroLightBorder,
+    border = HeroLightBorder,
+    separator = HeroLightSeparator,
+    muted = HeroLightMuted,
+    scrollbar = HeroLightScrollbar,
+    segment = Color.White,
+    success = HeroLightSuccess,
+    onSuccess = Color.White,
+    successContainer = HeroLightSuccessSoft,
+    warning = HeroLightWarning,
+    onWarning = Color.White,
+    warningContainer = HeroLightWarningSoft,
+    danger = Red40,
+    onDanger = Color.White,
+    dangerContainer = Red90,
+)
+
+/** Static HeroUI Pro dark semantic tokens. */
+internal val DarkSurauSemanticColors = SurauSemanticColors(
+    accent = HeroDarkAccent,
+    onAccent = HeroDarkOnAccent,
+    accentSoft = HeroDarkPrimaryContainer,
+    default = HeroDarkDefault,
+    surface = HeroDarkSurface,
+    surfaceSecondary = HeroDarkSurfaceSecondary,
+    surfaceTertiary = HeroDarkSurfaceTertiary,
+    surfaceHover = HeroDarkSurfaceTertiary,
+    overlay = HeroDarkOverlay,
+    fieldBackground = HeroDarkFieldBackground,
+    fieldBorder = HeroDarkFieldBorder,
+    border = HeroDarkBorder,
+    separator = HeroDarkSeparator,
+    muted = HeroDarkMuted,
+    scrollbar = HeroDarkScrollbar,
+    segment = HeroDarkSegment,
+    success = HeroDarkSuccess,
+    onSuccess = Color(0xFF052109),
+    successContainer = HeroDarkSuccessSoft,
+    warning = HeroDarkWarning,
+    onWarning = Color(0xFF3F2900),
+    warningContainer = HeroDarkWarningSoft,
+    danger = Red80,
+    onDanger = Red20,
+    dangerContainer = Red30,
+)
+
+/**
+ * Derives [SurauSemanticColors] from a Material 3 [ColorScheme] so the extended tokens follow a
+ * dynamic (wallpaper) color scheme on Android 12+. Used by [SurauTheme] when dynamic theming is on.
+ */
+internal fun surauSemanticColorsFromScheme(
+    colorScheme: ColorScheme,
+    darkTheme: Boolean,
+): SurauSemanticColors {
+    val base = if (darkTheme) DarkSurauSemanticColors else LightSurauSemanticColors
+    return base.copy(
+        accent = colorScheme.primary,
+        onAccent = colorScheme.onPrimary,
+        accentSoft = colorScheme.primaryContainer,
+        default = colorScheme.surfaceContainerHigh,
+        surface = colorScheme.surface,
+        surfaceSecondary = colorScheme.surfaceContainer,
+        surfaceTertiary = colorScheme.surfaceContainerHighest,
+        surfaceHover = colorScheme.surfaceContainerHigh,
+        overlay = colorScheme.surfaceContainerLow,
+        fieldBackground = colorScheme.surface,
+        fieldBorder = colorScheme.outline,
+        border = colorScheme.outline,
+        separator = colorScheme.outlineVariant,
+        muted = colorScheme.onSurfaceVariant,
+        segment = colorScheme.surfaceContainerLowest,
+    )
+}
+
+/**
+ * [androidx.compose.runtime.CompositionLocal] carrying the extended Surau semantic colors. Defaults
+ * to the light tokens; [SurauTheme] overrides it with the resolved (static or dynamic) instance.
+ */
+val LocalSurauColors = staticCompositionLocalOf { LightSurauSemanticColors }
+
+/**
+ * Convenience accessor for the extended Surau semantic colors, mirroring
+ * `MaterialTheme.colorScheme`. Use as `SurauTheme.colors.separator`.
+ */
+object SurauTheme {
+    val colors: SurauSemanticColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalSurauColors.current
+}

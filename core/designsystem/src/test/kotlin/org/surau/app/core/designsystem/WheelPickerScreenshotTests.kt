@@ -1,0 +1,88 @@
+/*
+ * Copyright 2025 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.surau.app.core.designsystem
+
+import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.unit.dp
+import dagger.hilt.android.testing.HiltTestApplication
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+import org.robolectric.annotation.LooperMode
+import org.surau.app.core.designsystem.component.SurauTimePickerField
+import org.surau.app.core.designsystem.component.SurauWheelPicker
+import org.surau.app.core.designsystem.component.SurauWheelTimePicker
+import org.surau.app.core.testing.util.captureMultiTheme
+import java.time.LocalTime
+
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(application = HiltTestApplication::class, qualifiers = "480dpi")
+@LooperMode(LooperMode.Mode.PAUSED)
+class WheelPickerScreenshotTests {
+
+    @get:Rule
+    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+    @Test
+    fun wheelPicker_multipleThemes() {
+        composeTestRule.captureMultiTheme("WheelPicker") {
+            Surface {
+                SurauWheelPicker(
+                    items = (1..12).toList(),
+                    selectedIndex = 3,
+                    onSelectedIndexChange = {},
+                    modifier = Modifier.width(96.dp).padding(8.dp),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun wheelTimePicker_multipleThemes() {
+        composeTestRule.captureMultiTheme("WheelTimePicker") {
+            Surface {
+                SurauWheelTimePicker(
+                    value = LocalTime.of(9, 30),
+                    onValueChange = {},
+                    modifier = Modifier.width(240.dp).padding(8.dp),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun timePickerField_multipleThemes() {
+        composeTestRule.captureMultiTheme("TimePickerField") {
+            Surface {
+                SurauTimePickerField(
+                    value = LocalTime.of(9, 30),
+                    onClick = {},
+                    modifier = Modifier.width(240.dp).padding(16.dp),
+                )
+            }
+        }
+    }
+}
