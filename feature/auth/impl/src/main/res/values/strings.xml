@@ -31,6 +31,7 @@
     <string name="feature_auth_impl_email_invalid">Format email tidak valid</string>
     <string name="feature_auth_impl_password_too_short">Kata sandi minimal 8 karakter</string>
     <string name="feature_auth_impl_invalid_credentials">Email atau kata sandi salah</string>
+    <string name="feature_auth_impl_email_exists">Email sudah terdaftar. Silakan masuk.</string>
     <string name="feature_auth_impl_rate_limited">Terlalu banyak percobaan. Coba lagi dalam %1$d detik.</string>
     <string name="feature_auth_impl_generic_error">Terjadi kesalahan. Coba lagi.</string>
     <string name="feature_auth_impl_offline_error">Tidak ada koneksi internet.</string>
