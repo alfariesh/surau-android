@@ -17,6 +17,7 @@
 package org.surau.app.feature.quran.impl
 
 import androidx.activity.compose.ReportDrawnWhen
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,7 +31,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -47,10 +47,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.surau.app.core.designsystem.component.SurauButton
@@ -58,8 +63,9 @@ import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauTab
 import org.surau.app.core.designsystem.component.SurauTabRow
 import org.surau.app.core.designsystem.icon.SurauIcons
+import org.surau.app.core.designsystem.theme.SurahNameFontFamily
 import org.surau.app.core.designsystem.theme.SurauTheme
-import org.surau.app.core.designsystem.theme.UthmanicHafsFontFamily
+import org.surau.app.core.designsystem.theme.surahNameGlyphCode
 import org.surau.app.core.domain.LastRead
 import org.surau.app.core.model.data.quran.JuzSegment
 import org.surau.app.core.model.data.quran.RevelationType
@@ -279,11 +285,15 @@ private fun SurahListItem(
             )
         },
         trailingContent = {
+            // The Surah Name font encodes each name as a `surahNNN` ligature, so we render the
+            // glyph token rather than the raw Arabic; nameArabic stays as the spoken description.
             Text(
-                text = surah.nameArabic,
-                fontFamily = UthmanicHafsFontFamily,
-                style = MaterialTheme.typography.titleLarge,
+                text = surahNameGlyphCode(surah.surahId),
+                fontFamily = SurahNameFontFamily,
+                fontSize = 36.sp,
+                lineHeight = 36.sp,
                 color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.semantics { contentDescription = surah.nameArabic },
             )
         },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -328,16 +338,19 @@ private fun JuzListItem(
 @Composable
 private fun SurahNumberMedallion(number: Int) {
     Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.secondaryContainer),
+        modifier = Modifier.size(44.dp),
         contentAlignment = Alignment.Center,
     ) {
+        Image(
+            painter = painterResource(R.drawable.feature_quran_impl_surah_medallion),
+            contentDescription = null,
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+            modifier = Modifier.fillMaxSize(),
+        )
         Text(
             text = number.toString(),
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
