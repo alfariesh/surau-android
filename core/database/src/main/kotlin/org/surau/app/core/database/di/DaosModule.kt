@@ -24,6 +24,7 @@ import org.surau.app.core.database.SurauDatabase
 import org.surau.app.core.database.dao.AyahDao
 import org.surau.app.core.database.dao.JuzDao
 import org.surau.app.core.database.dao.ReadingProgressDao
+import org.surau.app.core.database.dao.RecitationDao
 import org.surau.app.core.database.dao.SurahDao
 import org.surau.app.core.database.dao.TranslationSourceDao
 
@@ -44,6 +45,11 @@ internal object DaosModule {
     fun providesTranslationSourceDao(
         database: SurauDatabase,
     ): TranslationSourceDao = database.translationSourceDao()
+
+    @Provides
+    fun providesRecitationDao(
+        database: SurauDatabase,
+    ): RecitationDao = database.recitationDao()
 
     @Provides
     fun providesJuzDao(

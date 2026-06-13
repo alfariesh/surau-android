@@ -22,12 +22,14 @@ import androidx.room.TypeConverters
 import org.surau.app.core.database.dao.AyahDao
 import org.surau.app.core.database.dao.JuzDao
 import org.surau.app.core.database.dao.ReadingProgressDao
+import org.surau.app.core.database.dao.RecitationDao
 import org.surau.app.core.database.dao.SurahDao
 import org.surau.app.core.database.dao.TranslationSourceDao
 import org.surau.app.core.database.model.AyahEntity
 import org.surau.app.core.database.model.AyahFetchMetadataEntity
 import org.surau.app.core.database.model.JuzEntity
 import org.surau.app.core.database.model.ReadingProgressEntity
+import org.surau.app.core.database.model.RecitationEntity
 import org.surau.app.core.database.model.SurahEntity
 import org.surau.app.core.database.model.TranslationEntity
 import org.surau.app.core.database.model.TranslationSourceEntity
@@ -41,11 +43,12 @@ import org.surau.app.core.database.util.InstantConverter
         TranslationEntity::class,
         TransliterationEntity::class,
         TranslationSourceEntity::class,
+        RecitationEntity::class,
         JuzEntity::class,
         ReadingProgressEntity::class,
         AyahFetchMetadataEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(
@@ -55,6 +58,7 @@ abstract class SurauDatabase : RoomDatabase() {
     abstract fun surahDao(): SurahDao
     abstract fun ayahDao(): AyahDao
     abstract fun translationSourceDao(): TranslationSourceDao
+    abstract fun recitationDao(): RecitationDao
     abstract fun juzDao(): JuzDao
     abstract fun readingProgressDao(): ReadingProgressDao
 }
