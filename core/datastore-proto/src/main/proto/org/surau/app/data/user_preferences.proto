@@ -41,5 +41,10 @@ message UserPreferences {
     // Whether the first-launch welcome screen has been shown.
     bool welcome_shown = 25;
 
-    // NEXT AVAILABLE ID: 26
+    // Flow (immersive surah-mode reader) preferences — local-only, not synced to the backend.
+    // Flow Arabic font scale multiplied by 100 (100 = 1.0x). 0 means unset.
+    int32 flow_arabic_font_scale_percent = 26;
+    bool flow_show_translation = 27;
+
+    // NEXT AVAILABLE ID: 28
 }

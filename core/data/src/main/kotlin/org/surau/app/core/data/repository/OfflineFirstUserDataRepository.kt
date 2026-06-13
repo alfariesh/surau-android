@@ -58,6 +58,14 @@ internal class OfflineFirstUserDataRepository @Inject constructor(
         surauPreferencesDataSource.setArabicFontScale(scale)
     }
 
+    override suspend fun setFlowArabicFontScale(scale: Float) {
+        surauPreferencesDataSource.setFlowArabicFontScale(scale)
+    }
+
+    override suspend fun setFlowShowTranslation(show: Boolean) {
+        surauPreferencesDataSource.setFlowShowTranslation(show)
+    }
+
     override suspend fun setWelcomeShown(shown: Boolean) {
         surauPreferencesDataSource.setWelcomeShown(shown)
     }

@@ -59,6 +59,16 @@ interface UserDataRepository {
     suspend fun setArabicFontScale(scale: Float)
 
     /**
+     * Sets the immersive Flow reader's Arabic font scale (1.0 = default). Local-only.
+     */
+    suspend fun setFlowArabicFontScale(scale: Float)
+
+    /**
+     * Sets whether the immersive Flow reader shows the translation. Local-only.
+     */
+    suspend fun setFlowShowTranslation(show: Boolean)
+
+    /**
      * Marks the first-launch welcome screen as shown.
      */
     suspend fun setWelcomeShown(shown: Boolean)

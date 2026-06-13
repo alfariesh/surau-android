@@ -82,6 +82,18 @@ class TestUserDataRepository : UserDataRepository {
         }
     }
 
+    override suspend fun setFlowArabicFontScale(scale: Float) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(flowArabicFontScale = scale))
+        }
+    }
+
+    override suspend fun setFlowShowTranslation(show: Boolean) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(flowShowTranslation = show))
+        }
+    }
+
     override suspend fun setWelcomeShown(shown: Boolean) {
         currentUserData.let { current ->
             _userData.tryEmit(current.copy(welcomeShown = shown))
