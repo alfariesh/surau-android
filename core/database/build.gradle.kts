@@ -24,6 +24,12 @@ plugins {
 android {
     namespace = "org.surau.app.core.database"
     testOptions.unitTests.isIncludeAndroidResources = true
+    // Bundle the exported Room schemas into the test APK so MigrationTestHelper can read them.
+    sourceSets {
+        getByName("androidTest") {
+            assets.srcDirs(files("$projectDir/schemas"))
+        }
+    }
 }
 
 dependencies {
@@ -34,4 +40,8 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
+
+    androidTestImplementation(libs.androidx.test.ext)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.room.testing)
 }

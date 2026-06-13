@@ -27,6 +27,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.surau.app.core.data.test.QuranTestData
 import org.surau.app.core.domain.ReaderContent
+import org.surau.app.core.media.PlayerUiState
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.testing.util.captureMultiTheme
 
@@ -67,6 +68,42 @@ class QuranScreenshotTests {
     @Test
     fun surahReader_translationOnly() {
         captureReader("SurahReaderTranslationOnly", ReaderMode.TRANSLATION_ONLY)
+    }
+
+    @Test
+    fun surahReader_playing() {
+        composeTestRule.captureMultiTheme(
+            name = "SurahReaderPlaying",
+            shouldCompareDynamicColor = false,
+        ) {
+            SurahReaderScreen(
+                uiState = ReaderUiState.Success(
+                    content = ReaderContent(
+                        surah = QuranTestData.surahs.first(),
+                        ayahs = QuranTestData.ayahsBySurah.getValue(1),
+                        readerMode = ReaderMode.ARABIC_TRANSLATION,
+                        arabicFontScale = 1f,
+                        translationSourceId = QuranTestData.TEST_TRANSLATION_SOURCE_ID,
+                    ),
+                    initialAyahNumber = null,
+                ),
+                onBackClick = {},
+                onAyahVisible = {},
+                onReaderModeChange = {},
+                onFontScaleChange = {},
+                onTranslationSourceChange = {},
+                translationSources = QuranTestData.translationSources,
+                playingAyah = 2,
+                playerState = PlayerUiState(
+                    isPlaying = true,
+                    surahId = 1,
+                    currentAyahNumber = 2,
+                    recitationName = "Mishari Rashid Al-Afasy",
+                    positionMs = 1_500,
+                    durationMs = 3_000,
+                ),
+            )
+        }
     }
 
     private fun captureReader(name: String, readerMode: ReaderMode) {
