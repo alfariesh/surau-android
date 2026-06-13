@@ -43,6 +43,7 @@ graph TB
     :core:datastore-proto[datastore-proto]:::jvm-library
     :core:designsystem[designsystem]:::android-library
     :core:domain[domain]:::android-library
+    :core:media[media]:::android-library
     :core:model[model]:::jvm-library
     :core:navigation[navigation]:::android-library
     :core:network[network]:::android-library
@@ -56,6 +57,7 @@ graph TB
   :app -.-> :core:common
   :app -.-> :core:data
   :app -.-> :core:designsystem
+  :app -.-> :core:media
   :app -.-> :core:model
   :app -.-> :core:navigation
   :app -.-> :core:ui
@@ -77,6 +79,7 @@ graph TB
   :core:datastore --> :core:model
   :core:domain --> :core:data
   :core:domain --> :core:model
+  :core:media --> :core:model
   :core:network --> :core:common
   :core:network --> :core:model
   :core:ui --> :core:analytics
@@ -93,6 +96,7 @@ graph TB
   :feature:quran:impl -.-> :core:data
   :feature:quran:impl -.-> :core:designsystem
   :feature:quran:impl -.-> :core:domain
+  :feature:quran:impl -.-> :core:media
   :feature:quran:impl -.-> :core:model
   :feature:quran:impl -.-> :core:ui
   :feature:quran:impl --> :feature:quran:api
