@@ -23,7 +23,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class MigrationTest {
@@ -66,7 +65,7 @@ class MigrationTest {
     }
 
     @Test
-    fun migrate2To3_addsModeColumn_andKeepsExistingData() {
+    fun migrate2To3_addsModeColumn_andClearsStaleCache() {
         helper.createDatabase(TEST_DB, 2).apply {
             execSQL(
                 "INSERT INTO recitations " +
@@ -83,14 +82,18 @@ class MigrationTest {
             SurauDatabaseMigrations.MIGRATION_2_3,
         )
 
-        // The new `mode` column exists and is NULL for the pre-migration row.
-        db.query("SELECT mode FROM recitations WHERE id = 'mishari'").use { cursor ->
+        // The pre-`mode` cache row is cleared so the catalog refetches and backfills `mode`.
+        db.query("SELECT COUNT(*) FROM recitations").use { cursor ->
             cursor.moveToFirst()
-            assertTrue(cursor.isNull(0))
+            assertEquals(0, cursor.getInt(0))
         }
-        // ...and is writable.
-        db.execSQL("UPDATE recitations SET mode = 'surah' WHERE id = 'mishari'")
-        db.query("SELECT mode FROM recitations WHERE id = 'mishari'").use { cursor ->
+        // The new `mode` column exists and is writable.
+        db.execSQL(
+            "INSERT INTO recitations " +
+                "(id, display_name, reciter_name, style, mode, is_default, fetched_at) " +
+                "VALUES ('yasser', 'Yasser', 'Yasser', NULL, 'surah', 0, 1)",
+        )
+        db.query("SELECT mode FROM recitations WHERE id = 'yasser'").use { cursor ->
             cursor.moveToFirst()
             assertEquals("surah", cursor.getString(0))
         }
