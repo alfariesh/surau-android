@@ -106,6 +106,40 @@ class QuranScreenshotTests {
         }
     }
 
+    @Test
+    fun surahFlow_activeAyahCentered() {
+        composeTestRule.captureMultiTheme(
+            name = "SurahFlow",
+            shouldCompareDynamicColor = false,
+        ) {
+            SurahFlowScreen(
+                uiState = FlowUiState.Success(
+                    ayahs = QuranTestData.ayahsBySurah.getValue(1),
+                    surahName = "Al-Fatihah",
+                    translationSourceId = QuranTestData.TEST_TRANSLATION_SOURCE_ID,
+                ),
+                playingAyah = 4,
+                playerState = PlayerUiState(
+                    isPlaying = true,
+                    surahId = 1,
+                    currentAyahNumber = 4,
+                    recitationName = "Yasser Al-Dosari",
+                    positionMs = 7_000,
+                    durationMs = 12_000,
+                ),
+                fontScale = 1f,
+                showTranslation = false,
+                onBackClick = {},
+                onPlayPause = {},
+                onNext = {},
+                onPrevious = {},
+                onSeekToAyah = {},
+                onSetFontScale = {},
+                onToggleTranslation = {},
+            )
+        }
+    }
+
     private fun captureReader(name: String, readerMode: ReaderMode) {
         composeTestRule.captureMultiTheme(
             name = name,

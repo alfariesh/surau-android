@@ -56,4 +56,8 @@
     <string name="feature_quran_impl_now_playing">%1$s • Ayat %2$d</string>
     <string name="feature_quran_impl_audio_offline">Audio tidak tersedia saat offline.</string>
     <string name="feature_quran_impl_audio_partial">Sebagian ayat tidak memiliki audio.</string>
+    <string name="feature_quran_impl_flow">Flow</string>
+    <string name="feature_quran_impl_flow_settings">Pengaturan Flow</string>
+    <string name="feature_quran_impl_flow_font_size">Ukuran huruf</string>
+    <string name="feature_quran_impl_flow_show_translation">Tampilkan terjemahan</string>
 </resources>
