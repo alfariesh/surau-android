@@ -63,6 +63,16 @@ internal class OfflineFirstQuranAudioRepository @Inject constructor(
             ?: recitations.firstOrNull()?.id
     }
 
+    override suspend fun resolveRecitationId(preferredId: String?, requiredMode: String): String? {
+        refreshRecitationsIfNeeded()
+        val recitations = recitationDao.observeAll().first()
+            .map(RecitationEntity::asExternalModel)
+            .filter { it.mode == requiredMode }
+        return recitations.firstOrNull { it.id == preferredId }?.id
+            ?: recitations.firstOrNull { it.isDefault }?.id
+            ?: recitations.firstOrNull()?.id
+    }
+
     override suspend fun audioManifest(surahId: Int, recitationId: String?): SurahAudioManifest =
         apiCall { quranApi.surahAudio(surahId = surahId, recitationId = recitationId) }
             .asExternalModel()
@@ -90,6 +100,7 @@ internal class OfflineFirstQuranAudioRepository @Inject constructor(
                         displayName = dto.displayName,
                         reciterName = dto.reciterName,
                         style = dto.style,
+                        mode = dto.mode,
                         isDefault = dto.isDefault,
                         fetchedAt = now,
                     )

@@ -39,6 +39,9 @@ internal object DatabaseModule {
         SurauDatabase::class.java,
         "surau-database",
     )
-        .addMigrations(SurauDatabaseMigrations.MIGRATION_1_2)
+        .addMigrations(
+            SurauDatabaseMigrations.MIGRATION_1_2,
+            SurauDatabaseMigrations.MIGRATION_2_3,
+        )
         .build()
 }

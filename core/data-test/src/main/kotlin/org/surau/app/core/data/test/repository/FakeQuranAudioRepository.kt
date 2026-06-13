@@ -45,6 +45,13 @@ class FakeQuranAudioRepository @Inject constructor() : QuranAudioRepository {
             ?: recitations.value.firstOrNull { it.isDefault }?.id
             ?: recitations.value.firstOrNull()?.id
 
+    override suspend fun resolveRecitationId(preferredId: String?, requiredMode: String): String? {
+        val matching = recitations.value.filter { it.mode == requiredMode }
+        return matching.firstOrNull { it.id == preferredId }?.id
+            ?: matching.firstOrNull { it.isDefault }?.id
+            ?: matching.firstOrNull()?.id
+    }
+
     override suspend fun audioManifest(surahId: Int, recitationId: String?): SurahAudioManifest {
         manifestError?.let { throw it }
         return manifest

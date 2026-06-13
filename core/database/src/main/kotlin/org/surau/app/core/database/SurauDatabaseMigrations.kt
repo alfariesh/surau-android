@@ -40,4 +40,14 @@ internal object SurauDatabaseMigrations {
             )
         }
     }
+
+    /**
+     * v2 → v3: adds the nullable `mode` column ("ayah"/"surah") to `recitations` so the immersive
+     * Flow reader can pick the surah-mode reciter. Purely additive.
+     */
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE recitations ADD COLUMN mode TEXT")
+        }
+    }
 }

@@ -23,6 +23,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class MigrationTest {
@@ -60,6 +61,38 @@ class MigrationTest {
         db.query("SELECT COUNT(*) FROM translation_sources").use { cursor ->
             cursor.moveToFirst()
             assertEquals(1, cursor.getInt(0))
+        }
+        db.close()
+    }
+
+    @Test
+    fun migrate2To3_addsModeColumn_andKeepsExistingData() {
+        helper.createDatabase(TEST_DB, 2).apply {
+            execSQL(
+                "INSERT INTO recitations " +
+                    "(id, display_name, reciter_name, style, is_default, fetched_at) " +
+                    "VALUES ('mishari', 'Mishari', 'Mishari', 'murattal', 1, 0)",
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(
+            TEST_DB,
+            3,
+            true,
+            SurauDatabaseMigrations.MIGRATION_2_3,
+        )
+
+        // The new `mode` column exists and is NULL for the pre-migration row.
+        db.query("SELECT mode FROM recitations WHERE id = 'mishari'").use { cursor ->
+            cursor.moveToFirst()
+            assertTrue(cursor.isNull(0))
+        }
+        // ...and is writable.
+        db.execSQL("UPDATE recitations SET mode = 'surah' WHERE id = 'mishari'")
+        db.query("SELECT mode FROM recitations WHERE id = 'mishari'").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals("surah", cursor.getString(0))
         }
         db.close()
     }

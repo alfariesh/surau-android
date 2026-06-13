@@ -37,6 +37,13 @@ interface QuranAudioRepository {
     suspend fun resolveRecitationId(preferredId: String?): String?
 
     /**
+     * Like [resolveRecitationId] but restricted to recitations whose [Recitation.mode] equals
+     * [requiredMode] (e.g. `"surah"` for the immersive Flow reader). [preferredId] is honoured only
+     * when its recitation also matches [requiredMode]. Returns `null` if none is cached.
+     */
+    suspend fun resolveRecitationId(preferredId: String?, requiredMode: String): String?
+
+    /**
      * The audio manifest for [surahId] using [recitationId] (or the backend default when `null`).
      * Always network-only.
      *

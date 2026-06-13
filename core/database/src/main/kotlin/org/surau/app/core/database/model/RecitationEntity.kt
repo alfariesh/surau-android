@@ -34,6 +34,8 @@ data class RecitationEntity(
     @ColumnInfo(name = "reciter_name")
     val reciterName: String,
     val style: String?,
+    @ColumnInfo(name = "mode")
+    val mode: String?,
     @ColumnInfo(name = "is_default")
     val isDefault: Boolean,
     @ColumnInfo(name = "fetched_at")
@@ -45,5 +47,6 @@ fun RecitationEntity.asExternalModel() = Recitation(
     displayName = displayName,
     reciterName = reciterName,
     style = style,
+    mode = mode,
     isDefault = isDefault,
 )
