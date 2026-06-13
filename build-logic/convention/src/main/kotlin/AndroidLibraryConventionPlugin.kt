@@ -16,24 +16,25 @@
 
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.google.samples.apps.nowinandroid.configureFlavors
-import com.google.samples.apps.nowinandroid.configureGradleManagedDevices
-import com.google.samples.apps.nowinandroid.configureKotlinAndroid
-import com.google.samples.apps.nowinandroid.configurePrintApksTask
-import com.google.samples.apps.nowinandroid.configureSpotlessForAndroid
-import com.google.samples.apps.nowinandroid.disableUnnecessaryAndroidTests
-import com.google.samples.apps.nowinandroid.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.withType
+import org.surau.app.configureGradleManagedDevices
+import org.surau.app.configureKotlinAndroid
+import org.surau.app.configurePrintApksTask
+import org.surau.app.configureSpotlessForAndroid
+import org.surau.app.disableUnnecessaryAndroidTests
+import org.surau.app.libs
 
 abstract class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             apply(plugin = "com.android.library")
-            apply(plugin = "nowinandroid.android.lint")
+            apply(plugin = "surau.android.lint")
 
             extensions.configure<LibraryExtension> {
                 configureKotlinAndroid(this)
@@ -41,7 +42,6 @@ abstract class AndroidLibraryConventionPlugin : Plugin<Project> {
                 lint.targetSdk = 36
                 defaultConfig.testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 testOptions.animationsDisabled = true
-                configureFlavors(this)
                 configureGradleManagedDevices(this)
                 // The resource prefix is derived from the module name,
                 // so resources inside ":core:module1" must be prefixed with "core_module1_"
@@ -52,6 +52,10 @@ abstract class AndroidLibraryConventionPlugin : Plugin<Project> {
             extensions.configure<LibraryAndroidComponentsExtension> {
                 configurePrintApksTask(this)
                 disableUnnecessaryAndroidTests(target)
+            }
+            // Modules are allowed to have no unit tests (yet) without failing the build.
+            tasks.withType<Test>().configureEach {
+                failOnNoDiscoveredTests.set(false)
             }
             configureSpotlessForAndroid()
             dependencies {

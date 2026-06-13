@@ -22,7 +22,6 @@ graph TB
     :core:datastore-proto[datastore-proto]:::jvm-library
     :core:model[model]:::jvm-library
     :core:network[network]:::android-library
-    :core:notifications[notifications]:::android-library
   end
 
   :core:data -.-> :core:analytics
@@ -30,7 +29,6 @@ graph TB
   :core:data --> :core:database
   :core:data --> :core:datastore
   :core:data --> :core:network
-  :core:data -.-> :core:notifications
   :core:data-test --> :core:data
   :core:database --> :core:model
   :core:datastore -.-> :core:common
@@ -38,8 +36,6 @@ graph TB
   :core:datastore --> :core:model
   :core:network --> :core:common
   :core:network --> :core:model
-  :core:notifications -.-> :core:common
-  :core:notifications --> :core:model
 
 classDef android-application fill:#CAFFBF,stroke:#000,stroke-width:2px,color:#000;
 classDef android-feature fill:#FFD6A5,stroke:#000,stroke-width:2px,color:#000;

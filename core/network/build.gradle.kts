@@ -19,9 +19,9 @@ import java.io.StringReader
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.nowinandroid.android.library)
-    alias(libs.plugins.nowinandroid.android.library.jacoco)
-    alias(libs.plugins.nowinandroid.hilt)
+    alias(libs.plugins.surau.android.library)
+    alias(libs.plugins.surau.android.library.jacoco)
+    alias(libs.plugins.surau.hilt)
     id("kotlinx-serialization")
 }
 
@@ -29,7 +29,7 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    namespace = "com.google.samples.apps.nowinandroid.core.network"
+    namespace = "org.surau.app.core.network"
     testOptions.unitTests.isIncludeAndroidResources = true
 }
 
@@ -46,6 +46,8 @@ dependencies {
     implementation(libs.retrofit.kotlin.serialization)
 
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.retrofit.kotlin.serialization)
 }
 
 val backendUrl = providers.fileContents(
@@ -54,7 +56,7 @@ val backendUrl = providers.fileContents(
     val properties = Properties()
     properties.load(StringReader(text))
     properties["BACKEND_URL"]
-}.orElse("http://example.com")
+}.orElse("https://api.surau.org/v1/")
 
 androidComponents {
     onVariants {

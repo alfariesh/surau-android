@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 plugins {
-    alias(libs.plugins.nowinandroid.android.library)
-    alias(libs.plugins.nowinandroid.android.library.compose)
-    alias(libs.plugins.nowinandroid.android.library.jacoco)
+    alias(libs.plugins.surau.android.library)
+    alias(libs.plugins.surau.android.library.compose)
+    alias(libs.plugins.surau.android.library.jacoco)
     alias(libs.plugins.roborazzi)
 }
 
 android {
-    namespace = "com.google.samples.apps.nowinandroid.core.designsystem"
+    namespace = "org.surau.app.core.designsystem"
     testOptions.unitTests.isIncludeAndroidResources = true
 }
 

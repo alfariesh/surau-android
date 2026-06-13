@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright 2025 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <string name="feature_auth_impl_welcome_title">Assalamu\'alaikum</string>
+    <string name="feature_auth_impl_welcome_subtitle">Baca Al-Qur\'an kapan saja. Masuk untuk menyimpan progres bacaan Anda di semua perangkat.</string>
+    <string name="feature_auth_impl_continue_as_guest">Lanjut sebagai tamu</string>
+    <string name="feature_auth_impl_sign_in">Masuk</string>
+    <string name="feature_auth_impl_sign_in_title">Masuk ke Surau</string>
+    <string name="feature_auth_impl_register">Daftar</string>
+    <string name="feature_auth_impl_register_title">Buat akun</string>
+    <string name="feature_auth_impl_no_account">Belum punya akun?</string>
+    <string name="feature_auth_impl_have_account">Sudah punya akun?</string>
+    <string name="feature_auth_impl_email">Email</string>
+    <string name="feature_auth_impl_password">Kata sandi</string>
+    <string name="feature_auth_impl_display_name">Nama (opsional)</string>
+    <string name="feature_auth_impl_forgot_password">Lupa kata sandi?</string>
+    <string name="feature_auth_impl_email_invalid">Format email tidak valid</string>
+    <string name="feature_auth_impl_password_too_short">Kata sandi minimal 8 karakter</string>
+    <string name="feature_auth_impl_invalid_credentials">Email atau kata sandi salah</string>
+    <string name="feature_auth_impl_rate_limited">Terlalu banyak percobaan. Coba lagi dalam %1$d detik.</string>
+    <string name="feature_auth_impl_generic_error">Terjadi kesalahan. Coba lagi.</string>
+    <string name="feature_auth_impl_offline_error">Tidak ada koneksi internet.</string>
+    <string name="feature_auth_impl_verify_title">Verifikasi email</string>
+    <string name="feature_auth_impl_verify_subtitle">Masukkan 6 digit kode yang kami kirim ke %1$s</string>
+    <string name="feature_auth_impl_otp">Kode verifikasi</string>
+    <string name="feature_auth_impl_verify">Verifikasi</string>
+    <string name="feature_auth_impl_verified_title">Email terverifikasi</string>
+    <string name="feature_auth_impl_verified_subtitle">Silakan masuk dengan akun Anda.</string>
+    <string name="feature_auth_impl_resend">Kirim ulang kode</string>
+    <string name="feature_auth_impl_resend_in">Kirim ulang dalam %1$d dtk</string>
+    <string name="feature_auth_impl_resend_sent">Kode baru telah dikirim</string>
+    <string name="feature_auth_impl_otp_invalid">Kode harus 6 digit angka</string>
+    <string name="feature_auth_impl_forgot_title">Atur ulang kata sandi</string>
+    <string name="feature_auth_impl_forgot_subtitle">Masukkan email Anda. Kami akan mengirim tautan dan token untuk mengatur ulang kata sandi.</string>
+    <string name="feature_auth_impl_send">Kirim</string>
+    <string name="feature_auth_impl_forgot_sent">Periksa email Anda. Setelah menerima token, lanjutkan di bawah ini.</string>
+    <string name="feature_auth_impl_enter_token">Saya sudah punya token</string>
+    <string name="feature_auth_impl_reset_title">Kata sandi baru</string>
+    <string name="feature_auth_impl_reset_token">Token</string>
+    <string name="feature_auth_impl_new_password">Kata sandi baru</string>
+    <string name="feature_auth_impl_reset">Atur ulang</string>
+    <string name="feature_auth_impl_reset_done">Kata sandi berhasil diubah. Silakan masuk.</string>
+    <string name="feature_auth_impl_token_required">Token wajib diisi</string>
+    <string name="feature_auth_impl_back">Kembali</string>
+    <string name="feature_auth_impl_show_password">Tampilkan kata sandi</string>
+    <string name="feature_auth_impl_hide_password">Sembunyikan kata sandi</string>
+</resources>

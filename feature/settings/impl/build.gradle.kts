@@ -15,21 +15,29 @@
  */
 
 plugins {
-    alias(libs.plugins.nowinandroid.android.feature.impl)
-    alias(libs.plugins.nowinandroid.android.library.compose)
-    alias(libs.plugins.nowinandroid.android.library.jacoco)
+    alias(libs.plugins.surau.android.feature.impl)
+    alias(libs.plugins.surau.android.library.compose)
+    alias(libs.plugins.surau.android.library.jacoco)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
-    namespace = "com.google.samples.apps.nowinandroid.feature.settings.impl"
+    namespace = "org.surau.app.feature.settings.impl"
+    testOptions.unitTests.isIncludeAndroidResources = true
 }
 
 dependencies {
-    implementation(libs.androidx.appcompat)
-    implementation(libs.google.oss.licenses)
+    api(projects.feature.settings.api)
+
     implementation(projects.core.data)
+    implementation(projects.core.model)
 
+    testImplementation(projects.core.dataTest)
+    testImplementation(projects.core.datastoreTest)
+    testImplementation(projects.core.screenshotTesting)
     testImplementation(projects.core.testing)
-
-    androidTestImplementation(libs.bundles.androidx.compose.ui.test)
+    testImplementation(libs.hilt.android.testing)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
 }

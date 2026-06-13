@@ -1,0 +1,45 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+import "org/surau/app/data/dark_theme_config.proto";
+import "org/surau/app/data/reader_mode.proto";
+
+option java_package = "org.surau.app.core.datastore";
+option java_multiple_files = true;
+
+message UserPreferences {
+    // Field numbers 1-16, 18, 20 were used by the Now in Android news domain
+    // (followed topics, bookmarks, change list versions, theme brand, onboarding).
+    reserved 1 to 16, 18, 20;
+
+    DarkThemeConfigProto dark_theme_config = 17;
+
+    bool use_dynamic_color = 19;
+
+    // Quran reader preferences.
+    ReaderModeProto reader_mode = 21;
+    string translation_source_id = 22;
+    string recitation_id = 23;
+    // Arabic font scale multiplied by 100 (100 = 1.0x). 0 means unset.
+    int32 arabic_font_scale_percent = 24;
+
+    // Whether the first-launch welcome screen has been shown.
+    bool welcome_shown = 25;
+
+    // NEXT AVAILABLE ID: 26
+}

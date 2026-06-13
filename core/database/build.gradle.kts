@@ -15,14 +15,15 @@
  */
 
 plugins {
-    alias(libs.plugins.nowinandroid.android.library)
-    alias(libs.plugins.nowinandroid.android.library.jacoco)
-    alias(libs.plugins.nowinandroid.android.room)
-    alias(libs.plugins.nowinandroid.hilt)
+    alias(libs.plugins.surau.android.library)
+    alias(libs.plugins.surau.android.library.jacoco)
+    alias(libs.plugins.surau.android.room)
+    alias(libs.plugins.surau.hilt)
 }
 
 android {
-    namespace = "com.google.samples.apps.nowinandroid.core.database"
+    namespace = "org.surau.app.core.database"
+    testOptions.unitTests.isIncludeAndroidResources = true
 }
 
 dependencies {
@@ -30,7 +31,7 @@ dependencies {
 
     implementation(libs.kotlinx.datetime)
 
-    androidTestImplementation(libs.androidx.test.core)
-    androidTestImplementation(libs.androidx.test.runner)
-    androidTestImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
 }

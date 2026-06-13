@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 plugins {
-    alias(libs.plugins.nowinandroid.android.library)
-    alias(libs.plugins.nowinandroid.android.library.jacoco)
-    alias(libs.plugins.nowinandroid.hilt)
+    alias(libs.plugins.surau.android.library)
+    alias(libs.plugins.surau.android.library.jacoco)
+    alias(libs.plugins.surau.hilt)
     id("kotlinx-serialization")
 }
 
 android {
-    namespace = "com.google.samples.apps.nowinandroid.core.data"
+    namespace = "org.surau.app.core.data"
     testOptions.unitTests.isIncludeAndroidResources = true
 }
 
@@ -32,9 +32,13 @@ dependencies {
     api(projects.core.network)
 
     implementation(projects.core.analytics)
-    implementation(projects.core.notifications)
+    implementation(libs.retrofit.core)
 
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.room.runtime)
+    testImplementation(libs.room.ktx)
     testImplementation(libs.kotlinx.serialization.json)
     testImplementation(projects.core.datastoreTest)
     testImplementation(projects.core.testing)

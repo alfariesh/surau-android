@@ -13,36 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.google.samples.apps.nowinandroid.configureFlavors
-
 plugins {
     alias(libs.plugins.baselineprofile)
-    alias(libs.plugins.nowinandroid.android.test)
+    alias(libs.plugins.surau.android.test)
 }
 
 android {
-    namespace = "com.google.samples.apps.nowinandroid.benchmarks"
+    namespace = "org.surau.app.benchmarks"
 
     defaultConfig {
         minSdk = 28
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "APP_BUILD_TYPE_SUFFIX", "\"\"")
+        buildConfigField("String", "APP_FLAVOR_SUFFIX", "\"\"")
     }
 
     buildFeatures {
         buildConfig = true
-    }
-
-    // Use the same flavor dimensions as the application to allow generating Baseline Profiles on prod,
-    // which is more close to what will be shipped to users (no fake data), but has ability to run the
-    // benchmarks on demo, so we benchmark on stable data. 
-    configureFlavors(this) { flavor ->
-        buildConfigField(
-            "String",
-            "APP_FLAVOR_SUFFIX",
-            "\"${flavor.applicationIdSuffix ?: ""}\""
-        )
     }
 
     testOptions.managedDevices.localDevices {

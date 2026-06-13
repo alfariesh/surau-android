@@ -15,16 +15,16 @@
  */
 
 plugins {
-    alias(libs.plugins.nowinandroid.android.library)
-    alias(libs.plugins.nowinandroid.android.library.jacoco)
-    alias(libs.plugins.nowinandroid.hilt)
+    alias(libs.plugins.surau.android.library)
+    alias(libs.plugins.surau.android.library.jacoco)
+    alias(libs.plugins.surau.hilt)
 }
 
 android {
     defaultConfig {
         consumerProguardFiles("consumer-proguard-rules.pro")
     }
-    namespace = "com.google.samples.apps.nowinandroid.core.datastore"
+    namespace = "org.surau.app.core.datastore"
 }
 
 dependencies {

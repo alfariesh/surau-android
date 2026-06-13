@@ -13,49 +13,81 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.google.samples.apps.nowinandroid.NiaBuildType
+import org.surau.app.SurauBuildType
+import java.io.StringReader
+import java.util.Properties
 
 plugins {
-    alias(libs.plugins.nowinandroid.android.application)
-    alias(libs.plugins.nowinandroid.android.application.compose)
-    alias(libs.plugins.nowinandroid.android.application.flavors)
-    alias(libs.plugins.nowinandroid.android.application.jacoco)
-    alias(libs.plugins.nowinandroid.android.application.firebase)
-    alias(libs.plugins.nowinandroid.hilt)
-    alias(libs.plugins.google.osslicenses)
+    alias(libs.plugins.surau.android.application)
+    alias(libs.plugins.surau.android.application.compose)
+    alias(libs.plugins.surau.android.application.jacoco)
+    alias(libs.plugins.surau.hilt)
     alias(libs.plugins.baselineprofile)
     alias(libs.plugins.roborazzi)
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Release signing is sourced from local.properties (or matching env vars) so the keystore and its
+// passwords never enter version control. When unset — on CI or a fresh clone — the release build
+// falls back to the debug key so `assembleRelease` still works. See README → "Release signing".
+val localSigningProperties: Properties? = providers.fileContents(
+    isolated.rootProject.projectDirectory.file("local.properties"),
+).asText.map { text ->
+    Properties().apply { load(StringReader(text)) }
+}.orNull
+
+val signingProperty: (String) -> String? = { name ->
+    (localSigningProperties?.getProperty(name) ?: providers.environmentVariable(name).orNull)
+        ?.takeIf(String::isNotBlank)
+}
+
+val releaseStoreFilePath = signingProperty("RELEASE_STORE_FILE")
+
 android {
     defaultConfig {
-        applicationId = "com.google.samples.apps.nowinandroid"
-        versionCode = 8
-        versionName = "0.1.2" // X.Y.Z; X = Major, Y = minor, Z = Patch level
+        applicationId = "org.surau.app"
+        versionCode = 1
+        versionName = "0.1.0" // X.Y.Z; X = Major, Y = minor, Z = Patch level
 
         // Custom test runner to set up Hilt dependency graph
-        testInstrumentationRunner = "com.google.samples.apps.nowinandroid.core.testing.NiaTestRunner"
+        testInstrumentationRunner = "org.surau.app.core.testing.SurauTestRunner"
+    }
+
+    signingConfigs {
+        // Only declared when a keystore is configured; otherwise the release build below reuses
+        // the debug key so a fresh clone or CI can still produce a (debug-signed) release APK.
+        if (releaseStoreFilePath != null) {
+            create("release") {
+                storeFile = file(releaseStoreFilePath)
+                storePassword = signingProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = signingProperty("RELEASE_KEY_ALIAS")
+                keyPassword = signingProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         debug {
-            applicationIdSuffix = NiaBuildType.DEBUG.applicationIdSuffix
+            applicationIdSuffix = SurauBuildType.DEBUG.applicationIdSuffix
         }
         release {
             isMinifyEnabled = providers.gradleProperty("minifyWithR8")
                 .map(String::toBooleanStrict).getOrElse(true)
-            applicationIdSuffix = NiaBuildType.RELEASE.applicationIdSuffix
+            applicationIdSuffix = SurauBuildType.RELEASE.applicationIdSuffix
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),
                           "proguard-rules.pro")
 
-            // To publish on the Play store a private signing key is required, but to allow anyone
-            // who clones the code to sign and run the release variant, use the debug signing key.
-            // TODO: Abstract the signing configuration to a separate file to avoid hardcoding this.
-            signingConfig = signingConfigs.named("debug").get()
-            // Ensure Baseline Profile is fresh for release builds.
-            baselineProfile.automaticGenerationDuringBuild = true
+            // Use the real release key when local.properties/env provide one (see README →
+            // "Release signing"); otherwise fall back to the debug key so anyone can still build
+            // and run the release variant.
+            signingConfig = signingConfigs.getByName(
+                if (releaseStoreFilePath != null) "release" else "debug",
+            )
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     packaging {
@@ -64,20 +96,14 @@ android {
         }
     }
     testOptions.unitTests.isIncludeAndroidResources = true
-    namespace = "com.google.samples.apps.nowinandroid"
+    namespace = "org.surau.app"
 }
 
 dependencies {
-    implementation(projects.feature.interests.api)
-    implementation(projects.feature.interests.impl)
-    implementation(projects.feature.foryou.api)
-    implementation(projects.feature.foryou.impl)
-    implementation(projects.feature.bookmarks.api)
-    implementation(projects.feature.bookmarks.impl)
-    implementation(projects.feature.topic.api)
-    implementation(projects.feature.topic.impl)
-    implementation(projects.feature.search.api)
-    implementation(projects.feature.search.impl)
+    implementation(projects.feature.auth.api)
+    implementation(projects.feature.auth.impl)
+    implementation(projects.feature.quran.api)
+    implementation(projects.feature.quran.impl)
     implementation(projects.feature.settings.impl)
 
     implementation(projects.core.common)
@@ -85,6 +111,7 @@ dependencies {
     implementation(projects.core.designsystem)
     implementation(projects.core.data)
     implementation(projects.core.model)
+    implementation(projects.core.navigation)
     implementation(projects.core.analytics)
     implementation(projects.sync.work)
 
@@ -121,11 +148,11 @@ dependencies {
     testImplementation(projects.sync.syncTest)
     testImplementation(libs.kotlin.test)
 
-    testDemoImplementation(libs.androidx.navigation.testing)
-    testDemoImplementation(libs.robolectric)
-    testDemoImplementation(libs.roborazzi)
-    testDemoImplementation(projects.core.screenshotTesting)
-    testDemoImplementation(projects.core.testing)
+    testImplementation(libs.androidx.navigation.testing)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(projects.core.screenshotTesting)
+    testImplementation(projects.core.testing)
 
     androidTestImplementation(projects.core.testing)
     androidTestImplementation(projects.core.dataTest)
@@ -148,5 +175,5 @@ baselineProfile {
 }
 
 dependencyGuard {
-    configuration("prodReleaseRuntimeClasspath")
+    configuration("releaseRuntimeClasspath")
 }

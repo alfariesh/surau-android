@@ -14,22 +14,28 @@
  * limitations under the License.
  */
 
-import com.google.samples.apps.nowinandroid.configureKotlinJvm
-import com.google.samples.apps.nowinandroid.configureSpotlessForJvm
-import com.google.samples.apps.nowinandroid.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.withType
+import org.surau.app.configureKotlinJvm
+import org.surau.app.configureSpotlessForJvm
+import org.surau.app.libs
 
 abstract class JvmLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             apply(plugin = "org.jetbrains.kotlin.jvm")
-            apply(plugin = "nowinandroid.android.lint")
+            apply(plugin = "surau.android.lint")
 
             configureKotlinJvm()
             configureSpotlessForJvm()
+            // Modules are allowed to have no unit tests (yet) without failing the build.
+            tasks.withType<Test>().configureEach {
+                failOnNoDiscoveredTests.set(false)
+            }
             dependencies {
                 "testImplementation"(libs.findLibrary("kotlin.test").get())
             }

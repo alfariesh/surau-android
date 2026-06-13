@@ -15,11 +15,11 @@
  */
 
 import com.android.build.gradle.api.AndroidBasePlugin
-import com.google.samples.apps.nowinandroid.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.dependencies
+import org.surau.app.libs
 
 class HiltConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
