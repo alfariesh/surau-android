@@ -33,6 +33,7 @@ dependencies {
 
     implementation(projects.core.data)
     implementation(projects.core.domain)
+    implementation(projects.core.media)
     implementation(projects.core.model)
 
     testImplementation(projects.core.dataTest)

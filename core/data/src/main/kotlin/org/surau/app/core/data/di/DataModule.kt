@@ -24,9 +24,11 @@ import org.surau.app.core.data.auth.SessionTokenProvider
 import org.surau.app.core.data.repository.AuthRepository
 import org.surau.app.core.data.repository.DefaultAuthRepository
 import org.surau.app.core.data.repository.DefaultUserRepository
+import org.surau.app.core.data.repository.OfflineFirstQuranAudioRepository
 import org.surau.app.core.data.repository.OfflineFirstQuranProgressRepository
 import org.surau.app.core.data.repository.OfflineFirstQuranRepository
 import org.surau.app.core.data.repository.OfflineFirstUserDataRepository
+import org.surau.app.core.data.repository.QuranAudioRepository
 import org.surau.app.core.data.repository.QuranProgressRepository
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.UserDataRepository
@@ -65,6 +67,11 @@ abstract class DataModule {
     internal abstract fun bindsQuranRepository(
         quranRepository: OfflineFirstQuranRepository,
     ): QuranRepository
+
+    @Binds
+    internal abstract fun bindsQuranAudioRepository(
+        quranAudioRepository: OfflineFirstQuranAudioRepository,
+    ): QuranAudioRepository
 
     @Binds
     internal abstract fun bindsQuranProgressRepository(

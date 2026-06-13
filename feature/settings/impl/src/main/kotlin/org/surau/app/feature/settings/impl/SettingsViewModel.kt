@@ -25,12 +25,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.surau.app.core.data.repository.AuthRepository
+import org.surau.app.core.data.repository.QuranAudioRepository
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.data.repository.UserRepository
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.ReaderMode
+import org.surau.app.core.model.data.quran.Recitation
 import org.surau.app.core.model.data.quran.TranslationSource
 import org.surau.app.feature.settings.impl.SettingsUiState.Loading
 import org.surau.app.feature.settings.impl.SettingsUiState.Success
@@ -43,6 +45,7 @@ class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
     quranRepository: QuranRepository,
+    quranAudioRepository: QuranAudioRepository,
 ) : ViewModel() {
 
     val settingsUiState: StateFlow<SettingsUiState> =
@@ -50,17 +53,20 @@ class SettingsViewModel @Inject constructor(
             userDataRepository.userData,
             authRepository.authState,
             quranRepository.observeTranslationSources(),
-        ) { userData, authState, translationSources ->
+            quranAudioRepository.observeRecitations(),
+        ) { userData, authState, translationSources, recitations ->
             Success(
                 settings = UserEditableSettings(
                     useDynamicColor = userData.useDynamicColor,
                     darkThemeConfig = userData.darkThemeConfig,
                     readerMode = userData.readerMode,
                     translationSourceId = userData.translationSourceId,
+                    recitationId = userData.recitationId,
                     arabicFontScale = userData.arabicFontScale,
                 ),
                 authState = authState,
                 translationSources = translationSources,
+                recitations = recitations,
             )
         }
             .stateIn(
@@ -95,6 +101,13 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateRecitation(recitationId: String) {
+        viewModelScope.launch {
+            userDataRepository.setRecitationId(recitationId)
+            userRepository.pushReaderPreferences()
+        }
+    }
+
     fun updateArabicFontScale(scale: Float) {
         viewModelScope.launch {
             userDataRepository.setArabicFontScale(scale)
@@ -117,6 +130,7 @@ data class UserEditableSettings(
     val readerMode: ReaderMode,
     val translationSourceId: String?,
     val arabicFontScale: Float,
+    val recitationId: String? = null,
 )
 
 sealed interface SettingsUiState {
@@ -126,5 +140,6 @@ sealed interface SettingsUiState {
         val settings: UserEditableSettings,
         val authState: AuthState,
         val translationSources: List<TranslationSource>,
+        val recitations: List<Recitation> = emptyList(),
     ) : SettingsUiState
 }

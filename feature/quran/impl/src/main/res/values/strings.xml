@@ -47,4 +47,13 @@
     <string name="feature_quran_impl_copied">Ayat disalin</string>
     <string name="feature_quran_impl_back">Kembali</string>
     <string name="feature_quran_impl_page_indicator">Hal. %1$d</string>
+    <string name="feature_quran_impl_qari">Qari</string>
+    <string name="feature_quran_impl_play">Putar</string>
+    <string name="feature_quran_impl_pause">Jeda</string>
+    <string name="feature_quran_impl_previous_ayah">Ayat sebelumnya</string>
+    <string name="feature_quran_impl_next_ayah">Ayat berikutnya</string>
+    <string name="feature_quran_impl_follow_recitation">Ikuti bacaan</string>
+    <string name="feature_quran_impl_now_playing">%1$s • Ayat %2$d</string>
+    <string name="feature_quran_impl_audio_offline">Audio tidak tersedia saat offline.</string>
+    <string name="feature_quran_impl_audio_partial">Sebagian ayat tidak memiliki audio.</string>
 </resources>

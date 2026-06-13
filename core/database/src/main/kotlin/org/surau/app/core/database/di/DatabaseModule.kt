@@ -24,6 +24,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import org.surau.app.core.database.SurauDatabase
+import org.surau.app.core.database.SurauDatabaseMigrations
 import javax.inject.Singleton
 
 @Module
@@ -37,5 +38,7 @@ internal object DatabaseModule {
         context,
         SurauDatabase::class.java,
         "surau-database",
-    ).build()
+    )
+        .addMigrations(SurauDatabaseMigrations.MIGRATION_1_2)
+        .build()
 }

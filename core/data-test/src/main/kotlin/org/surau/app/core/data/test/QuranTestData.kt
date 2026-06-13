@@ -16,12 +16,16 @@
 
 package org.surau.app.core.data.test
 
+import org.surau.app.core.model.data.quran.AudioSegment
+import org.surau.app.core.model.data.quran.AudioTrack
 import org.surau.app.core.model.data.quran.Ayah
 import org.surau.app.core.model.data.quran.AyahReference
 import org.surau.app.core.model.data.quran.JuzSegment
 import org.surau.app.core.model.data.quran.PopulatedAyah
+import org.surau.app.core.model.data.quran.Recitation
 import org.surau.app.core.model.data.quran.RevelationType
 import org.surau.app.core.model.data.quran.Surah
+import org.surau.app.core.model.data.quran.SurahAudioManifest
 import org.surau.app.core.model.data.quran.Translation
 import org.surau.app.core.model.data.quran.TranslationSource
 
@@ -64,6 +68,50 @@ object QuranTestData {
             lang = "id",
             name = "King Fahad Quran Complex",
         ),
+    )
+
+    const val TEST_RECITATION_ID = "mishari-al-afasy"
+
+    val recitations = listOf(
+        Recitation(
+            id = TEST_RECITATION_ID,
+            displayName = "Mishari Rashid Al-Afasy",
+            reciterName = "Mishari Rashid Al-Afasy",
+            style = "murattal",
+            isDefault = true,
+        ),
+        Recitation(
+            id = "abdul-basit-murattal",
+            displayName = "Abdul Basit Abdus Samad",
+            reciterName = "Abdul Basit Abdus Samad",
+            style = "murattal",
+        ),
+    )
+
+    /** Al-Fatihah (7 ayahs) audio manifest with fake CDN track URLs. */
+    val fatihahAudioManifest = SurahAudioManifest(
+        surahId = 1,
+        recitationId = TEST_RECITATION_ID,
+        recitationName = "Mishari Rashid Al-Afasy",
+        mode = "ayah",
+        tracks = (1..7).map { ayah ->
+            AudioTrack(
+                ayahKey = "1:$ayah",
+                ayahNumber = ayah,
+                url = "https://cdn.surau.test/audio/mishari/1/$ayah.mp3",
+                durationMs = 3000L,
+                segments = listOf(
+                    AudioSegment(
+                        segmentIndex = 1,
+                        ayahKey = "1:$ayah",
+                        timestampFromMs = 0,
+                        timestampToMs = 3000,
+                        durationMs = 3000L,
+                    ),
+                ),
+            )
+        },
+        missingAyahKeys = emptyList(),
     )
 
     val juz = listOf(

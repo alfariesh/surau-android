@@ -21,6 +21,7 @@ import org.surau.app.core.network.model.quran.AyahDto
 import org.surau.app.core.network.model.quran.JuzDto
 import org.surau.app.core.network.model.quran.QuranSearchResultDto
 import org.surau.app.core.network.model.quran.RecitationDto
+import org.surau.app.core.network.model.quran.SurahAudioManifestDto
 import org.surau.app.core.network.model.quran.SurahDto
 import org.surau.app.core.network.model.quran.TranslationSourceDto
 import retrofit2.http.GET
@@ -58,6 +59,12 @@ interface SurauQuranApi {
 
     @GET("quran/recitations")
     suspend fun recitations(): PagedResponseDto<RecitationDto>
+
+    @GET("quran/surahs/{surahId}/audio")
+    suspend fun surahAudio(
+        @Path("surahId") surahId: Int,
+        @Query("recitation_id") recitationId: String? = null,
+    ): SurahAudioManifestDto
 
     @GET("quran/search")
     suspend fun search(

@@ -34,6 +34,7 @@ import org.surau.app.core.network.model.quran.AyahDto
 import org.surau.app.core.network.model.quran.JuzDto
 import org.surau.app.core.network.model.quran.QuranSearchResultDto
 import org.surau.app.core.network.model.quran.RecitationDto
+import org.surau.app.core.network.model.quran.SurahAudioManifestDto
 import org.surau.app.core.network.model.quran.SurahDto
 import org.surau.app.core.network.model.quran.TranslationSourceDto
 import org.surau.app.core.network.retrofit.SurauQuranApi
@@ -142,6 +143,11 @@ private class FakeSurauQuranApi : SurauQuranApi {
         throw NotImplementedError()
 
     override suspend fun recitations(): PagedResponseDto<RecitationDto> = throw NotImplementedError()
+
+    override suspend fun surahAudio(
+        surahId: Int,
+        recitationId: String?,
+    ): SurahAudioManifestDto = throw NotImplementedError()
 
     override suspend fun search(
         query: String,

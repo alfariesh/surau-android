@@ -17,13 +17,16 @@
 package org.surau.app.feature.settings.impl
 
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.surau.app.core.data.test.repository.FakeAuthRepository
+import org.surau.app.core.data.test.repository.FakeQuranAudioRepository
 import org.surau.app.core.data.test.repository.FakeQuranRepository
 import org.surau.app.core.data.test.repository.FakeUserDataRepository
 import org.surau.app.core.data.test.repository.FakeUserRepository
@@ -57,6 +60,7 @@ class SettingsViewModelTest {
             authRepository = authRepository,
             userRepository = FakeUserRepository(),
             quranRepository = quranRepository,
+            quranAudioRepository = FakeQuranAudioRepository(),
         )
     }
 
@@ -76,6 +80,14 @@ class SettingsViewModelTest {
         assertEquals(DARK, state.settings.darkThemeConfig)
         assertEquals(ReaderMode.ARABIC_ONLY, state.settings.readerMode)
         assertEquals(AuthState.Guest, state.authState)
+    }
+
+    @Test
+    fun updateRecitation_persistsPreference() = runTest {
+        viewModel.updateRecitation("mishari-al-afasy")
+        runCurrent()
+
+        assertEquals("mishari-al-afasy", userDataRepository.userData.first().recitationId)
     }
 
     @Test

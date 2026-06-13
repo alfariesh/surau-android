@@ -106,3 +106,45 @@ data class QuranSearchResultDto(
     @SerialName("matched_source_id") val matchedSourceId: String? = null,
     @SerialName("matched_field") val matchedField: String? = null,
 )
+
+@Serializable
+data class SurahAudioManifestDto(
+    @SerialName("surah_id") val surahId: Int,
+    @SerialName("recitation") val recitation: AudioManifestRecitationDto,
+    @SerialName("mode") val mode: String = "ayah",
+    @SerialName("tracks") val tracks: List<SurahAudioTrackDto> = emptyList(),
+    @SerialName("missing_ayah_keys") val missingAyahKeys: List<String> = emptyList(),
+)
+
+@Serializable
+data class AudioManifestRecitationDto(
+    @SerialName("id") val id: String,
+    @SerialName("display_name") val displayName: String = "",
+    @SerialName("reciter_name") val reciterName: String = "",
+    @SerialName("style") val style: String? = null,
+    @SerialName("mode") val mode: String = "ayah",
+    @SerialName("is_default") val isDefault: Boolean = false,
+)
+
+@Serializable
+data class SurahAudioTrackDto(
+    @SerialName("recitation_id") val recitationId: String = "",
+    @SerialName("track_type") val trackType: String = "ayah",
+    @SerialName("track_key") val trackKey: String = "",
+    @SerialName("surah_id") val surahId: Int = 0,
+    @SerialName("ayah_number") val ayahNumber: Int? = null,
+    @SerialName("url") val url: String = "",
+    @SerialName("duration_ms") val durationMs: Long? = null,
+    @SerialName("duration_seconds") val durationSeconds: Double? = null,
+    @SerialName("mime_type") val mimeType: String? = null,
+    @SerialName("segments") val segments: List<AyahAudioSegmentDto> = emptyList(),
+)
+
+@Serializable
+data class AyahAudioSegmentDto(
+    @SerialName("segment_index") val segmentIndex: Int = 0,
+    @SerialName("ayah_key") val ayahKey: String = "",
+    @SerialName("timestamp_from_ms") val timestampFromMs: Long = 0,
+    @SerialName("timestamp_to_ms") val timestampToMs: Long = 0,
+    @SerialName("duration_ms") val durationMs: Long? = null,
+)
