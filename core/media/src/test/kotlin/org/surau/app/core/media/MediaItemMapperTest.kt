@@ -22,6 +22,8 @@ import org.robolectric.RobolectricTestRunner
 import org.surau.app.core.model.data.quran.AudioTrack
 import org.surau.app.core.model.data.quran.SurahAudioManifest
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 class MediaItemMapperTest {
@@ -50,6 +52,40 @@ class MediaItemMapperTest {
         assertEquals("https://cdn/1.mp3", items[0].localConfiguration?.uri.toString())
         assertEquals(1, items[0].mediaMetadata.extras?.getInt(KEY_SURAH_ID))
         assertEquals(2, items[1].mediaMetadata.extras?.getInt(KEY_AYAH_NUMBER))
+    }
+
+    @Test
+    fun toSurahModeMediaItem_singleItem_idMetadataUri() {
+        val manifest = SurahAudioManifest(
+            surahId = 1,
+            recitationId = "dosari",
+            recitationName = "Yasser Al-Dosari",
+            mode = "surah",
+            tracks = listOf(track(ayahKey = "1", ayahNumber = null, url = "https://cdn/surah1.mp3")),
+            missingAyahKeys = emptyList(),
+        )
+
+        val item = assertNotNull(manifest.toSurahModeMediaItem(surahName = "Al-Fatihah"))
+
+        assertEquals("surah:1:full", item.mediaId)
+        assertEquals("Al-Fatihah", item.mediaMetadata.title.toString())
+        assertEquals("Yasser Al-Dosari", item.mediaMetadata.artist.toString())
+        assertEquals("https://cdn/surah1.mp3", item.localConfiguration?.uri.toString())
+        assertEquals(1, item.mediaMetadata.extras?.getInt(KEY_SURAH_ID))
+    }
+
+    @Test
+    fun toSurahModeMediaItem_blankUrl_null() {
+        val manifest = SurahAudioManifest(
+            surahId = 1,
+            recitationId = "dosari",
+            recitationName = "Yasser Al-Dosari",
+            mode = "surah",
+            tracks = listOf(track(ayahKey = "1", ayahNumber = null, url = "")),
+            missingAyahKeys = emptyList(),
+        )
+
+        assertNull(manifest.toSurahModeMediaItem(surahName = "Al-Fatihah"))
     }
 
     private fun track(ayahKey: String, ayahNumber: Int?, url: String) = AudioTrack(

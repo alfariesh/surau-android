@@ -50,3 +50,23 @@ internal fun SurahAudioManifest.toMediaItems(surahName: String): List<MediaItem>
                 .setMediaMetadata(metadata)
                 .build()
         }
+
+/**
+ * Maps a `mode == "surah"` manifest to a SINGLE [MediaItem] for the whole-surah audio file. The
+ * `mediaId` deliberately has no trailing ayah number (so the position-based [AyahTimeline] is the
+ * sole source of the active ayah); the surah id rides in the metadata extras.
+ */
+internal fun SurahAudioManifest.toSurahModeMediaItem(surahName: String): MediaItem? {
+    val track = tracks.firstOrNull { it.url.isNotBlank() } ?: return null
+    val extras = Bundle().apply { putInt(KEY_SURAH_ID, surahId) }
+    val metadata = MediaMetadata.Builder()
+        .setTitle(surahName)
+        .setArtist(recitationName)
+        .setExtras(extras)
+        .build()
+    return MediaItem.Builder()
+        .setMediaId("surah:$surahId:full")
+        .setUri(track.url)
+        .setMediaMetadata(metadata)
+        .build()
+}

@@ -64,6 +64,9 @@ class DefaultSurauPlayerController @Inject constructor(
     private var controller: MediaController? = null
     private var positionJob: Job? = null
 
+    /** Non-null while a surah-mode session is loaded; maps playback position to the active ayah. */
+    private var ayahTimeline: AyahTimeline? = null
+
     private val listener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             syncState()
@@ -79,33 +82,78 @@ class DefaultSurauPlayerController @Inject constructor(
 
     override fun playSurah(manifest: SurahAudioManifest, surahName: String, startAyah: Int) =
         controllerAction { controller ->
-            val items = manifest.toMediaItems(surahName)
-            if (items.isEmpty()) return@controllerAction
-            val startIndex = items
-                .indexOfFirst { it.mediaId == "${manifest.surahId}:$startAyah" }
-                .coerceAtLeast(0)
-            // Start the selected ayah from position 0.
-            controller.setMediaItems(items, startIndex, 0L)
+            if (manifest.mode == MODE_SURAH) {
+                // One audio file for the whole surah; the active ayah comes from the timeline.
+                val item = manifest.toSurahModeMediaItem(surahName) ?: return@controllerAction
+                val timeline = AyahTimeline.from(manifest)
+                ayahTimeline = timeline
+                controller.setMediaItems(listOf(item), 0, timeline.startMsOf(startAyah) ?: 0L)
+            } else {
+                ayahTimeline = null
+                val items = manifest.toMediaItems(surahName)
+                if (items.isEmpty()) return@controllerAction
+                val startIndex = items
+                    .indexOfFirst { it.mediaId == "${manifest.surahId}:$startAyah" }
+                    .coerceAtLeast(0)
+                controller.setMediaItems(items, startIndex, 0L)
+            }
             controller.prepare()
             controller.playWhenReady = true
         }
 
     override fun playPause() = controllerAction { if (it.isPlaying) it.pause() else it.play() }
 
-    override fun next() = controllerAction { if (it.hasNextMediaItem()) it.seekToNextMediaItem() }
+    override fun next() = controllerAction { controller ->
+        val timeline = ayahTimeline
+        if (timeline != null) {
+            val current = timeline.ayahAt(controller.currentPosition.coerceAtLeast(0L))
+                ?: return@controllerAction
+            val nextMs = timeline.nextAyah(current)?.let(timeline::startMsOf)
+                ?: return@controllerAction // last ayah: no wrap
+            controller.seekTo(nextMs)
+            syncState()
+        } else if (controller.hasNextMediaItem()) {
+            controller.seekToNextMediaItem()
+        }
+    }
 
-    override fun previous() = controllerAction { it.seekToPrevious() }
+    override fun previous() = controllerAction { controller ->
+        val timeline = ayahTimeline
+        if (timeline != null) {
+            val position = controller.currentPosition.coerceAtLeast(0L)
+            val current = timeline.ayahAt(position) ?: return@controllerAction
+            val currentStart = timeline.startMsOf(current) ?: 0L
+            // Restart the current ayah if past its start, otherwise step to the previous ayah.
+            val target = if (position - currentStart > RESTART_THRESHOLD_MS) {
+                current
+            } else {
+                timeline.prevAyah(current) ?: current
+            }
+            controller.seekTo(timeline.startMsOf(target) ?: 0L)
+            syncState()
+        } else {
+            controller.seekToPrevious()
+        }
+    }
 
     override fun seekToAyah(ayahNumber: Int) = controllerAction { controller ->
-        val index = (0 until controller.mediaItemCount).firstOrNull { i ->
-            controller.getMediaItemAt(i).mediaId.substringAfter(':', "").toIntOrNull() == ayahNumber
-        } ?: return@controllerAction
-        controller.seekToDefaultPosition(index)
+        val timeline = ayahTimeline
+        if (timeline != null) {
+            val ms = timeline.startMsOf(ayahNumber) ?: return@controllerAction
+            controller.seekTo(ms)
+            syncState()
+        } else {
+            val index = (0 until controller.mediaItemCount).firstOrNull { i ->
+                controller.getMediaItemAt(i).mediaId.substringAfter(':', "").toIntOrNull() == ayahNumber
+            } ?: return@controllerAction
+            controller.seekToDefaultPosition(index)
+        }
     }
 
     override fun stop() = controllerAction {
         it.stop()
         it.clearMediaItems()
+        ayahTimeline = null
     }
 
     /** Releases the controller. Only needed on process teardown; unused during normal operation. */
@@ -137,15 +185,22 @@ class DefaultSurauPlayerController @Inject constructor(
         return controller ?: connected
     }
 
+    /** The active ayah: from the surah-mode [ayahTimeline] if loaded, else the MediaItem's id. */
+    private fun currentAyah(positionMs: Long): Int? {
+        ayahTimeline?.let { return it.ayahAt(positionMs) }
+        return controller?.currentMediaItem?.mediaId?.substringAfter(':', "")?.toIntOrNull()
+    }
+
     private fun syncState() {
         val controller = controller ?: return
+        val position = controller.currentPosition.coerceAtLeast(0L)
         _state.update { previous ->
             reducePlayerState(
                 base = previous,
                 isPlaying = controller.isPlaying,
                 currentItem = controller.currentMediaItem,
                 durationMs = controller.duration,
-            ).copy(positionMs = controller.currentPosition.coerceAtLeast(0L))
+            ).copy(positionMs = position, currentAyahNumber = currentAyah(position))
         }
     }
 
@@ -155,7 +210,10 @@ class DefaultSurauPlayerController @Inject constructor(
         positionJob = scope.launch {
             while (isActive) {
                 controller?.let { player ->
-                    _state.update { it.copy(positionMs = player.currentPosition.coerceAtLeast(0L)) }
+                    val position = player.currentPosition.coerceAtLeast(0L)
+                    _state.update {
+                        it.copy(positionMs = position, currentAyahNumber = currentAyah(position))
+                    }
                 }
                 delay(POSITION_POLL_INTERVAL_MS)
             }
@@ -163,6 +221,8 @@ class DefaultSurauPlayerController @Inject constructor(
     }
 
     private companion object {
-        const val POSITION_POLL_INTERVAL_MS = 500L
+        const val POSITION_POLL_INTERVAL_MS = 250L
+        const val RESTART_THRESHOLD_MS = 1_000L
+        const val MODE_SURAH = "surah"
     }
 }
