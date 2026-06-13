@@ -18,12 +18,16 @@ package org.surau.app.feature.quran.impl
 
 import app.cash.turbine.TurbineTestContext
 import app.cash.turbine.test
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import org.surau.app.core.data.test.repository.FakeQuranAudioRepository
 import org.surau.app.core.data.test.repository.FakeQuranProgressRepository
 import org.surau.app.core.data.test.repository.FakeQuranRepository
 import org.surau.app.core.data.test.repository.FakeUserDataRepository
@@ -31,9 +35,13 @@ import org.surau.app.core.datastore.SurauPreferencesDataSource
 import org.surau.app.core.datastore.UserPreferences
 import org.surau.app.core.datastore.test.InMemoryDataStore
 import org.surau.app.core.domain.GetReaderContentUseCase
+import org.surau.app.core.media.PlayerUiState
+import org.surau.app.core.media.SurauPlayerController
 import org.surau.app.core.model.data.quran.ReaderMode
+import org.surau.app.core.model.data.quran.SurahAudioManifest
 import org.surau.app.core.testing.util.MainDispatcherRule
 import org.surau.app.feature.quran.api.navigation.SurahReaderNavKey
+import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
@@ -51,6 +59,8 @@ class SurahReaderViewModelTest {
 
     private val quranRepository = FakeQuranRepository()
     private val progressRepository = FakeQuranProgressRepository()
+    private val audioRepository = FakeQuranAudioRepository()
+    private val playerController = FakeSurauPlayerController()
     private val userDataRepository = FakeUserDataRepository(
         SurauPreferencesDataSource(InMemoryDataStore(UserPreferences.getDefaultInstance())),
     )
@@ -63,6 +73,8 @@ class SurahReaderViewModelTest {
         quranRepository = quranRepository,
         quranProgressRepository = progressRepository,
         userDataRepository = userDataRepository,
+        quranAudioRepository = audioRepository,
+        playerController = playerController,
         navKey = navKey,
     )
 
@@ -108,4 +120,63 @@ class SurahReaderViewModelTest {
 
         assertEquals(ReaderMode.ARABIC_ONLY, userDataRepository.userData.first().readerMode)
     }
+
+    @Test
+    fun playFromAyah_loadsManifestAndPlays() = runTest {
+        val viewModel = viewModel(SurahReaderNavKey(surahId = 1))
+
+        viewModel.playFromAyah(1)
+        advanceUntilIdle()
+
+        assertEquals(1, playerController.playedManifests.size)
+    }
+
+    @Test
+    fun playFromAyah_whenManifestUnavailable_emitsAudioError() = runTest {
+        audioRepository.manifestError = IOException("offline")
+        val viewModel = viewModel(SurahReaderNavKey(surahId = 1))
+
+        viewModel.audioError.test {
+            viewModel.playFromAyah(1)
+            awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertEquals(0, playerController.playedManifests.size)
+    }
+
+    @Test
+    fun playingAyah_tracksActiveSurahSession() = runTest {
+        playerController.playerState.value = PlayerUiState(surahId = 1, currentAyahNumber = 3)
+
+        val viewModel = viewModel(SurahReaderNavKey(surahId = 1))
+
+        assertEquals(3, viewModel.playingAyah.first { it != null })
+    }
+
+    @Test
+    fun setRecitation_updatesUserData() = runTest {
+        val viewModel = viewModel(SurahReaderNavKey(surahId = 1))
+
+        viewModel.setRecitation("abdul-basit-murattal")
+        advanceUntilIdle()
+
+        assertEquals("abdul-basit-murattal", userDataRepository.userData.first().recitationId)
+    }
+}
+
+private class FakeSurauPlayerController : SurauPlayerController {
+    val playerState = MutableStateFlow(PlayerUiState())
+    override val state: StateFlow<PlayerUiState> = playerState
+
+    val playedManifests = mutableListOf<SurahAudioManifest>()
+
+    override fun playSurah(manifest: SurahAudioManifest, surahName: String, startAyah: Int) {
+        playedManifests += manifest
+    }
+
+    override fun playPause() = Unit
+    override fun next() = Unit
+    override fun previous() = Unit
+    override fun seekToAyah(ayahNumber: Int) = Unit
+    override fun stop() = Unit
 }

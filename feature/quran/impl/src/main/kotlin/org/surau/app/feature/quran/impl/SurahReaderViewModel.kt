@@ -23,26 +23,35 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.surau.app.core.common.result.Result
 import org.surau.app.core.common.result.asResult
+import org.surau.app.core.data.repository.QuranAudioRepository
 import org.surau.app.core.data.repository.QuranProgressRepository
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.domain.GetReaderContentUseCase
 import org.surau.app.core.domain.ReaderContent
+import org.surau.app.core.media.PlayerUiState
+import org.surau.app.core.media.SurauPlayerController
 import org.surau.app.core.model.data.quran.AyahKey
 import org.surau.app.core.model.data.quran.ReaderMode
+import org.surau.app.core.model.data.quran.Recitation
 import org.surau.app.core.model.data.quran.TranslationSource
+import org.surau.app.core.network.model.SurauApiException
 import org.surau.app.feature.quran.api.navigation.SurahReaderNavKey
+import java.io.IOException
 
 @HiltViewModel(assistedFactory = SurahReaderViewModel.Factory::class)
 class SurahReaderViewModel @AssistedInject constructor(
@@ -50,6 +59,8 @@ class SurahReaderViewModel @AssistedInject constructor(
     quranRepository: QuranRepository,
     private val quranProgressRepository: QuranProgressRepository,
     private val userDataRepository: UserDataRepository,
+    private val quranAudioRepository: QuranAudioRepository,
+    private val playerController: SurauPlayerController,
     @Assisted val navKey: SurahReaderNavKey,
 ) : ViewModel() {
 
@@ -60,6 +71,51 @@ class SurahReaderViewModel @AssistedInject constructor(
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = emptyList(),
             )
+
+    val recitations: StateFlow<List<Recitation>> =
+        quranAudioRepository.observeRecitations()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList(),
+            )
+
+    val selectedRecitationId: StateFlow<String?> =
+        userDataRepository.userData
+            .map { it.recitationId }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null,
+            )
+
+    val playerState: StateFlow<PlayerUiState> =
+        playerController.state
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = PlayerUiState(),
+            )
+
+    /** The playing ayah when this surah's session is active, else `null` (gates the highlight). */
+    val playingAyah: StateFlow<Int?> =
+        playerController.state
+            .map { if (it.surahId == navKey.surahId) it.currentAyahNumber else null }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null,
+            )
+
+    private val _audioError = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Emits when a manifest fetch fails (offline / backend error) — prompts a snackbar. */
+    val audioError: SharedFlow<Unit> = _audioError
+
+    private val _audioPartial = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Emits when the surah has missing ayah audio — prompts a one-time snackbar. */
+    val audioPartial: SharedFlow<Unit> = _audioPartial
 
     @AssistedFactory
     interface Factory {
@@ -125,6 +181,55 @@ class SurahReaderViewModel @AssistedInject constructor(
 
     fun setTranslationSource(sourceId: String) {
         viewModelScope.launch { userDataRepository.setTranslationSourceId(sourceId) }
+    }
+
+    /** Plays from [ayahNumber]: seeks if this surah is already loaded, else fetches + plays. */
+    fun playFromAyah(ayahNumber: Int) {
+        viewModelScope.launch {
+            val current = playerController.state.value
+            if (current.surahId == navKey.surahId) {
+                playerController.seekToAyah(ayahNumber)
+                if (!current.isPlaying) playerController.playPause()
+            } else {
+                loadAndPlay(ayahNumber)
+            }
+        }
+    }
+
+    fun onPlayPause() = playerController.playPause()
+
+    fun onNext() = playerController.next()
+
+    fun onPrevious() = playerController.previous()
+
+    /** Switches the reciter, restarting the current ayah with the new manifest if playing. */
+    fun setRecitation(recitationId: String) {
+        viewModelScope.launch {
+            userDataRepository.setRecitationId(recitationId)
+            val current = playerController.state.value
+            if (current.surahId == navKey.surahId) {
+                current.currentAyahNumber?.let { loadAndPlay(it) }
+            }
+        }
+    }
+
+    private suspend fun loadAndPlay(ayahNumber: Int) {
+        val surahName =
+            (uiState.value as? ReaderUiState.Success)?.content?.surah?.nameLatin.orEmpty()
+        val recitationId = quranAudioRepository.resolveRecitationId(
+            userDataRepository.userData.first().recitationId,
+        )
+        val manifest = try {
+            quranAudioRepository.audioManifest(navKey.surahId, recitationId)
+        } catch (error: IOException) {
+            _audioError.tryEmit(Unit)
+            return
+        } catch (error: SurauApiException) {
+            _audioError.tryEmit(Unit)
+            return
+        }
+        if (manifest.missingAyahKeys.isNotEmpty()) _audioPartial.tryEmit(Unit)
+        playerController.playSurah(manifest, surahName, ayahNumber)
     }
 
     companion object {

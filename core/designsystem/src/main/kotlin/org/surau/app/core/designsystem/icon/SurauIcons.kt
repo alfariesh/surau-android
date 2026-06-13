@@ -29,9 +29,15 @@ import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Grid3x3
+import androidx.compose.material.icons.rounded.LocationSearching
+import androidx.compose.material.icons.rounded.MyLocation
+import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material.icons.rounded.Upcoming
 import androidx.compose.material.icons.rounded.ViewDay
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,10 +56,16 @@ object SurauIcons {
     val Close = Icons.Rounded.Close
     val Grid3x3 = Icons.Rounded.Grid3x3
     val MoreVert = Icons.Default.MoreVert
+    val FollowReading = Icons.Rounded.MyLocation
+    val FollowReadingOff = Icons.Rounded.LocationSearching
+    val Pause = Icons.Rounded.Pause
     val Person = Icons.Rounded.Person
+    val PlayArrow = Icons.Rounded.PlayArrow
     val Search = Icons.Rounded.Search
     val Settings = Icons.Rounded.Settings
     val ShortText = Icons.AutoMirrored.Rounded.ShortText
+    val SkipNext = Icons.Rounded.SkipNext
+    val SkipPrevious = Icons.Rounded.SkipPrevious
     val Upcoming = Icons.Rounded.Upcoming
     val UpcomingBorder = Icons.Outlined.Upcoming
     val ViewDay = Icons.Rounded.ViewDay

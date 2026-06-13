@@ -20,7 +20,9 @@ package org.surau.app.feature.quran.impl
 
 import android.content.Intent
 import androidx.activity.compose.ReportDrawnWhen
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,39 +37,51 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButtonGroup
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.icon.SurauIcons
+import org.surau.app.core.media.PlayerUiState
 import org.surau.app.core.model.data.quran.PopulatedAyah
 import org.surau.app.core.model.data.quran.ReaderMode
+import org.surau.app.core.model.data.quran.Recitation
 import org.surau.app.core.model.data.quran.TranslationSource
 import org.surau.app.core.ui.TrackScreenViewEvent
 import org.surau.app.core.ui.TrackScrollJank
@@ -87,6 +101,21 @@ fun SurahReaderScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val translationSources by viewModel.translationSources.collectAsStateWithLifecycle()
+    val recitations by viewModel.recitations.collectAsStateWithLifecycle()
+    val selectedRecitationId by viewModel.selectedRecitationId.collectAsStateWithLifecycle()
+    val playerState by viewModel.playerState.collectAsStateWithLifecycle()
+    val playingAyah by viewModel.playingAyah.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val offlineMessage = stringResource(R.string.feature_quran_impl_audio_offline)
+    val partialMessage = stringResource(R.string.feature_quran_impl_audio_partial)
+    LaunchedEffect(Unit) {
+        viewModel.audioError.collect { snackbarHostState.showSnackbar(offlineMessage) }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.audioPartial.collect { snackbarHostState.showSnackbar(partialMessage) }
+    }
+
     SurahReaderScreen(
         uiState = uiState,
         onBackClick = onBackClick,
@@ -95,6 +124,16 @@ fun SurahReaderScreen(
         onFontScaleChange = viewModel::setArabicFontScale,
         onTranslationSourceChange = viewModel::setTranslationSource,
         translationSources = translationSources,
+        playingAyah = playingAyah,
+        playerState = playerState,
+        recitations = recitations,
+        selectedRecitationId = selectedRecitationId,
+        onPlayAyah = viewModel::playFromAyah,
+        onPlayPause = viewModel::onPlayPause,
+        onNext = viewModel::onNext,
+        onPrevious = viewModel::onPrevious,
+        onRecitationChange = viewModel::setRecitation,
+        snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
 }
@@ -109,6 +148,16 @@ internal fun SurahReaderScreen(
     onTranslationSourceChange: (String) -> Unit,
     translationSources: List<TranslationSource>,
     modifier: Modifier = Modifier,
+    playingAyah: Int? = null,
+    playerState: PlayerUiState = PlayerUiState(),
+    recitations: List<Recitation> = emptyList(),
+    selectedRecitationId: String? = null,
+    onPlayAyah: (Int) -> Unit = {},
+    onPlayPause: () -> Unit = {},
+    onNext: () -> Unit = {},
+    onPrevious: () -> Unit = {},
+    onRecitationChange: (String) -> Unit = {},
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     ReportDrawnWhen { uiState !is ReaderUiState.Loading }
     TrackScreenViewEvent(screenName = "SurahReader")
@@ -134,10 +183,13 @@ internal fun SurahReaderScreen(
 
         is ReaderUiState.Success -> {
             val content = uiState.content
+            val surah = content.surah
             val listState = rememberLazyListState()
+            val scope = rememberCoroutineScope()
+            var followRecitation by rememberSaveable { mutableStateOf(true) }
 
             // Resume/scroll-to-ayah once per surah load.
-            LaunchedEffect(content.surah?.surahId, uiState.initialAyahNumber) {
+            LaunchedEffect(surah?.surahId, uiState.initialAyahNumber) {
                 val target = uiState.initialAyahNumber ?: return@LaunchedEffect
                 val index = content.ayahs.indexOfFirst { it.ayah.ayahNumber == target }
                 if (index >= 0) listState.scrollToItem(index)
@@ -156,43 +208,88 @@ internal fun SurahReaderScreen(
                     }
             }
 
+            // Auto-scroll to the playing ayah while "ikuti bacaan" is on.
+            LaunchedEffect(playingAyah, followRecitation, content.ayahs) {
+                if (followRecitation && playingAyah != null) {
+                    val index = content.ayahs.indexOfFirst { it.ayah.ayahNumber == playingAyah }
+                    if (index >= 0) listState.animateScrollToItem(index)
+                }
+            }
+
             val visibleAyah by remember(content.ayahs) {
                 derivedVisibleAyah(listState, content.ayahs)
             }
 
-            Column(modifier = modifier.fillMaxSize()) {
-                ReaderTopBar(
-                    title = content.surah?.nameLatin.orEmpty(),
-                    subtitle = visibleAyah?.let { ayah ->
-                        listOfNotNull(
-                            ayah.juzNumber?.let {
-                                stringResource(R.string.feature_quran_impl_juz_number, it)
-                            },
-                            ayah.pageNumber?.let {
-                                stringResource(R.string.feature_quran_impl_page_indicator, it)
-                            },
-                        ).joinToString(" • ").ifEmpty { null }
-                    },
-                    onBackClick = onBackClick,
-                    onSettingsClick = { showReaderSettings = true },
-                )
+            Box(modifier = modifier.fillMaxSize()) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    ReaderTopBar(
+                        title = surah?.nameLatin.orEmpty(),
+                        subtitle = visibleAyah?.let { ayah ->
+                            listOfNotNull(
+                                ayah.juzNumber?.let {
+                                    stringResource(R.string.feature_quran_impl_juz_number, it)
+                                },
+                                ayah.pageNumber?.let {
+                                    stringResource(R.string.feature_quran_impl_page_indicator, it)
+                                },
+                            ).joinToString(" • ").ifEmpty { null }
+                        },
+                        onBackClick = onBackClick,
+                        onSettingsClick = { showReaderSettings = true },
+                    )
 
-                TrackScrollJank(scrollableState = listState, stateName = "reader:ayahs")
+                    TrackScrollJank(scrollableState = listState, stateName = "reader:ayahs")
 
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("reader:ayahList"),
-                ) {
-                    items(content.ayahs, key = { it.ayah.ayahNumber }) { populated ->
-                        AyahItem(
-                            populated = populated,
-                            readerMode = content.readerMode,
-                            fontScale = content.arabicFontScale,
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .testTag("reader:ayahList"),
+                    ) {
+                        items(content.ayahs, key = { it.ayah.ayahNumber }) { populated ->
+                            val ayahNumber = populated.ayah.ayahNumber
+                            val isActive = ayahNumber == playingAyah
+                            AyahItem(
+                                populated = populated,
+                                readerMode = content.readerMode,
+                                fontScale = content.arabicFontScale,
+                                isActive = isActive,
+                                isPlaying = isActive && playerState.isPlaying,
+                                onPlayClick = {
+                                    if (isActive) onPlayPause() else onPlayAyah(ayahNumber)
+                                },
+                            )
+                        }
+                    }
+
+                    if (surah != null && playerState.surahId == surah.surahId) {
+                        MiniPlayerBar(
+                            surahName = surah.nameLatin,
+                            playerState = playerState,
+                            followRecitation = followRecitation,
+                            onPlayPause = onPlayPause,
+                            onPrevious = onPrevious,
+                            onNext = onNext,
+                            onToggleFollow = { followRecitation = it },
+                            onBarClick = {
+                                val target = playerState.currentAyahNumber
+                                if (target != null) {
+                                    val index =
+                                        content.ayahs.indexOfFirst { it.ayah.ayahNumber == target }
+                                    if (index >= 0) {
+                                        scope.launch { listState.animateScrollToItem(index) }
+                                    }
+                                }
+                            },
                         )
                     }
                 }
+
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
             }
 
             if (showReaderSettings) {
@@ -201,9 +298,12 @@ internal fun SurahReaderScreen(
                     fontScale = content.arabicFontScale,
                     translationSourceId = content.translationSourceId,
                     translationSources = translationSources,
+                    recitations = recitations,
+                    selectedRecitationId = selectedRecitationId,
                     onReaderModeChange = onReaderModeChange,
                     onFontScaleChange = onFontScaleChange,
                     onTranslationSourceChange = onTranslationSourceChange,
+                    onRecitationChange = onRecitationChange,
                     onDismiss = { showReaderSettings = false },
                 )
             }
@@ -265,6 +365,9 @@ private fun AyahItem(
     populated: PopulatedAyah,
     readerMode: ReaderMode,
     fontScale: Float,
+    isActive: Boolean,
+    isPlaying: Boolean,
+    onPlayClick: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -273,6 +376,15 @@ private fun AyahItem(
         populated.translation?.let { append("\n\n").append(it.text) }
         append("\n(QS ").append(populated.ayah.ayahKey.value).append(")")
     }
+
+    val highlightColor by animateColorAsState(
+        targetValue = if (isActive) {
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+        } else {
+            Color.Transparent
+        },
+        label = "ayahHighlight",
+    )
 
     Column(
         modifier = Modifier
@@ -287,10 +399,33 @@ private fun AyahItem(
                     context.startActivity(Intent.createChooser(sendIntent, null))
                 },
             )
+            .background(highlightColor)
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .testTag("reader:ayah:${populated.ayah.ayahNumber}"),
     ) {
-        AyahNumberBadge(populated.ayah.ayahNumber)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AyahNumberBadge(populated.ayah.ayahNumber)
+            Spacer(modifier = Modifier.weight(1f))
+            IconButton(
+                onClick = onPlayClick,
+                modifier = Modifier.testTag("reader:play:${populated.ayah.ayahNumber}"),
+            ) {
+                Icon(
+                    imageVector = if (isPlaying) SurauIcons.Pause else SurauIcons.PlayArrow,
+                    contentDescription = stringResource(
+                        if (isPlaying) {
+                            R.string.feature_quran_impl_pause
+                        } else {
+                            R.string.feature_quran_impl_play
+                        },
+                    ),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
 
         if (readerMode != ReaderMode.TRANSLATION_ONLY) {
             AyahText(
@@ -339,14 +474,119 @@ private fun AyahNumberBadge(ayahNumber: Int) {
 }
 
 @Composable
+private fun MiniPlayerBar(
+    surahName: String,
+    playerState: PlayerUiState,
+    followRecitation: Boolean,
+    onPlayPause: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onToggleFollow: (Boolean) -> Unit,
+    onBarClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 3.dp,
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("reader:miniPlayer"),
+    ) {
+        Column {
+            val progress = if (playerState.durationMs > 0L) {
+                (playerState.positionMs.toFloat() / playerState.durationMs).coerceIn(0f, 1f)
+            } else {
+                0f
+            }
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.feature_quran_impl_now_playing,
+                        surahName,
+                        playerState.currentAyahNumber ?: 0,
+                    ),
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(onClick = onBarClick)
+                        .padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
+                )
+                IconToggleButton(checked = followRecitation, onCheckedChange = onToggleFollow) {
+                    Icon(
+                        imageVector = if (followRecitation) {
+                            SurauIcons.FollowReading
+                        } else {
+                            SurauIcons.FollowReadingOff
+                        },
+                        contentDescription = stringResource(
+                            R.string.feature_quran_impl_follow_recitation,
+                        ),
+                        tint = if (followRecitation) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+                IconButton(onClick = onPrevious) {
+                    Icon(
+                        imageVector = SurauIcons.SkipPrevious,
+                        contentDescription = stringResource(
+                            R.string.feature_quran_impl_previous_ayah,
+                        ),
+                    )
+                }
+                FilledTonalIconButton(
+                    onClick = onPlayPause,
+                    modifier = Modifier.testTag("reader:miniPlayer:playPause"),
+                ) {
+                    Icon(
+                        imageVector = if (playerState.isPlaying) {
+                            SurauIcons.Pause
+                        } else {
+                            SurauIcons.PlayArrow
+                        },
+                        contentDescription = stringResource(
+                            if (playerState.isPlaying) {
+                                R.string.feature_quran_impl_pause
+                            } else {
+                                R.string.feature_quran_impl_play
+                            },
+                        ),
+                    )
+                }
+                IconButton(onClick = onNext, modifier = Modifier.padding(end = 4.dp)) {
+                    Icon(
+                        imageVector = SurauIcons.SkipNext,
+                        contentDescription = stringResource(R.string.feature_quran_impl_next_ayah),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun ReaderSettingsSheet(
     readerMode: ReaderMode,
     fontScale: Float,
     translationSourceId: String,
     translationSources: List<TranslationSource>,
+    recitations: List<Recitation>,
+    selectedRecitationId: String?,
     onReaderModeChange: (ReaderMode) -> Unit,
     onFontScaleChange: (Float) -> Unit,
     onTranslationSourceChange: (String) -> Unit,
+    onRecitationChange: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -405,6 +645,32 @@ private fun ReaderSettingsSheet(
                         },
                         modifier = Modifier.combinedClickable(
                             onClick = { onTranslationSourceChange(source.id) },
+                            onLongClick = null,
+                        ),
+                    )
+                }
+            }
+
+            if (recitations.isNotEmpty()) {
+                Spacer(modifier = Modifier.size(24.dp))
+                Text(
+                    text = stringResource(R.string.feature_quran_impl_qari),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                val selected = selectedRecitationId
+                    ?: recitations.firstOrNull { it.isDefault }?.id
+                recitations.forEach { recitation ->
+                    ListItem(
+                        headlineContent = { Text(recitation.displayName) },
+                        supportingContent = recitation.style?.let { { Text(it) } },
+                        leadingContent = {
+                            RadioButton(
+                                selected = recitation.id == selected,
+                                onClick = null,
+                            )
+                        },
+                        modifier = Modifier.combinedClickable(
+                            onClick = { onRecitationChange(recitation.id) },
                             onLongClick = null,
                         ),
                     )
