@@ -1,4 +1,4 @@
-# `:core:data-test`
+# `:feature:auth:impl`
 
 ## Module dependency graph
 
@@ -11,17 +11,28 @@ config:
     nodePlacementStrategy: SIMPLE
 ---
 graph TB
+  subgraph :feature
+    direction TB
+    subgraph :feature:auth
+      direction TB
+      :feature:auth:api[api]:::android-library
+      :feature:auth:impl[impl]:::android-library
+    end
+  end
   subgraph :core
     direction TB
     :core:analytics[analytics]:::android-library
     :core:common[common]:::jvm-library
     :core:data[data]:::android-library
-    :core:data-test[data-test]:::android-library
     :core:database[database]:::android-library
     :core:datastore[datastore]:::android-library
     :core:datastore-proto[datastore-proto]:::jvm-library
+    :core:designsystem[designsystem]:::android-library
+    :core:domain[domain]:::android-library
     :core:model[model]:::jvm-library
+    :core:navigation[navigation]:::android-library
     :core:network[network]:::android-library
+    :core:ui[ui]:::android-library
   end
 
   :core:data -.-> :core:analytics
@@ -29,13 +40,24 @@ graph TB
   :core:data --> :core:database
   :core:data --> :core:datastore
   :core:data --> :core:network
-  :core:data-test --> :core:data
   :core:database --> :core:model
   :core:datastore -.-> :core:common
   :core:datastore --> :core:datastore-proto
   :core:datastore --> :core:model
+  :core:domain --> :core:data
+  :core:domain --> :core:model
   :core:network --> :core:common
   :core:network --> :core:model
+  :core:ui --> :core:analytics
+  :core:ui --> :core:designsystem
+  :core:ui --> :core:model
+  :feature:auth:api --> :core:navigation
+  :feature:auth:impl -.-> :core:data
+  :feature:auth:impl -.-> :core:designsystem
+  :feature:auth:impl -.-> :core:domain
+  :feature:auth:impl -.-> :core:model
+  :feature:auth:impl -.-> :core:ui
+  :feature:auth:impl --> :feature:auth:api
 
 classDef android-application fill:#CAFFBF,stroke:#000,stroke-width:2px,color:#000;
 classDef android-feature fill:#FFD6A5,stroke:#000,stroke-width:2px,color:#000;

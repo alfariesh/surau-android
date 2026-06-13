@@ -16,14 +16,14 @@
 
 package org.surau.app.core.datastore
 
-import org.surau.app.core.datastore.test.InMemoryDataStore
-import org.surau.app.core.model.data.DarkThemeConfig
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import org.surau.app.core.datastore.test.InMemoryDataStore
+import org.surau.app.core.model.data.DarkThemeConfig
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

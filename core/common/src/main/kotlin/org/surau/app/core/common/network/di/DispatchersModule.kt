@@ -16,15 +16,15 @@
 
 package org.surau.app.core.common.network.di
 
-import org.surau.app.core.common.network.Dispatcher
-import org.surau.app.core.common.network.SurauDispatchers.Default
-import org.surau.app.core.common.network.SurauDispatchers.IO
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import org.surau.app.core.common.network.Dispatcher
+import org.surau.app.core.common.network.SurauDispatchers.Default
+import org.surau.app.core.common.network.SurauDispatchers.IO
 
 @Module
 @InstallIn(SingletonComponent::class)

@@ -46,10 +46,10 @@ import com.google.android.apps.common.testing.accessibility.framework.Accessibil
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityViewCheckResult
 import com.google.android.apps.common.testing.accessibility.framework.integrations.espresso.AccessibilityViewCheckException
 import com.google.android.apps.common.testing.accessibility.framework.utils.contrast.BitmapImage
-import org.surau.app.core.designsystem.theme.SurauTheme
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.robolectric.RuntimeEnvironment
+import org.surau.app.core.designsystem.theme.SurauTheme
 import java.io.File
 import java.io.FileOutputStream
 

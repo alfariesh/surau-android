@@ -16,12 +16,12 @@
 
 import androidx.room.gradle.RoomExtension
 import com.google.devtools.ksp.gradle.KspExtension
-import org.surau.app.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import org.surau.app.libs
 
 class AndroidRoomConventionPlugin : Plugin<Project> {
 

@@ -18,10 +18,10 @@ package org.surau.app.util
 
 import android.util.Log
 import androidx.profileinstaller.ProfileVerifier
-import org.surau.app.core.common.network.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
+import org.surau.app.core.common.network.di.ApplicationScope
 import javax.inject.Inject
 
 /**

@@ -15,6 +15,7 @@ graph TB
     direction TB
     subgraph :feature:settings
       direction TB
+      :feature:settings:api[api]:::android-library
       :feature:settings:impl[impl]:::android-library
     end
   end
@@ -28,8 +29,8 @@ graph TB
     :core:datastore-proto[datastore-proto]:::jvm-library
     :core:designsystem[designsystem]:::android-library
     :core:model[model]:::jvm-library
+    :core:navigation[navigation]:::android-library
     :core:network[network]:::android-library
-    :core:notifications[notifications]:::android-library
     :core:ui[ui]:::android-library
   end
 
@@ -38,21 +39,21 @@ graph TB
   :core:data --> :core:database
   :core:data --> :core:datastore
   :core:data --> :core:network
-  :core:data -.-> :core:notifications
   :core:database --> :core:model
   :core:datastore -.-> :core:common
   :core:datastore --> :core:datastore-proto
   :core:datastore --> :core:model
   :core:network --> :core:common
   :core:network --> :core:model
-  :core:notifications -.-> :core:common
-  :core:notifications --> :core:model
   :core:ui --> :core:analytics
   :core:ui --> :core:designsystem
   :core:ui --> :core:model
+  :feature:settings:api --> :core:navigation
   :feature:settings:impl -.-> :core:data
   :feature:settings:impl -.-> :core:designsystem
+  :feature:settings:impl -.-> :core:model
   :feature:settings:impl -.-> :core:ui
+  :feature:settings:impl --> :feature:settings:api
 
 classDef android-application fill:#CAFFBF,stroke:#000,stroke-width:2px,color:#000;
 classDef android-feature fill:#FFD6A5,stroke:#000,stroke-width:2px,color:#000;

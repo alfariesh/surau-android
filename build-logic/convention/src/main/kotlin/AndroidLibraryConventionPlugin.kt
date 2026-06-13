@@ -16,12 +16,6 @@
 
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import org.surau.app.configureGradleManagedDevices
-import org.surau.app.configureKotlinAndroid
-import org.surau.app.configurePrintApksTask
-import org.surau.app.configureSpotlessForAndroid
-import org.surau.app.disableUnnecessaryAndroidTests
-import org.surau.app.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
@@ -29,6 +23,12 @@ import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.withType
+import org.surau.app.configureGradleManagedDevices
+import org.surau.app.configureKotlinAndroid
+import org.surau.app.configurePrintApksTask
+import org.surau.app.configureSpotlessForAndroid
+import org.surau.app.disableUnnecessaryAndroidTests
+import org.surau.app.libs
 
 abstract class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {

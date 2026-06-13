@@ -66,7 +66,6 @@ import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButtonGroup
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.icon.SurauIcons
-import org.surau.app.core.domain.ReaderContent
 import org.surau.app.core.model.data.quran.PopulatedAyah
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.model.data.quran.TranslationSource

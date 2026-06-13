@@ -16,8 +16,6 @@
 
 package org.surau.app.core.common.network.di
 
-import org.surau.app.core.common.network.Dispatcher
-import org.surau.app.core.common.network.SurauDispatchers.Default
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,6 +23,8 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import org.surau.app.core.common.network.Dispatcher
+import org.surau.app.core.common.network.SurauDispatchers.Default
 import javax.inject.Qualifier
 import javax.inject.Singleton
 

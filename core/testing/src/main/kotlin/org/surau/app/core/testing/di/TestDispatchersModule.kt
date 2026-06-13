@@ -16,16 +16,16 @@
 
 package org.surau.app.core.testing.di
 
-import org.surau.app.core.common.network.Dispatcher
-import org.surau.app.core.common.network.SurauDispatchers.Default
-import org.surau.app.core.common.network.SurauDispatchers.IO
-import org.surau.app.core.common.network.di.DispatchersModule
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import org.surau.app.core.common.network.Dispatcher
+import org.surau.app.core.common.network.SurauDispatchers.Default
+import org.surau.app.core.common.network.SurauDispatchers.IO
+import org.surau.app.core.common.network.di.DispatchersModule
 
 @Module
 @TestInstallIn(

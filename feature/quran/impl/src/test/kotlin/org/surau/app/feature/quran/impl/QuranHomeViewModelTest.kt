@@ -16,6 +16,7 @@
 
 package org.surau.app.feature.quran.impl
 
+import app.cash.turbine.TurbineTestContext
 import app.cash.turbine.test
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -26,7 +27,6 @@ import org.surau.app.core.data.test.repository.FakeQuranRepository
 import org.surau.app.core.domain.GetSurahListWithLastReadUseCase
 import org.surau.app.core.model.data.quran.AyahKey
 import org.surau.app.core.testing.util.MainDispatcherRule
-import app.cash.turbine.TurbineTestContext
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull

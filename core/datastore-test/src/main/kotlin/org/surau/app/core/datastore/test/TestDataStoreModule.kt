@@ -17,13 +17,13 @@
 package org.surau.app.core.datastore.test
 
 import androidx.datastore.core.DataStore
-import org.surau.app.core.datastore.UserPreferences
-import org.surau.app.core.datastore.UserPreferencesSerializer
-import org.surau.app.core.datastore.di.DataStoreModule
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
+import org.surau.app.core.datastore.UserPreferences
+import org.surau.app.core.datastore.UserPreferencesSerializer
+import org.surau.app.core.datastore.di.DataStoreModule
 import javax.inject.Singleton
 
 @Module

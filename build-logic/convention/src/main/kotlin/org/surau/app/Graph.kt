@@ -17,7 +17,6 @@
 package org.surau.app
 
 import com.android.utils.associateWithNotNull
-import org.surau.app.PluginType.Unknown
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -35,6 +34,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
+import org.surau.app.PluginType.Unknown
 import kotlin.text.RegexOption.DOT_MATCHES_ALL
 
 /**

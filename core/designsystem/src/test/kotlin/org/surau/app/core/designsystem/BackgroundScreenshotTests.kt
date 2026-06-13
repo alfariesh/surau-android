@@ -22,9 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.unit.dp
-import org.surau.app.core.designsystem.component.SurauBackground
-import org.surau.app.core.designsystem.component.SurauGradientBackground
-import org.surau.app.core.testing.util.captureMultiTheme
 import dagger.hilt.android.testing.HiltTestApplication
 import org.junit.Rule
 import org.junit.Test
@@ -33,6 +30,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.annotation.LooperMode
+import org.surau.app.core.designsystem.component.SurauBackground
+import org.surau.app.core.designsystem.component.SurauGradientBackground
+import org.surau.app.core.testing.util.captureMultiTheme
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)

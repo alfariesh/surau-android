@@ -16,6 +16,7 @@
 
 package org.surau.app.feature.quran.impl
 
+import app.cash.turbine.TurbineTestContext
 import app.cash.turbine.test
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceTimeBy
@@ -23,18 +24,16 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
-import org.surau.app.core.data.test.QuranTestData
 import org.surau.app.core.data.test.repository.FakeQuranProgressRepository
 import org.surau.app.core.data.test.repository.FakeQuranRepository
+import org.surau.app.core.data.test.repository.FakeUserDataRepository
 import org.surau.app.core.datastore.SurauPreferencesDataSource
 import org.surau.app.core.datastore.UserPreferences
 import org.surau.app.core.datastore.test.InMemoryDataStore
-import org.surau.app.core.data.test.repository.FakeUserDataRepository
 import org.surau.app.core.domain.GetReaderContentUseCase
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.testing.util.MainDispatcherRule
 import org.surau.app.feature.quran.api.navigation.SurahReaderNavKey
-import app.cash.turbine.TurbineTestContext
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 

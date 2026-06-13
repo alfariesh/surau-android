@@ -25,8 +25,6 @@ import android.net.NetworkRequest
 import android.net.NetworkRequest.Builder
 import androidx.core.content.getSystemService
 import androidx.tracing.trace
-import org.surau.app.core.common.network.Dispatcher
-import org.surau.app.core.common.network.SurauDispatchers.IO
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
@@ -34,6 +32,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
+import org.surau.app.core.common.network.Dispatcher
+import org.surau.app.core.common.network.SurauDispatchers.IO
 import javax.inject.Inject
 
 internal class ConnectivityManagerNetworkMonitor @Inject constructor(

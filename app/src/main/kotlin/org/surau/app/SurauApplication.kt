@@ -22,9 +22,9 @@ import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy.Builder
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import dagger.hilt.android.HiltAndroidApp
 import org.surau.app.sync.initializers.Sync
 import org.surau.app.util.ProfileVerifierLogger
-import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 /**

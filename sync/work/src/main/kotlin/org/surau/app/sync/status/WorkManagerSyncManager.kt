@@ -21,13 +21,13 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkInfo.State
 import androidx.work.WorkManager
-import org.surau.app.core.data.util.SyncManager
-import org.surau.app.sync.initializers.SYNC_WORK_NAME
-import org.surau.app.sync.workers.SyncWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
+import org.surau.app.core.data.util.SyncManager
+import org.surau.app.sync.initializers.SYNC_WORK_NAME
+import org.surau.app.sync.workers.SyncWorker
 import javax.inject.Inject
 
 /**

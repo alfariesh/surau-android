@@ -16,9 +16,9 @@
 
 package org.surau.app.core.testing.util
 
-import org.surau.app.core.data.util.NetworkMonitor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.surau.app.core.data.util.NetworkMonitor
 
 class TestNetworkMonitor : NetworkMonitor {
 

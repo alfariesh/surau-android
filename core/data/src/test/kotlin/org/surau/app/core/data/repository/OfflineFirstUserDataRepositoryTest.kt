@@ -16,13 +16,6 @@
 
 package org.surau.app.core.data.repository
 
-import org.surau.app.core.analytics.NoOpAnalyticsHelper
-import org.surau.app.core.datastore.SurauPreferencesDataSource
-import org.surau.app.core.datastore.UserPreferences
-import org.surau.app.core.datastore.test.InMemoryDataStore
-import org.surau.app.core.model.data.DarkThemeConfig
-import org.surau.app.core.model.data.UserData
-import org.surau.app.core.model.data.quran.ReaderMode
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
@@ -30,6 +23,13 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import org.surau.app.core.analytics.NoOpAnalyticsHelper
+import org.surau.app.core.datastore.SurauPreferencesDataSource
+import org.surau.app.core.datastore.UserPreferences
+import org.surau.app.core.datastore.test.InMemoryDataStore
+import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.UserData
+import org.surau.app.core.model.data.quran.ReaderMode
 import kotlin.test.assertEquals
 
 class OfflineFirstUserDataRepositoryTest {

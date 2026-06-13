@@ -21,9 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import org.surau.app.core.designsystem.component.SurauIconToggleButton
-import org.surau.app.core.designsystem.icon.SurauIcons
-import org.surau.app.core.testing.util.captureMultiTheme
 import dagger.hilt.android.testing.HiltTestApplication
 import org.junit.Rule
 import org.junit.Test
@@ -32,6 +29,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.annotation.LooperMode
+import org.surau.app.core.designsystem.component.SurauIconToggleButton
+import org.surau.app.core.designsystem.icon.SurauIcons
+import org.surau.app.core.testing.util.captureMultiTheme
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)

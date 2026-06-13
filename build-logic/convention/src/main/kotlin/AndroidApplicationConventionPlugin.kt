@@ -16,15 +16,15 @@
 
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.configure
 import org.surau.app.configureBadgingTasks
 import org.surau.app.configureGradleManagedDevices
 import org.surau.app.configureKotlinAndroid
 import org.surau.app.configurePrintApksTask
 import org.surau.app.configureSpotlessForAndroid
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.configure
 
 abstract class AndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {

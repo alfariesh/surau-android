@@ -16,9 +16,9 @@
 
 package org.surau.app.core.sync.test
 
-import org.surau.app.core.data.util.SyncManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import org.surau.app.core.data.util.SyncManager
 import javax.inject.Inject
 
 internal class NeverSyncingSyncManager @Inject constructor() : SyncManager {

@@ -23,9 +23,6 @@ import android.content.IntentFilter
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.tracing.trace
-import org.surau.app.core.common.network.Dispatcher
-import org.surau.app.core.common.network.SurauDispatchers.IO
-import org.surau.app.core.common.network.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +37,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinTimeZone
+import org.surau.app.core.common.network.Dispatcher
+import org.surau.app.core.common.network.SurauDispatchers.IO
+import org.surau.app.core.common.network.di.ApplicationScope
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -16,6 +16,10 @@
 
 package org.surau.app.core.data.di
 
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import org.surau.app.core.data.auth.SessionTokenProvider
 import org.surau.app.core.data.repository.AuthRepository
 import org.surau.app.core.data.repository.DefaultAuthRepository
@@ -32,10 +36,6 @@ import org.surau.app.core.data.util.NetworkMonitor
 import org.surau.app.core.data.util.TimeZoneBroadcastMonitor
 import org.surau.app.core.data.util.TimeZoneMonitor
 import org.surau.app.core.network.auth.AuthTokenProvider
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)

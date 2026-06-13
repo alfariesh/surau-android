@@ -16,9 +16,9 @@
 
 package org.surau.app.core.data.test
 
-import org.surau.app.core.data.util.NetworkMonitor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import org.surau.app.core.data.util.NetworkMonitor
 import javax.inject.Inject
 
 class AlwaysOnlineNetworkMonitor @Inject constructor() : NetworkMonitor {

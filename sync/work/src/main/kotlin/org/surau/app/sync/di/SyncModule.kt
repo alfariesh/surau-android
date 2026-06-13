@@ -16,14 +16,14 @@
 
 package org.surau.app.sync.di
 
-import org.surau.app.core.data.util.SyncManager
-import org.surau.app.sync.status.StubSyncSubscriber
-import org.surau.app.sync.status.SyncSubscriber
-import org.surau.app.sync.status.WorkManagerSyncManager
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import org.surau.app.core.data.util.SyncManager
+import org.surau.app.sync.status.StubSyncSubscriber
+import org.surau.app.sync.status.SyncSubscriber
+import org.surau.app.sync.status.WorkManagerSyncManager
 
 @Module
 @InstallIn(SingletonComponent::class)

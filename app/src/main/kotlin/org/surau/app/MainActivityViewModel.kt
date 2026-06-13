@@ -18,16 +18,16 @@ package org.surau.app
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import org.surau.app.MainActivityUiState.Loading
-import org.surau.app.MainActivityUiState.Success
-import org.surau.app.core.data.repository.UserDataRepository
-import org.surau.app.core.model.data.DarkThemeConfig
-import org.surau.app.core.model.data.UserData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.surau.app.MainActivityUiState.Loading
+import org.surau.app.MainActivityUiState.Success
+import org.surau.app.core.data.repository.UserDataRepository
+import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.UserData
 import javax.inject.Inject
 
 @HiltViewModel

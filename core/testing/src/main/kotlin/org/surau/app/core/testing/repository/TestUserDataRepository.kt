@@ -16,14 +16,14 @@
 
 package org.surau.app.core.testing.repository
 
-import org.surau.app.core.data.repository.UserDataRepository
-import org.surau.app.core.model.data.DarkThemeConfig
-import org.surau.app.core.model.data.UserData
-import org.surau.app.core.model.data.quran.ReaderMode
 import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filterNotNull
+import org.surau.app.core.data.repository.UserDataRepository
+import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.UserData
+import org.surau.app.core.model.data.quran.ReaderMode
 
 val emptyUserData = UserData(
     darkThemeConfig = DarkThemeConfig.FOLLOW_SYSTEM,

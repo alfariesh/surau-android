@@ -16,14 +16,14 @@
 
 package org.surau.app.core.sync.test
 
-import org.surau.app.core.data.util.SyncManager
-import org.surau.app.sync.di.SyncModule
-import org.surau.app.sync.status.StubSyncSubscriber
-import org.surau.app.sync.status.SyncSubscriber
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
+import org.surau.app.core.data.util.SyncManager
+import org.surau.app.sync.di.SyncModule
+import org.surau.app.sync.status.StubSyncSubscriber
+import org.surau.app.sync.status.SyncSubscriber
 
 @Module
 @TestInstallIn(

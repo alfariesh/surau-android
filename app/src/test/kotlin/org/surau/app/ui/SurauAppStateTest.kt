@@ -19,10 +19,6 @@ package org.surau.app.ui
 import androidx.compose.runtime.remember
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation3.runtime.NavBackStack
-import org.surau.app.core.navigation.NavigationState
-import org.surau.app.core.testing.util.TestNetworkMonitor
-import org.surau.app.core.testing.util.TestTimeZoneMonitor
-import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import kotlinx.coroutines.flow.collect
@@ -35,6 +31,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.surau.app.core.navigation.NavigationState
+import org.surau.app.core.testing.util.TestNetworkMonitor
+import org.surau.app.core.testing.util.TestTimeZoneMonitor
+import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import kotlin.test.assertEquals
 
 /**

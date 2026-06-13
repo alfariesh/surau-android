@@ -55,10 +55,10 @@ import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import org.surau.app.core.designsystem.component.scrollbar.ThumbState.Active
 import org.surau.app.core.designsystem.component.scrollbar.ThumbState.Dormant
 import org.surau.app.core.designsystem.component.scrollbar.ThumbState.Inactive
-import kotlinx.coroutines.delay
 
 /**
  * The time period for showing the scrollbar thumb after interacting with it, before it fades away

@@ -20,6 +20,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.TimeZone
 import org.surau.app.core.data.util.NetworkMonitor
 import org.surau.app.core.data.util.TimeZoneMonitor
 import org.surau.app.core.navigation.NavigationState
@@ -27,11 +32,6 @@ import org.surau.app.core.navigation.rememberNavigationState
 import org.surau.app.core.ui.TrackDisposableJank
 import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import org.surau.app.navigation.TOP_LEVEL_NAV_ITEMS
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.datetime.TimeZone
 
 @Composable
 fun rememberSurauAppState(

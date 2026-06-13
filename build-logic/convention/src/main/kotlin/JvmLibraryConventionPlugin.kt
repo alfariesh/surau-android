@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import org.surau.app.configureKotlinJvm
-import org.surau.app.configureSpotlessForJvm
-import org.surau.app.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.withType
+import org.surau.app.configureKotlinJvm
+import org.surau.app.configureSpotlessForJvm
+import org.surau.app.libs
 
 abstract class JvmLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
