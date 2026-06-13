@@ -18,10 +18,12 @@ plugins {
     alias(libs.plugins.surau.android.feature.impl)
     alias(libs.plugins.surau.android.library.compose)
     alias(libs.plugins.surau.android.library.jacoco)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
     namespace = "org.surau.app.feature.settings.impl"
+    testOptions.unitTests.isIncludeAndroidResources = true
 }
 
 dependencies {
@@ -32,6 +34,10 @@ dependencies {
 
     testImplementation(projects.core.dataTest)
     testImplementation(projects.core.datastoreTest)
+    testImplementation(projects.core.screenshotTesting)
     testImplementation(projects.core.testing)
+    testImplementation(libs.hilt.android.testing)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
 }
