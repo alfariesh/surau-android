@@ -18,6 +18,7 @@ package org.surau.app.ui
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -49,9 +50,18 @@ class NavigationTest {
     @Before
     fun setup() = hiltRule.inject()
 
+    /**
+     * The welcome screen is shown via a DataStore-driven flow, so it only appears after an async
+     * read settles — wait for it before touching the node to avoid a race on first composition.
+     */
+    private fun awaitWelcomeGuest() = composeTestRule.waitUntil(WELCOME_TIMEOUT_MS) {
+        composeTestRule.onAllNodesWithTag("welcome:guest").fetchSemanticsNodes().isNotEmpty()
+    }
+
     @Test
     fun firstLaunch_showsWelcome_thenGuestLandsOnQuranHome() {
         composeTestRule.apply {
+            awaitWelcomeGuest()
             // Fresh install: the welcome screen offers guest reading first.
             onNodeWithTag("welcome:guest").assertIsDisplayed()
 
@@ -65,6 +75,7 @@ class NavigationTest {
     @Test
     fun quranHome_openSurah_readerShowsAyahs_backReturnsHome() {
         composeTestRule.apply {
+            awaitWelcomeGuest()
             onNodeWithTag("welcome:guest").performClick()
 
             onNodeWithText("Al-Fatihah").performClick()
@@ -78,6 +89,7 @@ class NavigationTest {
     @Test
     fun quranHome_settings_showsAccountSection_signInOpensLogin() {
         composeTestRule.apply {
+            awaitWelcomeGuest()
             onNodeWithTag("welcome:guest").performClick()
 
             onNodeWithTag("quranHome:settings").performClick()
@@ -86,5 +98,9 @@ class NavigationTest {
             onNodeWithTag("settings:signIn").performClick()
             onNodeWithTag("login:submit").assertIsDisplayed()
         }
+    }
+
+    private companion object {
+        const val WELCOME_TIMEOUT_MS = 5_000L
     }
 }
