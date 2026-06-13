@@ -47,13 +47,14 @@ import org.surau.app.R
 import org.surau.app.core.designsystem.component.SurauBackground
 import org.surau.app.core.navigation.Navigator
 import org.surau.app.core.navigation.toEntries
+import org.surau.app.feature.auth.api.navigation.ResetPasswordNavKey
 import org.surau.app.feature.auth.api.navigation.WelcomeNavKey
+import org.surau.app.feature.auth.api.navigation.navigateToLogin
 import org.surau.app.feature.auth.impl.navigation.authEntries
 import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import org.surau.app.feature.quran.impl.navigation.quranHomeEntry
 import org.surau.app.feature.quran.impl.navigation.quranSearchEntry
 import org.surau.app.feature.quran.impl.navigation.surahReaderEntry
-import org.surau.app.feature.auth.api.navigation.navigateToLogin
 import org.surau.app.feature.settings.api.navigation.navigateToSettings
 import org.surau.app.feature.settings.impl.navigation.settingsEntry
 
@@ -63,6 +64,7 @@ fun SurauApp(
     shouldShowWelcome: Boolean,
     appVersionName: String,
     modifier: Modifier = Modifier,
+    resetPasswordToken: String? = null,
 ) {
     SurauBackground(modifier = modifier) {
         val snackbarHostState = remember { SnackbarHostState() }
@@ -82,10 +84,23 @@ fun SurauApp(
 
         val navigator = remember { Navigator(appState.navigationState) }
 
-        // First launch: offer guest/sign-in once. Never blocks later launches.
-        LaunchedEffect(shouldShowWelcome) {
-            if (shouldShowWelcome && appState.navigationState.currentKey == QuranHomeNavKey) {
+        // First launch: offer guest/sign-in once. Never blocks later launches. A pending
+        // reset-password deep link takes precedence and suppresses the welcome detour.
+        LaunchedEffect(shouldShowWelcome, resetPasswordToken) {
+            if (resetPasswordToken == null &&
+                shouldShowWelcome &&
+                appState.navigationState.currentKey == QuranHomeNavKey
+            ) {
                 navigator.navigate(WelcomeNavKey)
+            }
+        }
+
+        // Reset-password deep link: route straight to the reset screen with the emailed token.
+        LaunchedEffect(resetPasswordToken) {
+            if (resetPasswordToken != null &&
+                appState.navigationState.currentKey == QuranHomeNavKey
+            ) {
+                navigator.navigate(ResetPasswordNavKey(resetPasswordToken))
             }
         }
 

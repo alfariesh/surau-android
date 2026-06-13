@@ -16,6 +16,7 @@
 
 package org.surau.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -33,6 +34,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.metrics.performance.JankStats
 import androidx.tracing.trace
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.surau.app.MainActivityUiState.Loading
 import org.surau.app.core.analytics.AnalyticsHelper
 import org.surau.app.core.analytics.LocalAnalyticsHelper
@@ -43,12 +50,6 @@ import org.surau.app.core.ui.LocalTimeZone
 import org.surau.app.ui.SurauApp
 import org.surau.app.ui.rememberSurauAppState
 import org.surau.app.util.isSystemInDarkTheme
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -71,9 +72,17 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainActivityViewModel by viewModels()
 
+    /**
+     * Reset-password token captured from a `https://surau.org/reset-password?token=…` deep link.
+     * Tracked as Compose state so that a warm-start [onNewIntent] also routes into the reset flow.
+     */
+    private var deepLinkResetToken by mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        deepLinkResetToken = extractResetToken(intent)
 
         // We keep this as a mutable state, so that we can track changes inside the composition.
         // This allows us to react to dark/light mode changes.
@@ -146,6 +155,7 @@ class MainActivity : ComponentActivity() {
                     SurauApp(
                         appState = appState,
                         shouldShowWelcome = uiState.shouldShowWelcome,
+                        resetPasswordToken = deepLinkResetToken,
                         appVersionName = BuildConfig.VERSION_NAME,
                     )
                 }
@@ -162,7 +172,25 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         lazyStats.get().isTrackingEnabled = false
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        extractResetToken(intent)?.let { deepLinkResetToken = it }
+    }
 }
+
+/**
+ * Pulls the reset-password token out of a `VIEW` deep link such as
+ * `https://surau.org/reset-password?token=abc`. Returns null for any other intent.
+ */
+private fun extractResetToken(intent: Intent?): String? =
+    intent
+        ?.takeIf { it.action == Intent.ACTION_VIEW }
+        ?.data
+        ?.takeIf { it.path?.startsWith("/reset-password") == true }
+        ?.getQueryParameter("token")
+        ?.takeIf { it.isNotBlank() }
 
 /**
  * The default light scrim, as defined by androidx and the platform:
