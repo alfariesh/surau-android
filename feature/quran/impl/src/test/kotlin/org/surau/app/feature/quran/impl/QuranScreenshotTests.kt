@@ -136,6 +136,8 @@ class QuranScreenshotTests {
                 onSeekToAyah = {},
                 onSetFontScale = {},
                 onToggleTranslation = {},
+                onSetRepeat = { _, _ -> },
+                onSetSleepTimer = {},
             )
         }
     }

@@ -52,6 +52,12 @@ internal class AyahTimeline private constructor(
     /** The earliest start (ms) of [ayah], or `null` if it has no segment. */
     fun startMsOf(ayah: Int): Long? = entries.firstOrNull { it.ayah == ayah }?.startMs
 
+    /**
+     * The end (ms) of [ayah] = the next ayah's start, or `null` at the last ayah (the caller falls
+     * back to the track duration). Used to detect the loop boundary while repeating.
+     */
+    fun endMsOf(ayah: Int): Long? = nextAyah(ayah)?.let(::startMsOf)
+
     fun firstAyah(): Int? = entries.firstOrNull()?.ayah
 
     fun lastAyah(): Int? = entries.lastOrNull()?.ayah

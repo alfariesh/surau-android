@@ -60,4 +60,16 @@
     <string name="feature_quran_impl_flow_settings">Pengaturan Flow</string>
     <string name="feature_quran_impl_flow_font_size">Ukuran huruf</string>
     <string name="feature_quran_impl_flow_show_translation">Tampilkan terjemahan</string>
+    <string name="feature_quran_impl_repeat">Pengulangan</string>
+    <string name="feature_quran_impl_repeat_action">Ulangi</string>
+    <string name="feature_quran_impl_repeat_off">Mati</string>
+    <string name="feature_quran_impl_repeat_ayah">Ayat ini</string>
+    <string name="feature_quran_impl_repeat_surah">Surah</string>
+    <string name="feature_quran_impl_repeat_count">Jumlah</string>
+    <string name="feature_quran_impl_repeat_infinite">Terus</string>
+    <string name="feature_quran_impl_repeat_times">%1$d×</string>
+    <string name="feature_quran_impl_sleep_timer">Timer tidur</string>
+    <string name="feature_quran_impl_sleep_off">Matikan</string>
+    <string name="feature_quran_impl_sleep_minutes">%1$d menit</string>
+    <string name="feature_quran_impl_sleep_end_of_surah">Akhir surah</string>
 </resources>

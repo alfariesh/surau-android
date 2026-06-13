@@ -23,7 +23,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -48,7 +49,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -69,11 +73,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalView
@@ -81,18 +86,23 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.media.PlayerUiState
+import org.surau.app.core.media.RepeatScope
+import org.surau.app.core.media.SleepTimerOption
 import org.surau.app.core.model.data.quran.PopulatedAyah
 import org.surau.app.core.ui.TrackScreenViewEvent
 import org.surau.app.feature.quran.api.navigation.SurahFlowNavKey
+import kotlin.math.abs
 
 @Composable
 fun SurahFlowScreen(
@@ -131,6 +141,8 @@ fun SurahFlowScreen(
         onSeekToAyah = viewModel::onSeekToAyah,
         onSetFontScale = viewModel::setFontScale,
         onToggleTranslation = viewModel::toggleTranslation,
+        onSetRepeat = viewModel::onSetRepeat,
+        onSetSleepTimer = viewModel::onSetSleepTimer,
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
@@ -150,6 +162,8 @@ internal fun SurahFlowScreen(
     onSeekToAyah: (Int) -> Unit,
     onSetFontScale: (Float) -> Unit,
     onToggleTranslation: () -> Unit,
+    onSetRepeat: (RepeatScope, Int) -> Unit,
+    onSetSleepTimer: (SleepTimerOption) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     initialChromeVisible: Boolean = true,
@@ -195,6 +209,8 @@ internal fun SurahFlowScreen(
             onSeekToAyah = onSeekToAyah,
             onSetFontScale = onSetFontScale,
             onToggleTranslation = onToggleTranslation,
+            onSetRepeat = onSetRepeat,
+            onSetSleepTimer = onSetSleepTimer,
             snackbarHostState = snackbarHostState,
             initialChromeVisible = initialChromeVisible,
             modifier = modifier,
@@ -216,6 +232,8 @@ private fun FlowSuccess(
     onSeekToAyah: (Int) -> Unit,
     onSetFontScale: (Float) -> Unit,
     onToggleTranslation: () -> Unit,
+    onSetRepeat: (RepeatScope, Int) -> Unit,
+    onSetSleepTimer: (SleepTimerOption) -> Unit,
     snackbarHostState: SnackbarHostState,
     initialChromeVisible: Boolean,
     modifier: Modifier,
@@ -250,11 +268,14 @@ private fun FlowSuccess(
         onDispose { controller?.show(WindowInsetsCompat.Type.systemBars()) }
     }
 
-    // Keep the active ayah centred.
+    // Keep the active ayah centred. Wait for the list to be measured first so centring also works
+    // when entering Flow mid-playback (the active ayah is already set before the first layout pass).
     LaunchedEffect(playingAyah) {
         val target = playingAyah ?: return@LaunchedEffect
         val index = success.ayahs.indexOfFirst { it.ayah.ayahNumber == target }
-        if (index >= 0) listState.centerItem(index)
+        if (index < 0) return@LaunchedEffect
+        snapshotFlow { listState.layoutInfo.viewportSize.height > 0 }.first { it }
+        listState.centerItem(index)
     }
 
     Box(
@@ -286,6 +307,7 @@ private fun FlowSuccess(
                         isActive = populated.ayah.ayahNumber == playingAyah,
                         fontScale = fontScale,
                         showTranslation = showTranslation,
+                        listState = listState,
                         onTap = { onSeekToAyah(populated.ayah.ayahNumber) },
                     )
                 }
@@ -311,6 +333,8 @@ private fun FlowSuccess(
         AnimatedVisibility(visible = chromeVisible, modifier = Modifier.align(Alignment.TopCenter)) {
             FlowTopBar(
                 surahName = success.surahName,
+                sleepTimerRemainingMs = playerState.sleepTimerRemainingMs,
+                stopAtSurahEnd = playerState.stopAtSurahEnd,
                 onBackClick = onBackClick,
                 onSettingsClick = {
                     showSettings = true
@@ -325,18 +349,12 @@ private fun FlowSuccess(
         ) {
             FlowBottomBar(
                 playerState = playerState,
-                onPlayPause = {
-                    onPlayPause()
-                    interactionTick++
-                },
-                onPrevious = {
-                    onPrevious()
-                    interactionTick++
-                },
-                onNext = {
-                    onNext()
-                    interactionTick++
-                },
+                onPlayPause = onPlayPause,
+                onPrevious = onPrevious,
+                onNext = onNext,
+                onSetRepeat = onSetRepeat,
+                onSetSleepTimer = onSetSleepTimer,
+                onInteraction = { interactionTick++ },
             )
         }
 
@@ -350,8 +368,11 @@ private fun FlowSuccess(
         FlowSettingsSheet(
             fontScale = fontScale,
             showTranslation = showTranslation,
+            repeatScope = playerState.repeatScope,
+            repeatCount = playerState.repeatCount,
             onFontScaleChange = onSetFontScale,
             onToggleTranslation = onToggleTranslation,
+            onSetRepeat = onSetRepeat,
             onDismiss = { showSettings = false },
         )
     }
@@ -363,12 +384,10 @@ private fun FlowAyah(
     isActive: Boolean,
     fontScale: Float,
     showTranslation: Boolean,
+    listState: LazyListState,
     onTap: () -> Unit,
 ) {
-    val alpha by animateFloatAsState(
-        targetValue = if (isActive) 1f else INACTIVE_ALPHA,
-        label = "flowAyahAlpha",
-    )
+    val ayahNumber = populated.ayah.ayahNumber
     val color = if (isActive) {
         MaterialTheme.colorScheme.onSurface
     } else {
@@ -377,10 +396,28 @@ private fun FlowAyah(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                // Picker-wheel effect: the ayah at the viewport centre is full size and opaque;
+                // ayahs above/below shrink, fade, and tilt away like a rotating cylinder.
+                val info = listState.layoutInfo
+                val item = info.visibleItemsInfo.firstOrNull { it.key == ayahNumber }
+                val viewportHeight = (info.viewportEndOffset - info.viewportStartOffset).toFloat()
+                if (item != null && viewportHeight > 0f) {
+                    val viewportCenter = info.viewportStartOffset + viewportHeight / 2f
+                    val itemCenter = item.offset + item.size / 2f
+                    val fraction = (abs(itemCenter - viewportCenter) / (viewportHeight / 2f))
+                        .coerceIn(0f, 1f)
+                    val scale = lerp(1f, 0.5f, fraction)
+                    scaleX = scale
+                    scaleY = scale
+                    alpha = lerp(1f, 0.15f, fraction)
+                    cameraDistance = 16f * density
+                    rotationX = lerp(0f, 52f, fraction) * if (itemCenter < viewportCenter) 1f else -1f
+                }
+            }
             .clickable(onClick = onTap)
-            .padding(horizontal = 24.dp, vertical = 16.dp)
-            .alpha(alpha)
-            .testTag("flow:ayah:${populated.ayah.ayahNumber}"),
+            .padding(horizontal = 24.dp, vertical = 18.dp)
+            .testTag("flow:ayah:$ayahNumber"),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AyahText(
@@ -405,6 +442,8 @@ private fun FlowAyah(
 @Composable
 private fun FlowTopBar(
     surahName: String,
+    sleepTimerRemainingMs: Long?,
+    stopAtSurahEnd: Boolean,
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
@@ -429,6 +468,27 @@ private fun FlowTopBar(
                     .weight(1f)
                     .padding(start = 8.dp),
             )
+            // Ambient sleep-timer readout while a stop is armed.
+            if (sleepTimerRemainingMs != null || stopAtSurahEnd) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(end = 4.dp).testTag("flow:sleepIndicator"),
+                ) {
+                    Icon(
+                        imageVector = SurauIcons.Bedtime,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Text(
+                        text = sleepTimerRemainingMs?.let(::formatTimer)
+                            ?: stringResource(R.string.feature_quran_impl_sleep_end_of_surah),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 4.dp),
+                    )
+                }
+            }
             IconButton(onClick = onSettingsClick, modifier = Modifier.testTag("flow:settings")) {
                 Icon(
                     imageVector = SurauIcons.Settings,
@@ -445,6 +505,9 @@ private fun FlowBottomBar(
     onPlayPause: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
+    onSetRepeat: (RepeatScope, Int) -> Unit,
+    onSetSleepTimer: (SleepTimerOption) -> Unit,
+    onInteraction: () -> Unit,
 ) {
     Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
         Column(
@@ -465,20 +528,31 @@ private fun FlowBottomBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onPrevious) {
+                RepeatButton(
+                    scope = playerState.repeatScope,
+                    onCycle = {
+                        onSetRepeat(playerState.repeatScope.next(), playerState.repeatCount)
+                        onInteraction()
+                    },
+                )
+                IconButton(onClick = {
+                    onPrevious()
+                    onInteraction()
+                }) {
                     Icon(
                         imageVector = SurauIcons.SkipPrevious,
                         contentDescription = stringResource(R.string.feature_quran_impl_previous_ayah),
                     )
                 }
                 FilledTonalIconButton(
-                    onClick = onPlayPause,
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .testTag("flow:playPause"),
+                    onClick = {
+                        onPlayPause()
+                        onInteraction()
+                    },
+                    modifier = Modifier.testTag("flow:playPause"),
                 ) {
                     Icon(
                         imageVector = if (playerState.isPlaying) {
@@ -495,23 +569,109 @@ private fun FlowBottomBar(
                         ),
                     )
                 }
-                IconButton(onClick = onNext) {
+                IconButton(onClick = {
+                    onNext()
+                    onInteraction()
+                }) {
                     Icon(
                         imageVector = SurauIcons.SkipNext,
                         contentDescription = stringResource(R.string.feature_quran_impl_next_ayah),
                     )
                 }
+                SleepTimerButton(
+                    active = playerState.sleepTimerRemainingMs != null || playerState.stopAtSurahEnd,
+                    onSelect = {
+                        onSetSleepTimer(it)
+                        onInteraction()
+                    },
+                )
             }
         }
     }
 }
 
 @Composable
+private fun RepeatButton(scope: RepeatScope, onCycle: () -> Unit) {
+    IconButton(onClick = onCycle, modifier = Modifier.testTag("flow:repeat")) {
+        Icon(
+            imageVector = if (scope == RepeatScope.AYAH) SurauIcons.RepeatOne else SurauIcons.Repeat,
+            contentDescription = stringResource(R.string.feature_quran_impl_repeat_action),
+            tint = if (scope == RepeatScope.OFF) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            } else {
+                MaterialTheme.colorScheme.primary
+            },
+        )
+    }
+}
+
+@Composable
+private fun SleepTimerButton(active: Boolean, onSelect: (SleepTimerOption) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }, modifier = Modifier.testTag("flow:sleepTimer")) {
+            Icon(
+                imageVector = SurauIcons.Bedtime,
+                contentDescription = stringResource(R.string.feature_quran_impl_sleep_timer),
+                tint = if (active) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            for (minutes in SLEEP_TIMER_MINUTES) {
+                DropdownMenuItem(
+                    text = {
+                        Text(stringResource(R.string.feature_quran_impl_sleep_minutes, minutes))
+                    },
+                    onClick = {
+                        expanded = false
+                        onSelect(SleepTimerOption.After(minutes * 60_000L))
+                    },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.feature_quran_impl_sleep_end_of_surah)) },
+                onClick = {
+                    expanded = false
+                    onSelect(SleepTimerOption.EndOfSurah)
+                },
+            )
+            if (active) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.feature_quran_impl_sleep_off)) },
+                    onClick = {
+                        expanded = false
+                        onSelect(SleepTimerOption.Off)
+                    },
+                )
+            }
+        }
+    }
+}
+
+private fun RepeatScope.next(): RepeatScope = when (this) {
+    RepeatScope.OFF -> RepeatScope.AYAH
+    RepeatScope.AYAH -> RepeatScope.SURAH
+    RepeatScope.SURAH -> RepeatScope.OFF
+}
+
+private fun formatTimer(ms: Long): String {
+    val totalSeconds = (ms / 1000).coerceAtLeast(0)
+    return "%d:%02d".format(totalSeconds / 60, totalSeconds % 60)
+}
+
+@Composable
 private fun FlowSettingsSheet(
     fontScale: Float,
     showTranslation: Boolean,
+    repeatScope: RepeatScope,
+    repeatCount: Int,
     onFontScaleChange: (Float) -> Unit,
     onToggleTranslation: () -> Unit,
+    onSetRepeat: (RepeatScope, Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -539,6 +699,54 @@ private fun FlowSettingsSheet(
                 )
                 Switch(checked = showTranslation, onCheckedChange = { onToggleTranslation() })
             }
+
+            Text(
+                text = stringResource(R.string.feature_quran_impl_repeat),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 20.dp),
+            )
+            Row(
+                modifier = Modifier.padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(
+                    selected = repeatScope == RepeatScope.OFF,
+                    onClick = { onSetRepeat(RepeatScope.OFF, repeatCount) },
+                    label = { Text(stringResource(R.string.feature_quran_impl_repeat_off)) },
+                )
+                FilterChip(
+                    selected = repeatScope == RepeatScope.AYAH,
+                    onClick = { onSetRepeat(RepeatScope.AYAH, repeatCount) },
+                    label = { Text(stringResource(R.string.feature_quran_impl_repeat_ayah)) },
+                )
+                FilterChip(
+                    selected = repeatScope == RepeatScope.SURAH,
+                    onClick = { onSetRepeat(RepeatScope.SURAH, repeatCount) },
+                    label = { Text(stringResource(R.string.feature_quran_impl_repeat_surah)) },
+                )
+            }
+            if (repeatScope != RepeatScope.OFF) {
+                Row(
+                    modifier = Modifier.padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    for (count in REPEAT_COUNTS) {
+                        FilterChip(
+                            selected = repeatCount == count,
+                            onClick = { onSetRepeat(repeatScope, count) },
+                            label = {
+                                Text(
+                                    if (count == 0) {
+                                        stringResource(R.string.feature_quran_impl_repeat_infinite)
+                                    } else {
+                                        stringResource(R.string.feature_quran_impl_repeat_times, count)
+                                    },
+                                )
+                            },
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.size(24.dp))
         }
     }
@@ -546,16 +754,24 @@ private fun FlowSettingsSheet(
 
 /** Scrolls so the centre of item [index] aligns with the viewport centre. */
 private suspend fun LazyListState.centerItem(index: Int) {
-    val item = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
-    if (item != null) {
-        val delta = item.offset + item.size / 2 - layoutInfo.viewportSize.height / 2
-        animateScrollBy(delta.toFloat())
+    if (layoutInfo.visibleItemsInfo.any { it.index == index }) {
+        animateScrollBy(distanceToCenter(index), animationSpec = spring(stiffness = Spring.StiffnessLow))
     } else {
         scrollToItem(index)
-        val settled = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } ?: return
-        val delta = settled.offset + settled.size / 2 - layoutInfo.viewportSize.height / 2
-        scrollBy(delta.toFloat())
+        scrollBy(distanceToCenter(index))
     }
+}
+
+/**
+ * Signed pixels from item [index]'s centre to the viewport centre, or `0` if it is not laid out.
+ * Uses the viewport's offset frame (`viewportStartOffset`/`viewportEndOffset`), which accounts for
+ * the large content padding — not the raw `viewportSize` — so a positive result scrolls the item up
+ * to the centre.
+ */
+private fun LazyListState.distanceToCenter(index: Int): Float {
+    val item = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } ?: return 0f
+    val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2f
+    return item.offset + item.size / 2f - viewportCenter
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
@@ -566,4 +782,5 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 
 private val FADE_HEIGHT = 120.dp
 private const val CHROME_IDLE_MS = 3_000L
-private const val INACTIVE_ALPHA = 0.3f
+private val SLEEP_TIMER_MINUTES = listOf(15, 30, 45, 60)
+private val REPEAT_COUNTS = listOf(0, 3, 5, 7) // 0 = unlimited

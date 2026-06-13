@@ -67,6 +67,17 @@ class DefaultSurauPlayerController @Inject constructor(
     /** Non-null while a surah-mode session is loaded; maps playback position to the active ayah. */
     private var ayahTimeline: AyahTimeline? = null
 
+    // Loop state (surah-mode only): the ayah range to repeat, its scope, target plays (0 = forever),
+    // plays completed, and an "armed" latch so each pass over the boundary counts exactly once.
+    private var loopScope = RepeatScope.OFF
+    private var repeatRange: IntRange? = null
+    private var repeatTarget = 0
+    private var repeatPlaysDone = 0
+    private var repeatArmed = false
+
+    private var sleepTimerJob: Job? = null
+    private var stopAtSurahEnd = false
+
     private val listener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             syncState()
@@ -75,13 +86,23 @@ class DefaultSurauPlayerController @Inject constructor(
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) = syncState()
 
-        override fun onPlaybackStateChanged(playbackState: Int) = syncState()
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            if (playbackState == Player.STATE_ENDED && stopAtSurahEnd) {
+                stopAtSurahEnd = false
+                _state.update { it.copy(stopAtSurahEnd = false) }
+                controller?.pause()
+            }
+            syncState()
+        }
 
         override fun onPlayerError(error: PlaybackException) = syncState()
     }
 
     override fun playSurah(manifest: SurahAudioManifest, surahName: String, startAyah: Int) =
         controllerAction { controller ->
+            // A new surah invalidates any ayah-range loop and any in-progress fade.
+            clearRepeat()
+            controller.volume = 1f
             if (manifest.mode == MODE_SURAH) {
                 // One audio file for the whole surah; the active ayah comes from the timeline.
                 val item = manifest.toSurahModeMediaItem(surahName) ?: return@controllerAction
@@ -108,9 +129,9 @@ class DefaultSurauPlayerController @Inject constructor(
         if (timeline != null) {
             val current = timeline.ayahAt(controller.currentPosition.coerceAtLeast(0L))
                 ?: return@controllerAction
-            val nextMs = timeline.nextAyah(current)?.let(timeline::startMsOf)
-                ?: return@controllerAction // last ayah: no wrap
-            controller.seekTo(nextMs)
+            val target = timeline.nextAyah(current) ?: return@controllerAction // last ayah: no wrap
+            controller.seekTo(timeline.startMsOf(target) ?: 0L)
+            followAyahLoop(target)
             syncState()
         } else if (controller.hasNextMediaItem()) {
             controller.seekToNextMediaItem()
@@ -130,6 +151,7 @@ class DefaultSurauPlayerController @Inject constructor(
                 timeline.prevAyah(current) ?: current
             }
             controller.seekTo(timeline.startMsOf(target) ?: 0L)
+            followAyahLoop(target)
             syncState()
         } else {
             controller.seekToPrevious()
@@ -141,6 +163,7 @@ class DefaultSurauPlayerController @Inject constructor(
         if (timeline != null) {
             val ms = timeline.startMsOf(ayahNumber) ?: return@controllerAction
             controller.seekTo(ms)
+            followAyahLoop(ayahNumber)
             syncState()
         } else {
             val index = (0 until controller.mediaItemCount).firstOrNull { i ->
@@ -150,15 +173,75 @@ class DefaultSurauPlayerController @Inject constructor(
         }
     }
 
+    override fun setRepeat(scope: RepeatScope, count: Int) = controllerAction { controller ->
+        val timeline = ayahTimeline
+        repeatTarget = count.coerceAtLeast(0)
+        repeatPlaysDone = 0
+        repeatArmed = false
+        repeatRange = when {
+            scope == RepeatScope.OFF || timeline == null -> null
+            scope == RepeatScope.AYAH ->
+                currentAyah(controller.currentPosition.coerceAtLeast(0L))?.let { it..it }
+            else -> { // SURAH
+                val first = timeline.firstAyah()
+                val last = timeline.lastAyah()
+                if (first != null && last != null) first..last else null
+            }
+        }
+        loopScope = if (repeatRange != null) scope else RepeatScope.OFF
+        // A loop and an "end of surah" stop are mutually exclusive.
+        if (repeatRange != null) stopAtSurahEnd = false
+        _state.update {
+            it.copy(repeatScope = loopScope, repeatCount = repeatTarget, stopAtSurahEnd = stopAtSurahEnd)
+        }
+    }
+
+    override fun setSleepTimer(option: SleepTimerOption) {
+        sleepTimerJob?.cancel()
+        controller?.volume = 1f // undo any in-progress fade
+        when (option) {
+            SleepTimerOption.Off -> {
+                stopAtSurahEnd = false
+                _state.update { it.copy(sleepTimerRemainingMs = null, stopAtSurahEnd = false) }
+            }
+
+            is SleepTimerOption.After -> {
+                stopAtSurahEnd = false
+                sleepTimerJob = scope.launch {
+                    var remaining = option.durationMs
+                    while (remaining > 0) {
+                        _state.update { it.copy(sleepTimerRemainingMs = remaining, stopAtSurahEnd = false) }
+                        delay(SLEEP_TICK_MS)
+                        remaining -= SLEEP_TICK_MS
+                    }
+                    _state.update { it.copy(sleepTimerRemainingMs = null) }
+                    fadeOutAndPause()
+                }
+            }
+
+            SleepTimerOption.EndOfSurah -> {
+                clearRepeat() // a loop would never let the surah end
+                stopAtSurahEnd = true
+                _state.update { it.copy(sleepTimerRemainingMs = null, stopAtSurahEnd = true) }
+            }
+        }
+    }
+
     override fun stop() = controllerAction {
         it.stop()
         it.clearMediaItems()
+        it.volume = 1f
         ayahTimeline = null
+        clearRepeat()
+        sleepTimerJob?.cancel()
+        stopAtSurahEnd = false
+        _state.update { state -> state.copy(sleepTimerRemainingMs = null, stopAtSurahEnd = false) }
     }
 
     /** Releases the controller. Only needed on process teardown; unused during normal operation. */
     fun release() {
         positionJob?.cancel()
+        sleepTimerJob?.cancel()
         controller?.removeListener(listener)
         controller?.release()
         controllerFuture?.let(MediaController::releaseFuture)
@@ -191,6 +274,61 @@ class DefaultSurauPlayerController @Inject constructor(
         return controller?.currentMediaItem?.mediaId?.substringAfter(':', "")?.toIntOrNull()
     }
 
+    /** When looping a single ayah, moves the loop to follow explicit ayah navigation. */
+    private fun followAyahLoop(ayah: Int) {
+        if (loopScope != RepeatScope.AYAH) return
+        repeatRange = ayah..ayah
+        repeatPlaysDone = 0
+        repeatArmed = false
+    }
+
+    private fun clearRepeat() {
+        loopScope = RepeatScope.OFF
+        repeatRange = null
+        repeatTarget = 0
+        repeatPlaysDone = 0
+        repeatArmed = false
+        _state.update { it.copy(repeatScope = RepeatScope.OFF, repeatCount = 0) }
+    }
+
+    /**
+     * Loops the repeat range: seeks back when playback reaches its end. The "armed" latch flips true
+     * once the position is safely before the boundary and back to false on the pass that triggers,
+     * so each loop counts exactly once regardless of poll cadence or post-seek position lag.
+     */
+    private fun enforceRepeat(player: MediaController, position: Long) {
+        val range = repeatRange ?: return
+        val timeline = ayahTimeline ?: return
+        val endMs = timeline.endMsOf(range.last) ?: player.duration.coerceAtLeast(0L)
+        if (endMs <= 0L) return
+        val boundary = endMs - REPEAT_BOUNDARY_EPSILON_MS
+        if (position < boundary) {
+            repeatArmed = true
+            return
+        }
+        if (!repeatArmed) return
+        repeatArmed = false
+        if (repeatTarget != 0) {
+            repeatPlaysDone++
+            if (repeatPlaysDone >= repeatTarget) {
+                clearRepeat()
+                return
+            }
+        }
+        player.seekTo(timeline.startMsOf(range.first) ?: 0L)
+    }
+
+    private suspend fun fadeOutAndPause() {
+        val player = controller ?: return
+        val startVolume = player.volume
+        for (step in 1..SLEEP_FADE_STEPS) {
+            player.volume = startVolume * (1f - step.toFloat() / SLEEP_FADE_STEPS)
+            delay(SLEEP_FADE_MS / SLEEP_FADE_STEPS)
+        }
+        player.pause()
+        player.volume = startVolume // restore for the next play
+    }
+
     private fun syncState() {
         val controller = controller ?: return
         val position = controller.currentPosition.coerceAtLeast(0L)
@@ -214,6 +352,7 @@ class DefaultSurauPlayerController @Inject constructor(
                     _state.update {
                         it.copy(positionMs = position, currentAyahNumber = currentAyah(position))
                     }
+                    enforceRepeat(player, position)
                 }
                 delay(POSITION_POLL_INTERVAL_MS)
             }
@@ -224,5 +363,9 @@ class DefaultSurauPlayerController @Inject constructor(
         const val POSITION_POLL_INTERVAL_MS = 250L
         const val RESTART_THRESHOLD_MS = 1_000L
         const val MODE_SURAH = "surah"
+        const val REPEAT_BOUNDARY_EPSILON_MS = 200L
+        const val SLEEP_TICK_MS = 1_000L
+        const val SLEEP_FADE_MS = 4_000L
+        const val SLEEP_FADE_STEPS = 20
     }
 }

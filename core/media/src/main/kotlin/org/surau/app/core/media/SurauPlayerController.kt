@@ -43,5 +43,14 @@ interface SurauPlayerController {
     /** Seeks to [ayahNumber] within the loaded session, if present. */
     fun seekToAyah(ayahNumber: Int)
 
+    /**
+     * Loops the active surah-mode session per [scope], stopping after [count] plays (or repeating
+     * forever when [count] is `0`). A no-op without a loaded surah-mode timeline.
+     */
+    fun setRepeat(scope: RepeatScope, count: Int)
+
+    /** Arms (or with [SleepTimerOption.Off] clears) the sleep timer. */
+    fun setSleepTimer(option: SleepTimerOption)
+
     fun stop()
 }

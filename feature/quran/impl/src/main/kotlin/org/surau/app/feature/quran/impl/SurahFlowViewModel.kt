@@ -36,6 +36,8 @@ import org.surau.app.core.data.repository.QuranAudioRepository
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.domain.GetReaderContentUseCase
 import org.surau.app.core.media.PlayerUiState
+import org.surau.app.core.media.RepeatScope
+import org.surau.app.core.media.SleepTimerOption
 import org.surau.app.core.media.SurauPlayerController
 import org.surau.app.core.model.data.UserData
 import org.surau.app.core.model.data.quran.PopulatedAyah
@@ -136,6 +138,10 @@ class SurahFlowViewModel @AssistedInject constructor(
     fun onPrevious() = playerController.previous()
 
     fun onSeekToAyah(ayahNumber: Int) = playerController.seekToAyah(ayahNumber)
+
+    fun onSetRepeat(scope: RepeatScope, count: Int) = playerController.setRepeat(scope, count)
+
+    fun onSetSleepTimer(option: SleepTimerOption) = playerController.setSleepTimer(option)
 
     fun setFontScale(scale: Float) {
         viewModelScope.launch { userDataRepository.setFlowArabicFontScale(scale) }

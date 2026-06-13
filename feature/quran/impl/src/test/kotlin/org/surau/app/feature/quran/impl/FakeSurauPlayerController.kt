@@ -19,6 +19,8 @@ package org.surau.app.feature.quran.impl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.surau.app.core.media.PlayerUiState
+import org.surau.app.core.media.RepeatScope
+import org.surau.app.core.media.SleepTimerOption
 import org.surau.app.core.media.SurauPlayerController
 import org.surau.app.core.model.data.quran.SurahAudioManifest
 
@@ -33,6 +35,11 @@ internal class FakeSurauPlayerController : SurauPlayerController {
     val playCalls = mutableListOf<PlayCall>()
     val playedManifests get() = playCalls.map { it.manifest }
 
+    data class RepeatCall(val scope: RepeatScope, val count: Int)
+
+    val repeatCalls = mutableListOf<RepeatCall>()
+    val sleepTimerCalls = mutableListOf<SleepTimerOption>()
+
     override fun playSurah(manifest: SurahAudioManifest, surahName: String, startAyah: Int) {
         playCalls += PlayCall(manifest, surahName, startAyah)
     }
@@ -41,5 +48,13 @@ internal class FakeSurauPlayerController : SurauPlayerController {
     override fun next() = Unit
     override fun previous() = Unit
     override fun seekToAyah(ayahNumber: Int) = Unit
+    override fun setRepeat(scope: RepeatScope, count: Int) {
+        repeatCalls += RepeatCall(scope, count)
+    }
+
+    override fun setSleepTimer(option: SleepTimerOption) {
+        sleepTimerCalls += option
+    }
+
     override fun stop() = Unit
 }

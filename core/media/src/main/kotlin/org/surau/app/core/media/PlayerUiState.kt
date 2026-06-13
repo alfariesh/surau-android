@@ -27,4 +27,12 @@ data class PlayerUiState(
     val recitationName: String? = null,
     val positionMs: Long = 0,
     val durationMs: Long = 0,
+    /** Active loop scope (surah-mode sessions only). */
+    val repeatScope: RepeatScope = RepeatScope.OFF,
+    /** Target number of plays for the loop; `0` means unlimited. */
+    val repeatCount: Int = 0,
+    /** Remaining millis on a countdown sleep timer, or `null` when none is counting. */
+    val sleepTimerRemainingMs: Long? = null,
+    /** Whether an "end of surah" sleep stop is armed. */
+    val stopAtSurahEnd: Boolean = false,
 )

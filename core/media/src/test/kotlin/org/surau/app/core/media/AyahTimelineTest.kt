@@ -77,6 +77,14 @@ class AyahTimelineTest {
     }
 
     @Test
+    fun endMsOf_isNextAyahStart_orNullAtLast() {
+        assertEquals(4000, timeline.endMsOf(1)) // next ayah (2) starts at 4000
+        assertEquals(7000, timeline.endMsOf(2)) // ayah 3 missing → next is 4 at 7000
+        assertEquals(9000, timeline.endMsOf(4)) // next ayah (5) starts at 9000
+        assertNull(timeline.endMsOf(5)) // last ayah → caller falls back to duration
+    }
+
+    @Test
     fun nextAndPrev_walkDistinctAyahsWithoutWrap() {
         assertEquals(4, timeline.nextAyah(2)) // ayah 3 is missing
         assertEquals(2, timeline.prevAyah(4))

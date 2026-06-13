@@ -33,6 +33,8 @@ import org.surau.app.core.datastore.UserPreferences
 import org.surau.app.core.datastore.test.InMemoryDataStore
 import org.surau.app.core.domain.GetReaderContentUseCase
 import org.surau.app.core.media.PlayerUiState
+import org.surau.app.core.media.RepeatScope
+import org.surau.app.core.media.SleepTimerOption
 import org.surau.app.core.testing.util.MainDispatcherRule
 import org.surau.app.feature.quran.api.navigation.SurahFlowNavKey
 import java.io.IOException
@@ -114,5 +116,26 @@ class SurahFlowViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1.6f, userDataRepository.userData.first().flowArabicFontScale, 0.001f)
+    }
+
+    @Test
+    fun onSetRepeat_forwardsToController() = runTest {
+        val viewModel = viewModel(SurahFlowNavKey(surahId = 1))
+
+        viewModel.onSetRepeat(RepeatScope.AYAH, count = 3)
+
+        assertEquals(
+            FakeSurauPlayerController.RepeatCall(RepeatScope.AYAH, 3),
+            playerController.repeatCalls.single(),
+        )
+    }
+
+    @Test
+    fun onSetSleepTimer_forwardsToController() = runTest {
+        val viewModel = viewModel(SurahFlowNavKey(surahId = 1))
+
+        viewModel.onSetSleepTimer(SleepTimerOption.EndOfSurah)
+
+        assertEquals(SleepTimerOption.EndOfSurah, playerController.sleepTimerCalls.single())
     }
 }
