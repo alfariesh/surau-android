@@ -37,6 +37,7 @@ import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.register
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.gradle.process.ExecOperations
+import org.gradle.work.DisableCachingByDefault
 import javax.inject.Inject
 
 @CacheableTask
@@ -70,6 +71,7 @@ abstract class GenerateBadgingTask : DefaultTask() {
     }
 }
 
+@DisableCachingByDefault(because = "Doesn't benefit from caching")
 abstract class UpdateBadgingTask : DefaultTask() {
 
     @get:PathSensitive(PathSensitivity.NONE)
