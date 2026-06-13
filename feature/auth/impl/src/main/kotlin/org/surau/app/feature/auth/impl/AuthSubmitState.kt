@@ -41,6 +41,7 @@ sealed interface AuthSubmitState {
 
 enum class AuthErrorKind {
     INVALID_CREDENTIALS,
+    EMAIL_EXISTS,
     OFFLINE,
     GENERIC,
 }
@@ -56,6 +57,10 @@ internal fun Throwable.toAuthSubmitState(email: String? = null): AuthSubmitState
     this is SurauApiException && isRateLimited ->
         AuthSubmitState.RateLimited(retryAfterSeconds ?: DEFAULT_RETRY_AFTER_SECONDS)
 
+    // Register returns 409 when the email already has an account.
+    this is SurauApiException && httpStatus == HTTP_CONFLICT ->
+        AuthSubmitState.Error(AuthErrorKind.EMAIL_EXISTS)
+
     this is SurauApiException && isInvalidCredentials ->
         AuthSubmitState.Error(AuthErrorKind.INVALID_CREDENTIALS)
 
@@ -65,3 +70,4 @@ internal fun Throwable.toAuthSubmitState(email: String? = null): AuthSubmitState
 }
 
 private const val DEFAULT_RETRY_AFTER_SECONDS = 60L
+private const val HTTP_CONFLICT = 409
