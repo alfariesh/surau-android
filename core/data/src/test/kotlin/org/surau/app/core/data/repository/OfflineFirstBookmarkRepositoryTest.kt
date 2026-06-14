@@ -59,7 +59,9 @@ private class FakeBookmarkApi : SurauMeApi {
     var listThrows404 = false
     private var nextId = 1
 
-    fun seed(dto: SavedItemDto) { store[dto.id] = dto }
+    fun seed(dto: SavedItemDto) {
+        store[dto.id] = dto
+    }
 
     override suspend fun savedItems(
         itemType: String,

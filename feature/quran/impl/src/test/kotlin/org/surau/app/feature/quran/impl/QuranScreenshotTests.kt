@@ -71,6 +71,44 @@ class QuranScreenshotTests {
     }
 
     @Test
+    fun surahReader_withTransliteration() {
+        val ayahs = QuranTestData.ayahsBySurah.getValue(1).map { populated ->
+            populated.copy(
+                transliteration = org.surau.app.core.model.data.quran.Transliteration(
+                    sourceId = "kemenag-id-latin",
+                    lang = "id",
+                    text = "bismi llāhi r-raḥmāni r-raḥīm",
+                ),
+            )
+        }
+        composeTestRule.captureMultiTheme(
+            name = "SurahReaderTransliteration",
+            shouldCompareDynamicColor = false,
+        ) {
+            SurahReaderScreen(
+                uiState = ReaderUiState.Success(
+                    content = ReaderContent(
+                        surah = QuranTestData.surahs.first(),
+                        ayahs = ayahs,
+                        readerMode = ReaderMode.ARABIC_TRANSLATION,
+                        arabicFontScale = 1f,
+                        translationSourceId = QuranTestData.TEST_TRANSLATION_SOURCE_ID,
+                        showTransliteration = true,
+                        showTranslation = true,
+                    ),
+                    initialAyahNumber = null,
+                ),
+                onBackClick = {},
+                onAyahVisible = {},
+                onReaderModeChange = {},
+                onFontScaleChange = {},
+                onTranslationSourceChange = {},
+                translationSources = QuranTestData.translationSources,
+            )
+        }
+    }
+
+    @Test
     fun surahReader_playing() {
         composeTestRule.captureMultiTheme(
             name = "SurahReaderPlaying",

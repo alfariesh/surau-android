@@ -16,8 +16,8 @@
 
 package org.surau.app.core.database.util
 
-import kotlin.test.assertEquals
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class StringListConverterTest {
 

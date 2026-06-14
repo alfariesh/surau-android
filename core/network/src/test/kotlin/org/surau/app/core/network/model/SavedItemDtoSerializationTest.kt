@@ -17,13 +17,13 @@
 package org.surau.app.core.network.model
 
 import kotlinx.serialization.json.Json
+import org.junit.Test
 import org.surau.app.core.network.model.me.CreateSavedItemRequestDto
 import org.surau.app.core.network.model.me.PatchSavedItemRequestDto
 import org.surau.app.core.network.model.me.SavedItemsResponseDto
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.junit.Test
 
 /**
  * Locks down the trickiest saved-items contract detail: POST must NOT clear absent metadata
