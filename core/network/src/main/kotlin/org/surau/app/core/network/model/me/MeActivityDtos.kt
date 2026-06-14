@@ -70,7 +70,7 @@ data class ReadingActivitySummaryDto(
 
 @Serializable
 data class ReadingActivityDayDto(
-    @SerialName("date") val date: String,
+    @SerialName("date") val date: String = "",
     @SerialName("quran_ayahs_read") val quranAyahsRead: Int = 0,
     @SerialName("kitab_pages_read") val kitabPagesRead: Int = 0,
     @SerialName("quran_events") val quranEvents: Int = 0,

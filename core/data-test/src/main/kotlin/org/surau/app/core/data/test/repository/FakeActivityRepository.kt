@@ -16,6 +16,7 @@
 
 package org.surau.app.core.data.test.repository
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
@@ -51,6 +52,9 @@ class FakeActivityRepository @Inject constructor() : ActivityRepository {
 
     var failLoads: Boolean = false
 
+    /** When set, [getStreak] suspends on this until completed — lets a test hold a load in flight. */
+    var loadGate: CompletableDeferred<Unit>? = null
+
     fun setSurahProgress(map: Map<Int, Float>) {
         surahProgress.value = map
     }
@@ -61,6 +65,7 @@ class FakeActivityRepository @Inject constructor() : ActivityRepository {
     }
 
     override suspend fun getStreak(today: LocalDate): ReadingStreak {
+        loadGate?.await()
         if (failLoads) throw IOException("fake streak failure")
         return streak
     }

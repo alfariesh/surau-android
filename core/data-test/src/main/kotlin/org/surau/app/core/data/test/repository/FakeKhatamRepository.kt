@@ -36,6 +36,9 @@ class FakeKhatamRepository @Inject constructor() : KhatamRepository {
     /** When true, the next mutating call throws (then resets) so tests can assert rollback. */
     var failNextMutation: Boolean = false
 
+    /** When true, [history] throws — to verify the screen tolerates a failed history load. */
+    var failHistory: Boolean = false
+
     fun setActiveCycle(cycle: KhatamCycle?) {
         activeCycle = cycle
     }
@@ -73,7 +76,10 @@ class FakeKhatamRepository @Inject constructor() : KhatamRepository {
         return completed
     }
 
-    override suspend fun history(limit: Int, offset: Int): List<KhatamCycle> = historyCycles.toList()
+    override suspend fun history(limit: Int, offset: Int): List<KhatamCycle> {
+        if (failHistory) throw IOException("fake history failure")
+        return historyCycles.toList()
+    }
 
     private inline fun mutateJuz(transform: (Set<Int>) -> Set<Int>): KhatamCycle {
         maybeFail()

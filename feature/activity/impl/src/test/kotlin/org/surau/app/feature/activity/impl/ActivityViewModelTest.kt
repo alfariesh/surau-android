@@ -17,6 +17,7 @@
 package org.surau.app.feature.activity.impl
 
 import app.cash.turbine.test
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -144,5 +145,58 @@ class ActivityViewModelTest {
         vm.startKhatam("Khatam Ramadhan")
 
         assertEquals("Khatam Ramadhan", success(vm).khatam?.notes)
+    }
+
+    @Test
+    fun authenticated_loadFailure_showsError() = runTest {
+        authRepository.login("a@b.com", "password")
+        activityRepository.failLoads = true
+
+        assertEquals(ActivityUiState.Error, viewModel().uiState.value)
+    }
+
+    @Test
+    fun logout_duringLoad_doesNotClobberLoginRequired() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        activityRepository.loadGate = gate
+        authRepository.login("a@b.com", "password")
+
+        val vm = viewModel() // load launches and suspends on the gate
+        assertEquals(ActivityUiState.Loading, vm.uiState.value)
+
+        authRepository.logout() // -> LoginRequired, cancelling the in-flight load
+        assertEquals(ActivityUiState.LoginRequired, vm.uiState.value)
+
+        gate.complete(Unit) // the cancelled load must not resurrect Success
+        assertEquals(ActivityUiState.LoginRequired, vm.uiState.value)
+    }
+
+    @Test
+    fun historyFailure_stillShowsSuccessWithEmptyHistory() = runTest {
+        authRepository.login("a@b.com", "password")
+        khatamRepository.setActiveCycle(activeCycle(setOf(1, 2)))
+        khatamRepository.failHistory = true
+
+        val state = success(viewModel())
+        assertEquals(setOf(1, 2), state.khatam?.completedJuz)
+        assertTrue(state.history.isEmpty())
+    }
+
+    @Test
+    fun completeKhatam_error_resyncsAndKeepsActiveCycle() = runTest {
+        authRepository.login("a@b.com", "password")
+        khatamRepository.setActiveCycle(activeCycle((1..30).toSet()))
+        khatamRepository.failNextMutation = true
+        val vm = viewModel()
+
+        vm.errors.test {
+            vm.completeKhatam()
+            assertEquals(R.string.feature_activity_impl_error_generic, awaitItem())
+        }
+
+        // complete() failed before clearing → the cycle is resynced and stays active.
+        val state = success(vm)
+        assertEquals(30, state.khatam?.completedJuz?.size)
+        assertFalse(state.completing)
     }
 }

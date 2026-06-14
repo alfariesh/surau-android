@@ -19,8 +19,10 @@ package org.surau.app.feature.activity.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -60,6 +62,8 @@ class ActivityViewModel @Inject constructor(
     val errors: SharedFlow<Int> = _errors.asSharedFlow()
 
     private var loadedForSession = false
+    private var loadJob: Job? = null
+    private var startInFlight = false
 
     init {
         viewModelScope.launch {
@@ -68,6 +72,8 @@ class ActivityViewModel @Inject constructor(
                     is AuthState.Authenticated -> if (!loadedForSession) load()
                     AuthState.Guest -> {
                         loadedForSession = false
+                        // Cancel any in-flight load so a late result can't overwrite LoginRequired.
+                        loadJob?.cancel()
                         _uiState.value = ActivityUiState.LoginRequired
                     }
                     AuthState.Unknown -> Unit // keep Loading until the session resolves
@@ -80,8 +86,9 @@ class ActivityViewModel @Inject constructor(
 
     private fun load() {
         loadedForSession = true
+        loadJob?.cancel()
         _uiState.value = ActivityUiState.Loading
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
             val from = today.minus(FETCH_DAYS, DateTimeUnit.DAY)
             val result = try {
@@ -89,7 +96,10 @@ class ActivityViewModel @Inject constructor(
                     val streak = async { activityRepository.getStreak(today) }
                     val activity = async { activityRepository.getActivity(from, today) }
                     val khatam = async { khatamRepository.getActiveCycle() }
-                    val history = async { khatamRepository.history() }
+                    // History is secondary — its failure must not take down the whole screen.
+                    val history = async {
+                        runCatching { khatamRepository.history() }.getOrDefault(emptyList())
+                    }
                     ActivityUiState.Success(
                         today = today,
                         streak = streak.await(),
@@ -103,6 +113,8 @@ class ActivityViewModel @Inject constructor(
             } catch (e: Exception) {
                 ActivityUiState.Error
             }
+            // Bail if we were cancelled (e.g. logout) before publishing the result.
+            ensureActive()
             _uiState.value = result
         }
     }
@@ -139,6 +151,8 @@ class ActivityViewModel @Inject constructor(
     }
 
     fun startKhatam(notes: String?) {
+        if (startInFlight) return
+        startInFlight = true
         viewModelScope.launch {
             try {
                 val cycle = khatamRepository.startCycle(notes)
@@ -147,13 +161,16 @@ class ActivityViewModel @Inject constructor(
                 throw e
             } catch (e: Exception) {
                 _errors.tryEmit(R.string.feature_activity_impl_error_generic)
+            } finally {
+                startInFlight = false
             }
         }
     }
 
     fun completeKhatam() {
-        val current = (_uiState.value as? ActivityUiState.Success)?.khatam ?: return
-        if (!current.isCompletable) return
+        val state = _uiState.value as? ActivityUiState.Success ?: return
+        val khatam = state.khatam ?: return
+        if (!khatam.isCompletable || state.completing) return
         updateSuccess { it.copy(completing = true) }
         viewModelScope.launch {
             try {
@@ -164,8 +181,10 @@ class ActivityViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                updateSuccess { it.copy(completing = false) }
                 _errors.tryEmit(R.string.feature_activity_impl_error_generic)
+                // Resync to the server's truth so a stale 30/30 doesn't loop on a 409.
+                val fresh = runCatching { khatamRepository.getActiveCycle() }.getOrNull()
+                updateSuccess { it.copy(khatam = fresh ?: it.khatam, completing = false) }
             }
         }
     }
