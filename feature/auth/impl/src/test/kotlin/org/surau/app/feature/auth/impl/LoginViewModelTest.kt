@@ -36,7 +36,9 @@ import org.surau.app.core.datastore.SurauPreferencesDataSource
 import org.surau.app.core.datastore.UserPreferences
 import org.surau.app.core.datastore.test.InMemoryDataStore
 import org.surau.app.core.domain.SyncUserDataAfterLoginUseCase
+import org.surau.app.core.model.data.auth.AccountSession
 import org.surau.app.core.model.data.auth.AuthState
+import org.surau.app.core.model.data.auth.EmailPreferences
 import org.surau.app.core.network.model.SurauApiException
 import org.surau.app.core.testing.util.MainDispatcherRule
 import java.io.IOException
@@ -62,6 +64,17 @@ private class ScriptedAuthRepository : AuthRepository {
     override suspend fun forgotPassword(email: String) = Unit
     override suspend fun resetPassword(token: String, newPassword: String) = Unit
     override suspend fun logout() = Unit
+    override suspend fun updateProfile(displayName: String?, countryCode: String?) = Unit
+    override suspend fun changePassword(currentPassword: String, newPassword: String) = Unit
+    override suspend fun requestEmailChange(currentPassword: String, newEmail: String) = Unit
+    override suspend fun verifyEmailChange(newEmail: String, otp: String) = Unit
+    override suspend fun listSessions(): List<AccountSession> = emptyList()
+    override suspend fun revokeSession(sessionId: String) = Unit
+    override suspend fun logoutAllDevices() = Unit
+    override suspend fun deleteAccount(currentPassword: String) = Unit
+    override suspend fun emailPreferences() = EmailPreferences(marketingOptIn = false)
+    override suspend fun updateEmailPreferences(marketingOptIn: Boolean) =
+        EmailPreferences(marketingOptIn = marketingOptIn)
 }
 
 class LoginViewModelTest {

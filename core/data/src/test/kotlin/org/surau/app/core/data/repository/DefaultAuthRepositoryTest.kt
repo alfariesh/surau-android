@@ -16,16 +16,24 @@
 
 package org.surau.app.core.data.repository
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.TimeZone
 import org.junit.Before
 import org.junit.Test
+import org.surau.app.core.data.util.TimeZoneMonitor
 import org.surau.app.core.datastore.AuthSession
 import org.surau.app.core.datastore.AuthSessionDataSource
 import org.surau.app.core.datastore.test.InMemoryDataStore
 import org.surau.app.core.model.data.auth.AuthState
+import org.surau.app.core.network.model.auth.ChangeEmailRequestDto
+import org.surau.app.core.network.model.auth.ChangeEmailVerifyRequestDto
+import org.surau.app.core.network.model.auth.ChangePasswordRequestDto
+import org.surau.app.core.network.model.auth.DeleteAccountRequestDto
 import org.surau.app.core.network.model.auth.ForgotPasswordRequestDto
 import org.surau.app.core.network.model.auth.IntrospectDto
 import org.surau.app.core.network.model.auth.LoginRequestDto
@@ -35,12 +43,17 @@ import org.surau.app.core.network.model.auth.RegisterRequestDto
 import org.surau.app.core.network.model.auth.RegisteredUserDto
 import org.surau.app.core.network.model.auth.ResendVerificationRequestDto
 import org.surau.app.core.network.model.auth.ResetPasswordRequestDto
+import org.surau.app.core.network.model.auth.SessionsResponseDto
 import org.surau.app.core.network.model.auth.TokenPairDto
 import org.surau.app.core.network.model.auth.VerifyEmailRequestDto
 import org.surau.app.core.network.model.auth.VerifyEmailResponseDto
+import org.surau.app.core.network.model.user.EmailPreferencesDto
+import org.surau.app.core.network.model.user.EmailPreferencesPatchRequestDto
 import org.surau.app.core.network.model.user.OnboardingRequestDto
 import org.surau.app.core.network.model.user.PreferencesPatchRequestDto
+import org.surau.app.core.network.model.user.ProfilePatchRequestDto
 import org.surau.app.core.network.model.user.UserAccountDto
+import org.surau.app.core.network.retrofit.SurauAccountApi
 import org.surau.app.core.network.retrofit.SurauAuthApi
 import org.surau.app.core.network.retrofit.SurauUserApi
 import java.io.IOException
@@ -55,6 +68,7 @@ class DefaultAuthRepositoryTest {
 
     private lateinit var authApi: FakeSurauAuthApi
     private lateinit var userApi: FakeSurauUserApi
+    private lateinit var accountApi: FakeSurauAccountApi
     private lateinit var authSession: AuthSessionDataSource
     private lateinit var subject: DefaultAuthRepository
 
@@ -62,8 +76,9 @@ class DefaultAuthRepositoryTest {
     fun setup() {
         authApi = FakeSurauAuthApi()
         userApi = FakeSurauUserApi()
+        accountApi = FakeSurauAccountApi()
         authSession = AuthSessionDataSource(InMemoryDataStore(AuthSession.getDefaultInstance()))
-        subject = DefaultAuthRepository(authApi, userApi, authSession)
+        subject = DefaultAuthRepository(authApi, userApi, accountApi, authSession, FakeTimeZoneMonitor())
     }
 
     @Test
@@ -179,4 +194,68 @@ private class FakeSurauUserApi : SurauUserApi {
 
     override suspend fun patchPreferences(body: PreferencesPatchRequestDto): UserAccountDto =
         throw NotImplementedError()
+
+    var profileResponse: UserAccountDto = UserAccountDto(id = "user-1")
+    var emailPreferencesResponse: EmailPreferencesDto = EmailPreferencesDto(marketingOptIn = false)
+    val profilePatches = mutableListOf<ProfilePatchRequestDto>()
+
+    override suspend fun updateProfile(body: ProfilePatchRequestDto): UserAccountDto {
+        profilePatches += body
+        return profileResponse
+    }
+
+    override suspend fun emailPreferences(): EmailPreferencesDto = emailPreferencesResponse
+
+    override suspend fun updateEmailPreferences(
+        body: EmailPreferencesPatchRequestDto,
+    ): EmailPreferencesDto = EmailPreferencesDto(marketingOptIn = body.marketingOptIn)
+}
+
+private class FakeSurauAccountApi : SurauAccountApi {
+    var changePasswordResponse: TokenPairDto = ROTATED_PAIR
+    var changePasswordError: Exception? = null
+    var requestEmailChangeError: Exception? = null
+    var verifyEmailChangeResponse: TokenPairDto = ROTATED_PAIR
+    var verifyEmailChangeError: Exception? = null
+    var deleteAccountError: Exception? = null
+    var sessionsResponse: SessionsResponseDto = SessionsResponseDto()
+    val revokedSessionIds = mutableListOf<String>()
+    var logoutAllCalls = 0
+
+    override suspend fun changePassword(body: ChangePasswordRequestDto): TokenPairDto =
+        changePasswordError?.let { throw it } ?: changePasswordResponse
+
+    override suspend fun requestEmailChange(body: ChangeEmailRequestDto) {
+        requestEmailChangeError?.let { throw it }
+    }
+
+    override suspend fun verifyEmailChange(body: ChangeEmailVerifyRequestDto): TokenPairDto =
+        verifyEmailChangeError?.let { throw it } ?: verifyEmailChangeResponse
+
+    override suspend fun listSessions(): SessionsResponseDto = sessionsResponse
+
+    override suspend fun revokeSession(id: String) {
+        revokedSessionIds += id
+    }
+
+    override suspend fun logoutAll() {
+        logoutAllCalls++
+    }
+
+    override suspend fun deleteAccount(body: DeleteAccountRequestDto) {
+        deleteAccountError?.let { throw it }
+    }
+
+    private companion object {
+        val ROTATED_PAIR = TokenPairDto(
+            accessToken = "rotated-access",
+            refreshToken = "rotated-refresh",
+            sessionId = "rotated-session",
+            expiresInSeconds = 900,
+        )
+    }
+}
+
+private class FakeTimeZoneMonitor(zone: TimeZone = TimeZone.UTC) : TimeZoneMonitor {
+    override val currentTimeZone: Flow<TimeZone> = flowOf(zone)
 }
