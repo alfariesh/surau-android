@@ -17,6 +17,7 @@
 package org.surau.app.core.network.di
 
 import android.content.Context
+import android.os.Build
 import androidx.tracing.trace
 import coil.ImageLoader
 import coil.decode.SvgDecoder
@@ -28,6 +29,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.Cache
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -65,6 +67,29 @@ internal object NetworkModule {
         }
 
     /**
+     * Sends a recognisable `User-Agent` (e.g. `Surau (Android 16; Google Pixel 8)`) instead of the
+     * default `okhttp/x.y.z`, so the device shows up meaningfully in the account's session list and
+     * the backend's "new sign-in" security emails.
+     */
+    private fun userAgentInterceptor(): Interceptor {
+        val manufacturer = Build.MANUFACTURER.orEmpty().replaceFirstChar { it.uppercaseChar() }
+        val model = Build.MODEL.orEmpty()
+        val device = when {
+            model.isBlank() && manufacturer.isBlank() -> "Android"
+            model.startsWith(manufacturer, ignoreCase = true) -> model
+            else -> "$manufacturer $model".trim()
+        }
+        val userAgent = "Surau (Android ${Build.VERSION.RELEASE}; $device)"
+        return Interceptor { chain ->
+            chain.proceed(
+                chain.request().newBuilder()
+                    .header("User-Agent", userAgent)
+                    .build(),
+            )
+        }
+    }
+
+    /**
      * Client for public endpoints. The disk cache honours the backend's ETag /
      * `Cache-Control: max-age=3600` headers on Quran content for free.
      */
@@ -76,6 +101,7 @@ internal object NetworkModule {
     ): OkHttpClient = trace("SurauPublicOkHttpClient") {
         OkHttpClient.Builder()
             .cache(Cache(File(context.cacheDir, "http_cache"), HTTP_CACHE_SIZE_BYTES))
+            .addInterceptor(userAgentInterceptor())
             .addInterceptor(loggingInterceptor())
             .build()
     }
