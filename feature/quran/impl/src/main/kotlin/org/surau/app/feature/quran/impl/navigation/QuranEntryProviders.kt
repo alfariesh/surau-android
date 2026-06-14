@@ -19,13 +19,16 @@ package org.surau.app.feature.quran.impl.navigation
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import org.surau.app.core.navigation.Navigator
+import org.surau.app.feature.quran.api.navigation.QuranBookmarksNavKey
 import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import org.surau.app.feature.quran.api.navigation.QuranSearchNavKey
 import org.surau.app.feature.quran.api.navigation.SurahFlowNavKey
 import org.surau.app.feature.quran.api.navigation.SurahReaderNavKey
+import org.surau.app.feature.quran.api.navigation.navigateToQuranBookmarks
 import org.surau.app.feature.quran.api.navigation.navigateToQuranSearch
 import org.surau.app.feature.quran.api.navigation.navigateToSurahFlow
 import org.surau.app.feature.quran.api.navigation.navigateToSurahReader
+import org.surau.app.feature.quran.impl.QuranBookmarksScreen
 import org.surau.app.feature.quran.impl.QuranHomeScreen
 import org.surau.app.feature.quran.impl.QuranSearchScreen
 import org.surau.app.feature.quran.impl.SurahFlowScreen
@@ -41,7 +44,19 @@ fun EntryProviderScope<NavKey>.quranHomeEntry(
                 navigator.navigateToSurahReader(surahId, ayahNumber)
             },
             onSearchClick = navigator::navigateToQuranSearch,
+            onBookmarksClick = navigator::navigateToQuranBookmarks,
             onSettingsClick = onSettingsClick,
+        )
+    }
+}
+
+fun EntryProviderScope<NavKey>.quranBookmarksEntry(navigator: Navigator) {
+    entry<QuranBookmarksNavKey> {
+        QuranBookmarksScreen(
+            onBackClick = navigator::goBack,
+            onOpenInReader = { surahId, ayahNumber ->
+                navigator.navigateToSurahReader(surahId, ayahNumber)
+            },
         )
     }
 }

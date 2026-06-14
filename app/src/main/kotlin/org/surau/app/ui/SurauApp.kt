@@ -52,6 +52,7 @@ import org.surau.app.feature.auth.api.navigation.WelcomeNavKey
 import org.surau.app.feature.auth.api.navigation.navigateToLogin
 import org.surau.app.feature.auth.impl.navigation.authEntries
 import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
+import org.surau.app.feature.quran.impl.navigation.quranBookmarksEntry
 import org.surau.app.feature.quran.impl.navigation.quranHomeEntry
 import org.surau.app.feature.quran.impl.navigation.quranSearchEntry
 import org.surau.app.feature.quran.impl.navigation.surahFlowEntry
@@ -138,6 +139,7 @@ fun SurauApp(
                     surahReaderEntry(navigator)
                     surahFlowEntry(navigator)
                     quranSearchEntry(navigator)
+                    quranBookmarksEntry(navigator)
                     authEntries(
                         navigator = navigator,
                         onAuthFlowDone = { navigator.navigate(QuranHomeNavKey) },

@@ -76,6 +76,7 @@ import org.surau.app.core.ui.TrackScreenViewEvent
 fun QuranHomeScreen(
     onSurahClick: (surahId: Int, ayahNumber: Int?) -> Unit,
     onSearchClick: () -> Unit,
+    onBookmarksClick: () -> Unit,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: QuranHomeViewModel = hiltViewModel(),
@@ -85,6 +86,7 @@ fun QuranHomeScreen(
         uiState = uiState,
         onSurahClick = onSurahClick,
         onSearchClick = onSearchClick,
+        onBookmarksClick = onBookmarksClick,
         onSettingsClick = onSettingsClick,
         modifier = modifier,
     )
@@ -97,6 +99,7 @@ internal fun QuranHomeScreen(
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onBookmarksClick: () -> Unit = {},
 ) {
     ReportDrawnWhen { uiState !is QuranHomeUiState.Loading }
     TrackScreenViewEvent(screenName = "QuranHome")
@@ -104,6 +107,7 @@ internal fun QuranHomeScreen(
     Column(modifier = modifier.fillMaxSize()) {
         QuranHomeHeader(
             onSearchClick = onSearchClick,
+            onBookmarksClick = onBookmarksClick,
             onSettingsClick = onSettingsClick,
         )
 
@@ -134,6 +138,7 @@ internal fun QuranHomeScreen(
 @Composable
 private fun QuranHomeHeader(
     onSearchClick: () -> Unit,
+    onBookmarksClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
     Row(
@@ -151,6 +156,12 @@ private fun QuranHomeHeader(
             Icon(
                 imageVector = SurauIcons.Search,
                 contentDescription = stringResource(R.string.feature_quran_impl_search),
+            )
+        }
+        IconButton(onClick = onBookmarksClick, modifier = Modifier.testTag("quranHome:bookmarks")) {
+            Icon(
+                imageVector = SurauIcons.Bookmarks,
+                contentDescription = stringResource(R.string.feature_quran_impl_bookmarks),
             )
         }
         IconButton(onClick = onSettingsClick, modifier = Modifier.testTag("quranHome:settings")) {
