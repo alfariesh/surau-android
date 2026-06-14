@@ -100,6 +100,47 @@ class MigrationTest {
         db.close()
     }
 
+    @Test
+    fun migrate3To4_addsBookmarksTable_andKeepsExistingData() {
+        helper.createDatabase(TEST_DB, 3).apply {
+            execSQL(
+                "INSERT INTO reading_progress (id, ayah_key, updated_at, pending_sync) " +
+                    "VALUES (0, '2:255', 0, 0)",
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(
+            TEST_DB,
+            4,
+            true,
+            SurauDatabaseMigrations.MIGRATION_3_4,
+        )
+
+        // The new bookmarks table exists and is empty.
+        db.query("SELECT COUNT(*) FROM bookmarks").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(0, cursor.getInt(0))
+        }
+        // Existing v3 data survived the migration.
+        db.query("SELECT ayah_key FROM reading_progress WHERE id = 0").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals("2:255", cursor.getString(0))
+        }
+        // The bookmarks schema is writable, including the JSON tags column.
+        db.execSQL(
+            "INSERT INTO bookmarks " +
+                "(ayah_key, surah_id, label, note, tags, created_at, updated_at, " +
+                "server_id, pending_sync, pending_delete) " +
+                "VALUES ('73:4', 73, NULL, 'note', '[\"tafsir\"]', 0, 0, NULL, 1, 0)",
+        )
+        db.query("SELECT tags FROM bookmarks WHERE ayah_key = '73:4'").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals("[\"tafsir\"]", cursor.getString(0))
+        }
+        db.close()
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }

@@ -20,6 +20,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import org.surau.app.core.database.dao.AyahDao
+import org.surau.app.core.database.dao.BookmarkDao
 import org.surau.app.core.database.dao.JuzDao
 import org.surau.app.core.database.dao.ReadingProgressDao
 import org.surau.app.core.database.dao.RecitationDao
@@ -27,6 +28,7 @@ import org.surau.app.core.database.dao.SurahDao
 import org.surau.app.core.database.dao.TranslationSourceDao
 import org.surau.app.core.database.model.AyahEntity
 import org.surau.app.core.database.model.AyahFetchMetadataEntity
+import org.surau.app.core.database.model.BookmarkEntity
 import org.surau.app.core.database.model.JuzEntity
 import org.surau.app.core.database.model.ReadingProgressEntity
 import org.surau.app.core.database.model.RecitationEntity
@@ -35,6 +37,7 @@ import org.surau.app.core.database.model.TranslationEntity
 import org.surau.app.core.database.model.TranslationSourceEntity
 import org.surau.app.core.database.model.TransliterationEntity
 import org.surau.app.core.database.util.InstantConverter
+import org.surau.app.core.database.util.StringListConverter
 
 @Database(
     entities = [
@@ -47,12 +50,14 @@ import org.surau.app.core.database.util.InstantConverter
         JuzEntity::class,
         ReadingProgressEntity::class,
         AyahFetchMetadataEntity::class,
+        BookmarkEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 @TypeConverters(
     InstantConverter::class,
+    StringListConverter::class,
 )
 abstract class SurauDatabase : RoomDatabase() {
     abstract fun surahDao(): SurahDao
@@ -61,4 +66,5 @@ abstract class SurauDatabase : RoomDatabase() {
     abstract fun recitationDao(): RecitationDao
     abstract fun juzDao(): JuzDao
     abstract fun readingProgressDao(): ReadingProgressDao
+    abstract fun bookmarkDao(): BookmarkDao
 }
