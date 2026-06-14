@@ -16,8 +16,10 @@
 
 package org.surau.app.core.media
 
+import androidx.annotation.OptIn
 import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 
 /**
  * Wraps the player so a surah-mode track — one audio file with per-ayah cut points stashed in its
@@ -28,6 +30,7 @@ import androidx.media3.common.Player
  * When the current item has no ayah starts (ayah mode, or no session), every command falls through
  * to the wrapped player unchanged.
  */
+@OptIn(UnstableApi::class)
 internal class AyahForwardingPlayer(player: Player) : ForwardingPlayer(player) {
 
     private fun ayahStarts(): LongArray? =
