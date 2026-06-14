@@ -21,15 +21,19 @@ import dagger.Module
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
 import org.surau.app.core.data.di.DataModule
+import org.surau.app.core.data.repository.ActivityRepository
 import org.surau.app.core.data.repository.AuthRepository
 import org.surau.app.core.data.repository.BookmarkRepository
+import org.surau.app.core.data.repository.KhatamRepository
 import org.surau.app.core.data.repository.QuranAudioRepository
 import org.surau.app.core.data.repository.QuranProgressRepository
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.data.repository.UserRepository
+import org.surau.app.core.data.test.repository.FakeActivityRepository
 import org.surau.app.core.data.test.repository.FakeAuthRepository
 import org.surau.app.core.data.test.repository.FakeBookmarkRepository
+import org.surau.app.core.data.test.repository.FakeKhatamRepository
 import org.surau.app.core.data.test.repository.FakeQuranAudioRepository
 import org.surau.app.core.data.test.repository.FakeQuranProgressRepository
 import org.surau.app.core.data.test.repository.FakeQuranRepository
@@ -79,6 +83,16 @@ internal interface TestDataModule {
     fun bindsBookmarkRepository(
         bookmarkRepository: FakeBookmarkRepository,
     ): BookmarkRepository
+
+    @Binds
+    fun bindsKhatamRepository(
+        khatamRepository: FakeKhatamRepository,
+    ): KhatamRepository
+
+    @Binds
+    fun bindsActivityRepository(
+        activityRepository: FakeActivityRepository,
+    ): ActivityRepository
 
     @Binds
     fun bindsAuthTokenProvider(

@@ -21,10 +21,14 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.surau.app.core.data.auth.SessionTokenProvider
+import org.surau.app.core.data.repository.ActivityRepository
 import org.surau.app.core.data.repository.AuthRepository
 import org.surau.app.core.data.repository.BookmarkRepository
+import org.surau.app.core.data.repository.DefaultActivityRepository
 import org.surau.app.core.data.repository.DefaultAuthRepository
+import org.surau.app.core.data.repository.DefaultKhatamRepository
 import org.surau.app.core.data.repository.DefaultUserRepository
+import org.surau.app.core.data.repository.KhatamRepository
 import org.surau.app.core.data.repository.OfflineFirstBookmarkRepository
 import org.surau.app.core.data.repository.OfflineFirstQuranAudioRepository
 import org.surau.app.core.data.repository.OfflineFirstQuranProgressRepository
@@ -84,6 +88,16 @@ abstract class DataModule {
     internal abstract fun bindsBookmarkRepository(
         bookmarkRepository: OfflineFirstBookmarkRepository,
     ): BookmarkRepository
+
+    @Binds
+    internal abstract fun bindsKhatamRepository(
+        khatamRepository: DefaultKhatamRepository,
+    ): KhatamRepository
+
+    @Binds
+    internal abstract fun bindsActivityRepository(
+        activityRepository: DefaultActivityRepository,
+    ): ActivityRepository
 
     @Binds
     internal abstract fun bindsNetworkMonitor(
