@@ -27,12 +27,14 @@ import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Bookmarks
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Grid3x3
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.LocationSearching
 import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Pause
@@ -53,6 +55,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * Now in Android icons. Material icons are [ImageVector]s, custom icons are drawable resource IDs.
  */
 object SurauIcons {
+    val Activity = Icons.Rounded.CalendarMonth
     val Add = Icons.Rounded.Add
     val ArrowBack = Icons.AutoMirrored.Rounded.ArrowBack
     val Bedtime = Icons.Rounded.Bedtime
@@ -78,6 +81,7 @@ object SurauIcons {
     val Settings = Icons.Rounded.Settings
     val Share = Icons.Rounded.Share
     val ShortText = Icons.AutoMirrored.Rounded.ShortText
+    val Streak = Icons.Rounded.LocalFireDepartment
     val SkipNext = Icons.Rounded.SkipNext
     val SkipPrevious = Icons.Rounded.SkipPrevious
     val Upcoming = Icons.Rounded.Upcoming

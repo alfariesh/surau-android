@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright 2025 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <string name="feature_activity_impl_title">Aktivitas</string>
+    <string name="feature_activity_impl_back">Kembali</string>
+    <string name="feature_activity_impl_loading">Memuat aktivitas</string>
+    <string name="feature_activity_impl_cancel">Batal</string>
+    <string name="feature_activity_impl_retry">Coba lagi</string>
+    <string name="feature_activity_impl_error_generic">Terjadi kesalahan. Coba lagi.</string>
+
+    <!-- Streak -->
+    <string name="feature_activity_impl_streak_days">%1$d hari beruntun</string>
+    <string name="feature_activity_impl_streak_longest">Terpanjang: %1$d hari</string>
+    <string name="feature_activity_impl_streak_active_today">Sudah membaca hari ini</string>
+    <string name="feature_activity_impl_streak_inactive_today">Belum membaca hari ini</string>
+
+    <!-- Heatmap -->
+    <string name="feature_activity_impl_heatmap_title">Aktivitas membaca</string>
+
+    <!-- Khatam -->
+    <string name="feature_activity_impl_khatam_title">Khatam Al-Qur\'an</string>
+    <string name="feature_activity_impl_khatam_progress">%1$d / %2$d juz</string>
+    <string name="feature_activity_impl_khatam_start">Mulai khatam</string>
+    <string name="feature_activity_impl_khatam_complete">Tandai selesai</string>
+    <string name="feature_activity_impl_khatam_none_desc">Mulai khatam untuk melacak progres 30 juz.</string>
+    <string name="feature_activity_impl_khatam_notes_label">Catatan (opsional)</string>
+    <string name="feature_activity_impl_khatam_start_dialog_title">Mulai khatam baru</string>
+    <string name="feature_activity_impl_khatam_history_title">Riwayat khatam</string>
+    <string name="feature_activity_impl_khatam_history_range">%1$s – %2$s</string>
+
+    <!-- Guest -->
+    <string name="feature_activity_impl_login_required_title">Masuk untuk melihat aktivitas</string>
+    <string name="feature_activity_impl_login_required_desc">Streak, heatmap, dan khatam butuh akun. Masuk untuk mulai melacak progres bacaanmu.</string>
+    <string name="feature_activity_impl_login_button">Masuk</string>
+
+    <!-- Error -->
+    <string name="feature_activity_impl_error_title">Gagal memuat</string>
+    <string name="feature_activity_impl_error_desc">Periksa koneksi internet lalu coba lagi.</string>
+</resources>
