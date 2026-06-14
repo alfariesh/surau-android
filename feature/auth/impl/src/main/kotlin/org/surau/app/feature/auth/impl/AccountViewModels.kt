@@ -44,10 +44,12 @@ abstract class SubmittingViewModel : ViewModel() {
 
     /**
      * Runs [action] as a single submit. [onSuccess] decides the terminal state (default
-     * [AuthSubmitState.Success]); [passwordOnly] tunes the 401 message for re-auth forms.
+     * [AuthSubmitState.Success]); [passwordOnly] tunes the 401 message for re-auth forms and
+     * [otpForm] tunes the 400 message for code-entry steps.
      */
     protected fun submit(
         passwordOnly: Boolean = false,
+        otpForm: Boolean = false,
         onSuccess: () -> Unit = { submitStateFlow.value = AuthSubmitState.Success },
         action: suspend () -> Unit,
     ) {
@@ -59,7 +61,7 @@ abstract class SubmittingViewModel : ViewModel() {
                 action()
                 onSuccess()
             } catch (exception: Exception) {
-                val state = exception.toAuthSubmitState(passwordOnly = passwordOnly)
+                val state = exception.toAuthSubmitState(passwordOnly = passwordOnly, otpForm = otpForm)
                 submitStateFlow.value = state
                 if (state is AuthSubmitState.RateLimited) startRateLimitCountdown(state.secondsLeft)
             }
@@ -152,7 +154,13 @@ class ChangeEmailViewModel @Inject constructor(
         }
 
     fun verify(otp: String) =
-        submit { authRepository.verifyEmailChange(_newEmail.value, otp.trim()) }
+        submit(otpForm = true) { authRepository.verifyEmailChange(_newEmail.value, otp.trim()) }
+
+    /** Returns from the OTP step to the request form (there is no resend — re-enter to restart). */
+    fun restartEmailChange() {
+        _awaitingOtp.value = false
+        submitStateFlow.value = AuthSubmitState.Idle
+    }
 }
 
 @HiltViewModel

@@ -45,6 +45,12 @@ enum class AuthErrorKind {
     /** Wrong current password on a password-gated account action (change-password, delete, …). */
     INVALID_PASSWORD,
     EMAIL_EXISTS,
+
+    /** The backend accepted the request but couldn't send the email (503). */
+    EMAIL_DELIVERY_FAILED,
+
+    /** Wrong or expired OTP / verification code on a code-entry form (400). */
+    INVALID_CODE,
     OFFLINE,
     GENERIC,
 }
@@ -53,10 +59,12 @@ enum class AuthErrorKind {
  * Maps an auth API failure to UI state. Rate limits become a ticking [AuthSubmitState.RateLimited]
  * handled by the caller. Pass [passwordOnly] for re-authentication forms that only take a password
  * (account management), so a 401 reads as "wrong password" rather than "wrong email or password".
+ * Pass [otpForm] for code-entry steps so a 400 reads as "wrong/expired code".
  */
 internal fun Throwable.toAuthSubmitState(
     email: String? = null,
     passwordOnly: Boolean = false,
+    otpForm: Boolean = false,
 ): AuthSubmitState = when {
     this is SurauApiException && isEmailNotVerified && email != null ->
         AuthSubmitState.RequiresVerification(email)
@@ -64,9 +72,17 @@ internal fun Throwable.toAuthSubmitState(
     this is SurauApiException && isRateLimited ->
         AuthSubmitState.RateLimited(retryAfterSeconds ?: DEFAULT_RETRY_AFTER_SECONDS)
 
+    // The email send failed downstream (e.g. provider outage) even though the request was valid.
+    this is SurauApiException && httpStatus == HTTP_SERVICE_UNAVAILABLE ->
+        AuthSubmitState.Error(AuthErrorKind.EMAIL_DELIVERY_FAILED)
+
     // Register / change-email return 409 when the email already has an account.
     this is SurauApiException && httpStatus == HTTP_CONFLICT ->
         AuthSubmitState.Error(AuthErrorKind.EMAIL_EXISTS)
+
+    // On a code-entry step the client pre-validates shape, so a 400 means the code is wrong/expired.
+    otpForm && this is SurauApiException && httpStatus == HTTP_BAD_REQUEST ->
+        AuthSubmitState.Error(AuthErrorKind.INVALID_CODE)
 
     this is SurauApiException && isInvalidCredentials ->
         AuthSubmitState.Error(
@@ -79,4 +95,6 @@ internal fun Throwable.toAuthSubmitState(
 }
 
 private const val DEFAULT_RETRY_AFTER_SECONDS = 60L
+private const val HTTP_BAD_REQUEST = 400
 private const val HTTP_CONFLICT = 409
+private const val HTTP_SERVICE_UNAVAILABLE = 503

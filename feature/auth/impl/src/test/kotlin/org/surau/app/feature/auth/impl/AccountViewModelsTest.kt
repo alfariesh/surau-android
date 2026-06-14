@@ -112,6 +112,41 @@ class ChangeEmailViewModelTest {
         assertEquals(AuthSubmitState.Success, viewModel.submitState.value)
         assertEquals("new@surau.org", authRepository.lastVerifiedEmail)
     }
+
+    @Test
+    fun request_emailDeliveryFailed_showsDeliveryError() = runTest {
+        authRepository.error = SurauApiException(httpStatus = 503, code = null, message = "email delivery failed")
+        val viewModel = ChangeEmailViewModel(authRepository)
+        viewModel.requestChange("secret123", "new@surau.org")
+        runCurrent()
+        assertEquals(
+            AuthSubmitState.Error(AuthErrorKind.EMAIL_DELIVERY_FAILED),
+            viewModel.submitState.value,
+        )
+        assertTrue(!viewModel.awaitingOtp.value)
+    }
+
+    @Test
+    fun verify_wrongCode_showsInvalidCode() = runTest {
+        val viewModel = ChangeEmailViewModel(authRepository)
+        viewModel.requestChange("secret123", "new@surau.org")
+        runCurrent()
+        authRepository.error = SurauApiException(httpStatus = 400, code = null, message = "invalid verification token")
+        viewModel.verify("000000")
+        runCurrent()
+        assertEquals(AuthSubmitState.Error(AuthErrorKind.INVALID_CODE), viewModel.submitState.value)
+    }
+
+    @Test
+    fun restart_returnsToRequestForm() = runTest {
+        val viewModel = ChangeEmailViewModel(authRepository)
+        viewModel.requestChange("secret123", "new@surau.org")
+        runCurrent()
+        assertTrue(viewModel.awaitingOtp.value)
+        viewModel.restartEmailChange()
+        assertTrue(!viewModel.awaitingOtp.value)
+        assertEquals(AuthSubmitState.Idle, viewModel.submitState.value)
+    }
 }
 
 class DeleteAccountViewModelTest {

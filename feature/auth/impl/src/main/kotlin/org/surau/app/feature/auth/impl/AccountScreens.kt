@@ -321,7 +321,7 @@ fun ChangeEmailScreen(
     if (awaitingOtp) {
         AuthScreenScaffold(
             title = stringResource(R.string.feature_auth_impl_account_email_title),
-            onBackClick = onBackClick,
+            onBackClick = viewModel::restartEmailChange,
             subtitle = stringResource(R.string.feature_auth_impl_verify_subtitle, newEmail),
             modifier = modifier,
         ) {

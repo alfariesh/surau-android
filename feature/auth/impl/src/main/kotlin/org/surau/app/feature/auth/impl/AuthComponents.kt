@@ -178,6 +178,10 @@ internal fun AuthSubmitError(state: AuthSubmitState, modifier: Modifier = Modifi
                 stringResource(R.string.feature_auth_impl_invalid_password)
             AuthErrorKind.EMAIL_EXISTS ->
                 stringResource(R.string.feature_auth_impl_email_exists)
+            AuthErrorKind.EMAIL_DELIVERY_FAILED ->
+                stringResource(R.string.feature_auth_impl_email_delivery_failed)
+            AuthErrorKind.INVALID_CODE ->
+                stringResource(R.string.feature_auth_impl_invalid_code)
             AuthErrorKind.OFFLINE -> stringResource(R.string.feature_auth_impl_offline_error)
             AuthErrorKind.GENERIC -> stringResource(R.string.feature_auth_impl_generic_error)
         }

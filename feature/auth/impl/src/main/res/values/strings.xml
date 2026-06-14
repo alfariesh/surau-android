@@ -60,6 +60,8 @@
     <string name="feature_auth_impl_show_password">Tampilkan kata sandi</string>
     <string name="feature_auth_impl_hide_password">Sembunyikan kata sandi</string>
     <string name="feature_auth_impl_invalid_password">Kata sandi salah</string>
+    <string name="feature_auth_impl_email_delivery_failed">Gagal mengirim email. Coba lagi nanti.</string>
+    <string name="feature_auth_impl_invalid_code">Kode salah atau kedaluwarsa.</string>
 
     <!-- Account management (M5) -->
     <string name="feature_auth_impl_account_title">Kelola Akun</string>
