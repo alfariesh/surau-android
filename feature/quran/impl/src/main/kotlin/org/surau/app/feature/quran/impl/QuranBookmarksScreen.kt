@@ -34,11 +34,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -52,13 +51,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauTextButton
@@ -207,6 +206,17 @@ private fun BookmarksList(
         }
     }
 
+    if (uiState.sections.isEmpty()) {
+        CenteredBox {
+            Text(
+                text = stringResource(R.string.feature_quran_impl_bookmarks_no_results),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        return
+    }
+
     LazyColumn(modifier = Modifier.testTag("bookmarks:list")) {
         uiState.sections.forEach { section ->
             item(key = "header-${section.surahId}") {
@@ -236,45 +246,74 @@ private fun BookmarkRow(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    ListItem(
-        headlineContent = {
-            Text(stringResource(R.string.feature_quran_impl_ayah_number, item.ayahNumber))
-        },
-        supportingContent = {
-            val note = item.note?.takeIf { it.isNotBlank() }
-            val tagLine = item.tags.takeIf { it.isNotEmpty() }?.joinToString("  ") { "#$it" }
-            val supporting = listOfNotNull(note, tagLine).joinToString("\n")
-            if (supporting.isNotEmpty()) {
-                Text(
-                    text = supporting,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .testTag("bookmarks:item:${item.ayahKey.value}")
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.feature_quran_impl_ayah_number, item.ayahNumber),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(
+                onClick = onEdit,
+                modifier = Modifier.testTag("bookmarks:edit:${item.ayahKey.value}"),
+            ) {
+                Icon(
+                    imageVector = SurauIcons.ShortText,
+                    contentDescription = stringResource(R.string.feature_quran_impl_bookmarks_edit),
                 )
             }
-        },
-        trailingContent = {
-            Row {
-                IconButton(onClick = onEdit, modifier = Modifier.testTag("bookmarks:edit:${item.ayahKey.value}")) {
-                    Icon(
-                        imageVector = SurauIcons.ShortText,
-                        contentDescription = stringResource(R.string.feature_quran_impl_bookmarks_edit),
-                    )
-                }
-                IconButton(onClick = onDelete, modifier = Modifier.testTag("bookmarks:delete:${item.ayahKey.value}")) {
-                    Icon(
-                        imageVector = SurauIcons.Delete,
-                        contentDescription = stringResource(R.string.feature_quran_impl_bookmarks_delete),
-                    )
-                }
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.testTag("bookmarks:delete:${item.ayahKey.value}"),
+            ) {
+                Icon(
+                    imageVector = SurauIcons.Delete,
+                    contentDescription = stringResource(R.string.feature_quran_impl_bookmarks_delete),
+                )
             }
-        },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .testTag("bookmarks:item:${item.ayahKey.value}"),
-    )
+        }
+
+        item.arabicText?.let { arabic ->
+            AyahText(
+                text = arabic,
+                fontScale = 0.7f,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+
+        item.note?.takeIf { it.isNotBlank() }?.let { note ->
+            Text(
+                text = note,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+
+        if (item.tags.isNotEmpty()) {
+            Text(
+                text = item.tags.joinToString("  ") { "#$it" },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+
+        HorizontalDivider(
+            modifier = Modifier.padding(top = 12.dp),
+            color = MaterialTheme.colorScheme.outlineVariant,
+        )
+    }
 }
 
 @Composable

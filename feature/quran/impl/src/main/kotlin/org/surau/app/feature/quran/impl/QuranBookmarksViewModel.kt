@@ -19,10 +19,16 @@ package org.surau.app.feature.quran.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.surau.app.core.data.repository.BookmarkRepository
@@ -34,10 +40,32 @@ import javax.inject.Inject
 @HiltViewModel
 class QuranBookmarksViewModel @Inject constructor(
     private val bookmarkRepository: BookmarkRepository,
-    quranRepository: QuranRepository,
+    private val quranRepository: QuranRepository,
 ) : ViewModel() {
 
     private val activeTag = MutableStateFlow<String?>(null)
+
+    /**
+     * Arabic text (keyed by ayah key) for the surahs that have bookmarks, read from the cache only —
+     * a bookmarked surah is usually already cached from reading it. Missing entries degrade to no
+     * preview rather than forcing a network fetch, keeping the screen fast and offline-robust.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val ayahTexts: Flow<Map<String, String>> =
+        bookmarkRepository.observeBookmarks()
+            .map { bookmarks -> bookmarks.map(Bookmark::surahId).distinct().sorted() }
+            .distinctUntilChanged()
+            .flatMapLatest { surahIds ->
+                if (surahIds.isEmpty()) {
+                    flowOf(emptyMap())
+                } else {
+                    val sourceId = quranRepository.resolveTranslationSourceId(null)
+                    combine(surahIds.map { quranRepository.observeAyahs(it, sourceId) }) { lists ->
+                        lists.asSequence().flatten()
+                            .associate { it.ayah.ayahKey.value to it.ayah.textQpcHafs }
+                    }
+                }
+            }
 
     val uiState: StateFlow<BookmarksUiState> =
         combine(
@@ -45,7 +73,8 @@ class QuranBookmarksViewModel @Inject constructor(
             bookmarkRepository.observeTags(),
             quranRepository.observeSurahs(),
             activeTag,
-        ) { bookmarks, tags, surahs, tag ->
+            ayahTexts,
+        ) { bookmarks, tags, surahs, tag, texts ->
             if (bookmarks.isEmpty()) {
                 BookmarksUiState.Empty
             } else {
@@ -59,7 +88,7 @@ class QuranBookmarksViewModel @Inject constructor(
                             surahId = surahId,
                             surahName = surahNames[surahId] ?: "Surah $surahId",
                             items = items.sortedBy { it.ayahNumber }
-                                .map { it.toListItem(surahNames[it.surahId]) },
+                                .map { it.toListItem(surahNames[it.surahId], texts[it.ayahKey.value]) },
                         )
                     }
                 BookmarksUiState.Success(
@@ -92,11 +121,12 @@ class QuranBookmarksViewModel @Inject constructor(
     }
 }
 
-private fun Bookmark.toListItem(surahName: String?) = BookmarkListItem(
+private fun Bookmark.toListItem(surahName: String?, arabicText: String?) = BookmarkListItem(
     ayahKey = ayahKey,
     surahId = surahId,
     ayahNumber = ayahNumber,
     surahName = surahName ?: "Surah $surahId",
+    arabicText = arabicText,
     note = note,
     tags = tags,
 )
@@ -106,6 +136,7 @@ data class BookmarkListItem(
     val surahId: Int,
     val ayahNumber: Int,
     val surahName: String,
+    val arabicText: String?,
     val note: String?,
     val tags: List<String>,
 )

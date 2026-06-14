@@ -39,6 +39,7 @@
     <string name="feature_quran_impl_bookmarks_title">Bookmark</string>
     <string name="feature_quran_impl_bookmarks_empty">Belum ada ayat tersimpan</string>
     <string name="feature_quran_impl_bookmarks_empty_hint">Tekan lama sebuah ayat untuk menyimpannya.</string>
+    <string name="feature_quran_impl_bookmarks_no_results">Tidak ada bookmark dengan tag ini.</string>
     <string name="feature_quran_impl_bookmarks_filter_all">Semua</string>
     <string name="feature_quran_impl_bookmarks_edit">Edit</string>
     <string name="feature_quran_impl_bookmarks_delete">Hapus</string>
