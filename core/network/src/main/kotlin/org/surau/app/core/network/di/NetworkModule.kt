@@ -34,6 +34,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import org.surau.app.core.network.BuildConfig
 import org.surau.app.core.network.auth.AuthInterceptor
 import org.surau.app.core.network.auth.TokenAuthenticator
+import org.surau.app.core.network.retrofit.SurauAccountApi
 import org.surau.app.core.network.retrofit.SurauAuthApi
 import org.surau.app.core.network.retrofit.SurauMeApi
 import org.surau.app.core.network.retrofit.SurauQuranApi
@@ -124,6 +125,13 @@ internal object NetworkModule {
         json: Json,
         @AuthClient client: OkHttpClient,
     ): SurauUserApi = retrofit(json, client).create(SurauUserApi::class.java)
+
+    @Provides
+    @Singleton
+    fun providesAccountApi(
+        json: Json,
+        @AuthClient client: OkHttpClient,
+    ): SurauAccountApi = retrofit(json, client).create(SurauAccountApi::class.java)
 
     @Provides
     @Singleton

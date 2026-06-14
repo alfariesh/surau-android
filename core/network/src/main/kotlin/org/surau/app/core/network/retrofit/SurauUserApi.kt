@@ -17,8 +17,11 @@
 package org.surau.app.core.network.retrofit
 
 import org.surau.app.core.network.model.auth.IntrospectDto
+import org.surau.app.core.network.model.user.EmailPreferencesDto
+import org.surau.app.core.network.model.user.EmailPreferencesPatchRequestDto
 import org.surau.app.core.network.model.user.OnboardingRequestDto
 import org.surau.app.core.network.model.user.PreferencesPatchRequestDto
+import org.surau.app.core.network.model.user.ProfilePatchRequestDto
 import org.surau.app.core.network.model.user.UserAccountDto
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -40,4 +43,13 @@ interface SurauUserApi {
 
     @PATCH("user/preferences")
     suspend fun patchPreferences(@Body body: PreferencesPatchRequestDto): UserAccountDto
+
+    @PATCH("user/profile")
+    suspend fun updateProfile(@Body body: ProfilePatchRequestDto): UserAccountDto
+
+    @GET("user/email-preferences")
+    suspend fun emailPreferences(): EmailPreferencesDto
+
+    @PATCH("user/email-preferences")
+    suspend fun updateEmailPreferences(@Body body: EmailPreferencesPatchRequestDto): EmailPreferencesDto
 }
