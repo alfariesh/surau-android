@@ -30,6 +30,7 @@ import org.surau.app.core.datastore.AuthSession
 import org.surau.app.core.datastore.AuthSessionDataSource
 import org.surau.app.core.datastore.test.InMemoryDataStore
 import org.surau.app.core.model.data.auth.AuthState
+import org.surau.app.core.network.model.SurauApiException
 import org.surau.app.core.network.model.auth.ChangeEmailRequestDto
 import org.surau.app.core.network.model.auth.ChangeEmailVerifyRequestDto
 import org.surau.app.core.network.model.auth.ChangePasswordRequestDto
@@ -53,11 +54,13 @@ import org.surau.app.core.network.model.user.OnboardingRequestDto
 import org.surau.app.core.network.model.user.PreferencesPatchRequestDto
 import org.surau.app.core.network.model.user.ProfilePatchRequestDto
 import org.surau.app.core.network.model.user.UserAccountDto
+import org.surau.app.core.network.model.user.UserProfileDto
 import org.surau.app.core.network.retrofit.SurauAccountApi
 import org.surau.app.core.network.retrofit.SurauAuthApi
 import org.surau.app.core.network.retrofit.SurauUserApi
 import java.io.IOException
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -148,6 +151,102 @@ class DefaultAuthRepositoryTest {
 
         assertTrue(authApi.loggedOutRefreshTokens.isEmpty())
         assertEquals(AuthState.Guest, subject.authState.first())
+    }
+
+    @Test
+    fun changePassword_persistsRotatedTokensAndSessionId() = testScope.runTest {
+        signIn(email = "user@surau.org")
+        accountApi.changePasswordResponse = TokenPairDto(
+            accessToken = "rotated-access",
+            refreshToken = "rotated-refresh",
+            sessionId = "rotated-session",
+        )
+
+        subject.changePassword("oldsecret1", "newsecret1")
+
+        assertEquals("rotated-access", authSession.currentAccessToken())
+        assertEquals("rotated-refresh", authSession.currentRefreshToken())
+        val state = assertIs<AuthState.Authenticated>(subject.authState.first())
+        assertEquals("rotated-session", state.session.sessionId)
+    }
+
+    @Test
+    fun verifyEmailChange_persistsTokensAndUpdatesEmail() = testScope.runTest {
+        signIn(email = "old@surau.org")
+        accountApi.verifyEmailChangeResponse = TokenPairDto(
+            accessToken = "ec-access",
+            refreshToken = "ec-refresh",
+            sessionId = "ec-session",
+        )
+
+        subject.verifyEmailChange("new@surau.org", "123456")
+
+        val state = assertIs<AuthState.Authenticated>(subject.authState.first())
+        assertEquals("new@surau.org", state.session.email)
+        assertEquals("ec-session", state.session.sessionId)
+        assertEquals("ec-access", authSession.currentAccessToken())
+    }
+
+    @Test
+    fun logoutAllDevices_clearsLocalSession() = testScope.runTest {
+        signIn(email = "user@surau.org")
+
+        subject.logoutAllDevices()
+
+        assertEquals(1, accountApi.logoutAllCalls)
+        assertEquals(AuthState.Guest, subject.authState.first())
+    }
+
+    @Test
+    fun deleteAccount_success_clearsLocalSession() = testScope.runTest {
+        signIn(email = "user@surau.org")
+
+        subject.deleteAccount("secret123")
+
+        assertEquals(AuthState.Guest, subject.authState.first())
+    }
+
+    @Test
+    fun deleteAccount_wrongPassword_keepsSession() = testScope.runTest {
+        signIn(email = "user@surau.org")
+        accountApi.deleteAccountError = SurauApiException(
+            httpStatus = 401,
+            code = SurauApiException.CODE_INVALID_CREDENTIALS,
+            message = "invalid credentials",
+        )
+
+        assertFailsWith<SurauApiException> { subject.deleteAccount("wrong") }
+
+        // A wrong-password 401 must stay retryable: the session is NOT cleared.
+        assertIs<AuthState.Authenticated>(subject.authState.first())
+        assertEquals("access", authSession.currentAccessToken())
+    }
+
+    @Test
+    fun updateProfile_sendsTimezone_andRefreshesDisplayName() = testScope.runTest {
+        signIn(email = "user@surau.org")
+        userApi.profileResponse = UserAccountDto(
+            id = "user-1",
+            profile = UserProfileDto(displayName = "Umar"),
+        )
+
+        subject.updateProfile("Umar", "ID")
+
+        val patch = userApi.profilePatches.single()
+        assertEquals("Umar", patch.displayName)
+        assertEquals("ID", patch.countryCode)
+        assertEquals("Asia/Jakarta", patch.timezone) // FakeTimeZoneMonitor default
+        val state = assertIs<AuthState.Authenticated>(subject.authState.first())
+        assertEquals("Umar", state.session.displayName)
+    }
+
+    private suspend fun signIn(email: String) {
+        authApi.loginResponse = TokenPairDto(
+            accessToken = "access",
+            refreshToken = "refresh",
+            sessionId = "login-session",
+        )
+        subject.login(email, "secret123")
     }
 }
 
@@ -256,6 +355,8 @@ private class FakeSurauAccountApi : SurauAccountApi {
     }
 }
 
-private class FakeTimeZoneMonitor(zone: TimeZone = TimeZone.UTC) : TimeZoneMonitor {
+private class FakeTimeZoneMonitor(
+    zone: TimeZone = TimeZone.of("Asia/Jakarta"),
+) : TimeZoneMonitor {
     override val currentTimeZone: Flow<TimeZone> = flowOf(zone)
 }

@@ -582,7 +582,7 @@ private fun SuccessScreen(
 }
 
 @Composable
-private fun AccountRow(
+internal fun AccountRow(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -610,7 +610,7 @@ private fun AccountRow(
 }
 
 @Composable
-private fun SessionRow(
+internal fun SessionRow(
     session: AccountSession,
     onRevoke: () -> Unit,
     modifier: Modifier = Modifier,
