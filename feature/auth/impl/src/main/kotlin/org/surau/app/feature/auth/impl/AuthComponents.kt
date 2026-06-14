@@ -174,6 +174,8 @@ internal fun AuthSubmitError(state: AuthSubmitState, modifier: Modifier = Modifi
         is AuthSubmitState.Error -> when (state.kind) {
             AuthErrorKind.INVALID_CREDENTIALS ->
                 stringResource(R.string.feature_auth_impl_invalid_credentials)
+            AuthErrorKind.INVALID_PASSWORD ->
+                stringResource(R.string.feature_auth_impl_invalid_password)
             AuthErrorKind.EMAIL_EXISTS ->
                 stringResource(R.string.feature_auth_impl_email_exists)
             AuthErrorKind.OFFLINE -> stringResource(R.string.feature_auth_impl_offline_error)

@@ -59,4 +59,51 @@
     <string name="feature_auth_impl_back">Kembali</string>
     <string name="feature_auth_impl_show_password">Tampilkan kata sandi</string>
     <string name="feature_auth_impl_hide_password">Sembunyikan kata sandi</string>
+    <string name="feature_auth_impl_invalid_password">Kata sandi salah</string>
+
+    <!-- Account management (M5) -->
+    <string name="feature_auth_impl_account_title">Kelola Akun</string>
+    <string name="feature_auth_impl_account_profile">Profil</string>
+    <string name="feature_auth_impl_account_change_password">Ganti kata sandi</string>
+    <string name="feature_auth_impl_account_change_email">Ganti email</string>
+    <string name="feature_auth_impl_account_sessions">Perangkat &amp; sesi</string>
+    <string name="feature_auth_impl_account_email_prefs">Preferensi email</string>
+    <string name="feature_auth_impl_account_logout_all">Keluar dari semua perangkat</string>
+    <string name="feature_auth_impl_account_delete">Hapus akun</string>
+    <string name="feature_auth_impl_account_cancel">Batal</string>
+    <string name="feature_auth_impl_account_save">Simpan</string>
+    <string name="feature_auth_impl_account_done">Selesai</string>
+    <string name="feature_auth_impl_account_current_password">Kata sandi saat ini</string>
+    <string name="feature_auth_impl_account_logout_all_confirm_title">Keluar dari semua perangkat?</string>
+    <string name="feature_auth_impl_account_logout_all_confirm_body">Anda akan keluar dari semua perangkat, termasuk perangkat ini.</string>
+
+    <string name="feature_auth_impl_account_profile_title">Edit profil</string>
+    <string name="feature_auth_impl_account_name_required">Nama wajib diisi</string>
+    <string name="feature_auth_impl_account_country_code">Kode negara (opsional)</string>
+
+    <string name="feature_auth_impl_account_password_title">Ganti kata sandi</string>
+    <string name="feature_auth_impl_account_password_subtitle">Masukkan kata sandi saat ini lalu kata sandi baru Anda.</string>
+    <string name="feature_auth_impl_account_password_done">Kata sandi berhasil diubah.</string>
+
+    <string name="feature_auth_impl_account_email_title">Ganti email</string>
+    <string name="feature_auth_impl_account_email_subtitle">Masukkan kata sandi dan email baru. Kami akan mengirim kode ke email baru tersebut.</string>
+    <string name="feature_auth_impl_account_email_send_code">Kirim kode</string>
+    <string name="feature_auth_impl_account_email_done">Email berhasil diubah menjadi %1$s.</string>
+
+    <string name="feature_auth_impl_account_sessions_title">Perangkat &amp; sesi</string>
+    <string name="feature_auth_impl_account_sessions_subtitle">Sesi yang sedang aktif di akun Anda.</string>
+    <string name="feature_auth_impl_account_sessions_error">Gagal memuat sesi. Coba lagi.</string>
+    <string name="feature_auth_impl_account_session_unknown">Perangkat tidak dikenal</string>
+    <string name="feature_auth_impl_account_session_current">Perangkat ini</string>
+    <string name="feature_auth_impl_account_session_revoke">Cabut</string>
+
+    <string name="feature_auth_impl_account_email_prefs_title">Preferensi email</string>
+    <string name="feature_auth_impl_account_email_prefs_subtitle">Atur email yang ingin Anda terima.</string>
+    <string name="feature_auth_impl_account_email_prefs_error">Gagal memuat preferensi. Coba lagi.</string>
+    <string name="feature_auth_impl_account_email_marketing">Email pemasaran &amp; promosi</string>
+
+    <string name="feature_auth_impl_account_delete_title">Hapus akun</string>
+    <string name="feature_auth_impl_account_delete_subtitle">Tindakan ini menghapus identitas akun Anda secara permanen. Progres bacaan di perangkat ini tetap tersimpan sebagai tamu.</string>
+    <string name="feature_auth_impl_account_delete_confirm_word">HAPUS</string>
+    <string name="feature_auth_impl_account_delete_confirm_label">Ketik %1$s untuk konfirmasi</string>
 </resources>

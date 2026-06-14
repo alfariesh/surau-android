@@ -41,6 +41,9 @@ sealed interface AuthSubmitState {
 
 enum class AuthErrorKind {
     INVALID_CREDENTIALS,
+
+    /** Wrong current password on a password-gated account action (change-password, delete, …). */
+    INVALID_PASSWORD,
     EMAIL_EXISTS,
     OFFLINE,
     GENERIC,
@@ -48,21 +51,27 @@ enum class AuthErrorKind {
 
 /**
  * Maps an auth API failure to UI state. Rate limits become a ticking [AuthSubmitState.RateLimited]
- * handled by the caller.
+ * handled by the caller. Pass [passwordOnly] for re-authentication forms that only take a password
+ * (account management), so a 401 reads as "wrong password" rather than "wrong email or password".
  */
-internal fun Throwable.toAuthSubmitState(email: String? = null): AuthSubmitState = when {
+internal fun Throwable.toAuthSubmitState(
+    email: String? = null,
+    passwordOnly: Boolean = false,
+): AuthSubmitState = when {
     this is SurauApiException && isEmailNotVerified && email != null ->
         AuthSubmitState.RequiresVerification(email)
 
     this is SurauApiException && isRateLimited ->
         AuthSubmitState.RateLimited(retryAfterSeconds ?: DEFAULT_RETRY_AFTER_SECONDS)
 
-    // Register returns 409 when the email already has an account.
+    // Register / change-email return 409 when the email already has an account.
     this is SurauApiException && httpStatus == HTTP_CONFLICT ->
         AuthSubmitState.Error(AuthErrorKind.EMAIL_EXISTS)
 
     this is SurauApiException && isInvalidCredentials ->
-        AuthSubmitState.Error(AuthErrorKind.INVALID_CREDENTIALS)
+        AuthSubmitState.Error(
+            if (passwordOnly) AuthErrorKind.INVALID_PASSWORD else AuthErrorKind.INVALID_CREDENTIALS,
+        )
 
     this is IOException -> AuthSubmitState.Error(AuthErrorKind.OFFLINE)
 

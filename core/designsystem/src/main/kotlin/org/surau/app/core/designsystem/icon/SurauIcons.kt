@@ -18,6 +18,7 @@ package org.surau.app.core.designsystem.icon
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Bookmarks
@@ -64,6 +65,7 @@ object SurauIcons {
     val Bookmarks = Icons.Rounded.Bookmarks
     val BookmarksBorder = Icons.Outlined.Bookmarks
     val Check = Icons.Rounded.Check
+    val ChevronRight = Icons.AutoMirrored.Rounded.KeyboardArrowRight
     val Close = Icons.Rounded.Close
     val ContentCopy = Icons.Rounded.ContentCopy
     val Delete = Icons.Rounded.Delete
