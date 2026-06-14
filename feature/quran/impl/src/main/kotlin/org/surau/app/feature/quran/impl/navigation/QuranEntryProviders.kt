@@ -37,6 +37,7 @@ import org.surau.app.feature.quran.impl.SurahReaderScreen
 fun EntryProviderScope<NavKey>.quranHomeEntry(
     navigator: Navigator,
     onSettingsClick: () -> Unit,
+    onActivityClick: () -> Unit,
 ) {
     entry<QuranHomeNavKey> {
         QuranHomeScreen(
@@ -45,6 +46,7 @@ fun EntryProviderScope<NavKey>.quranHomeEntry(
             },
             onSearchClick = navigator::navigateToQuranSearch,
             onBookmarksClick = navigator::navigateToQuranBookmarks,
+            onActivityClick = onActivityClick,
             onSettingsClick = onSettingsClick,
         )
     }

@@ -18,6 +18,7 @@ package org.surau.app.core.domain
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import org.surau.app.core.data.repository.ActivityRepository
 import org.surau.app.core.data.repository.QuranProgressRepository
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.model.data.quran.QuranReadingPosition
@@ -26,17 +27,20 @@ import javax.inject.Inject
 
 /**
  * The Quran home content: every surah plus the user's resume point (with its surah resolved for
- * display on the "last read" card).
+ * display on the "last read" card) and, for signed-in users, the per-surah reading progress used
+ * for the thin progress badges (empty for guests/offline — the badges are non-essential).
  */
 class GetSurahListWithLastReadUseCase @Inject constructor(
     private val quranRepository: QuranRepository,
     private val quranProgressRepository: QuranProgressRepository,
+    private val activityRepository: ActivityRepository,
 ) {
     operator fun invoke(): Flow<SurahListWithLastRead> =
         combine(
             quranRepository.observeSurahs(),
             quranProgressRepository.observePosition(),
-        ) { surahs, position ->
+            activityRepository.observeSurahProgress(),
+        ) { surahs, position, progressBySurah ->
             SurahListWithLastRead(
                 surahs = surahs,
                 lastRead = position?.let { p ->
@@ -44,6 +48,7 @@ class GetSurahListWithLastReadUseCase @Inject constructor(
                         LastRead(position = p, surah = surah)
                     }
                 },
+                progressBySurah = progressBySurah,
             )
         }
 }
@@ -51,6 +56,7 @@ class GetSurahListWithLastReadUseCase @Inject constructor(
 data class SurahListWithLastRead(
     val surahs: List<Surah>,
     val lastRead: LastRead?,
+    val progressBySurah: Map<Int, Float> = emptyMap(),
 )
 
 data class LastRead(

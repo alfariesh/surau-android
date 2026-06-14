@@ -36,6 +36,7 @@
     <string name="feature_quran_impl_search_min_chars">Ketik minimal 3 huruf untuk mencari.</string>
     <string name="feature_quran_impl_settings">Pengaturan</string>
     <string name="feature_quran_impl_bookmarks">Bookmark</string>
+    <string name="feature_quran_impl_activity">Aktivitas</string>
     <string name="feature_quran_impl_bookmarks_title">Bookmark</string>
     <string name="feature_quran_impl_bookmarks_empty">Belum ada ayat tersimpan</string>
     <string name="feature_quran_impl_bookmarks_empty_hint">Tekan lama sebuah ayat untuk menyimpannya.</string>
