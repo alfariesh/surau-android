@@ -106,6 +106,36 @@ class TestUserDataRepository : UserDataRepository {
         }
     }
 
+    override suspend fun setReaderShowTransliteration(show: Boolean) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(readerShowTransliteration = show))
+        }
+    }
+
+    override suspend fun setReaderShowTranslation(show: Boolean) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(readerShowTranslation = show))
+        }
+    }
+
+    override suspend fun setReaderArabicLineSpacing(spacing: Float) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(readerArabicLineSpacing = spacing))
+        }
+    }
+
+    override suspend fun setReaderTranslationScale(scale: Float) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(readerTranslationScale = scale))
+        }
+    }
+
+    override suspend fun setReaderKeepScreenOn(enabled: Boolean) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(readerKeepScreenOn = enabled))
+        }
+    }
+
     override suspend fun setWelcomeShown(shown: Boolean) {
         currentUserData.let { current ->
             _userData.tryEmit(current.copy(welcomeShown = shown))

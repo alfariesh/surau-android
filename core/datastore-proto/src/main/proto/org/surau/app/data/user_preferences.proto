@@ -50,5 +50,18 @@ message UserPreferences {
     // Inverse of "keep the screen on while playing" so the default (unset = false) means enabled.
     bool flow_keep_screen_on_disabled = 29;
 
-    // NEXT AVAILABLE ID: 30
+    // Reader (normal SurahReader) advanced display preferences — local-only, not synced to the
+    // backend (the backend stores no field for them).
+    // Whether to show the Latin transliteration. Default (unset = false) means hidden.
+    bool reader_show_transliteration = 30;
+    // Inverse of "show the translation" so the default (unset = false) means shown.
+    bool reader_translation_hidden = 31;
+    // Arabic line-spacing multiplied by 100 (100 = 1.0x). 0 means unset.
+    int32 reader_arabic_line_spacing_percent = 32;
+    // Translation text scale multiplied by 100 (100 = 1.0x). 0 means unset.
+    int32 reader_translation_scale_percent = 33;
+    // Inverse of "keep the screen on while reading" so the default (unset = false) means enabled.
+    bool reader_keep_screen_on_disabled = 34;
+
+    // NEXT AVAILABLE ID: 35
 }

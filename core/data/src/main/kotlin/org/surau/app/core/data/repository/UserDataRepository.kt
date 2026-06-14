@@ -79,6 +79,31 @@ interface UserDataRepository {
     suspend fun setFlowKeepScreenOn(enabled: Boolean)
 
     /**
+     * Sets whether the reader shows the Latin transliteration. Local-only.
+     */
+    suspend fun setReaderShowTransliteration(show: Boolean)
+
+    /**
+     * Sets whether the reader shows the translation (independent of the reader mode). Local-only.
+     */
+    suspend fun setReaderShowTranslation(show: Boolean)
+
+    /**
+     * Sets the reader's Arabic line-spacing multiplier (1.0 = default). Local-only.
+     */
+    suspend fun setReaderArabicLineSpacing(spacing: Float)
+
+    /**
+     * Sets the reader's translation text scale (1.0 = default). Local-only.
+     */
+    suspend fun setReaderTranslationScale(scale: Float)
+
+    /**
+     * Sets whether the reader keeps the screen on while reading. Local-only.
+     */
+    suspend fun setReaderKeepScreenOn(enabled: Boolean)
+
+    /**
      * Marks the first-launch welcome screen as shown.
      */
     suspend fun setWelcomeShown(shown: Boolean)

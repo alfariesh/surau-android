@@ -45,7 +45,17 @@ class GetReaderContentUseCase @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(surahId: Int): Flow<ReaderContent> =
         userDataRepository.userData
-            .map { ReaderPrefs(it.readerMode, it.translationSourceId, it.arabicFontScale) }
+            .map {
+                ReaderPrefs(
+                    readerMode = it.readerMode,
+                    translationSourceId = it.translationSourceId,
+                    arabicFontScale = it.arabicFontScale,
+                    showTransliteration = it.readerShowTransliteration,
+                    showTranslation = it.readerShowTranslation,
+                    arabicLineSpacing = it.readerArabicLineSpacing,
+                    translationScale = it.readerTranslationScale,
+                )
+            }
             .distinctUntilChanged()
             .flatMapLatest { prefs ->
                 flow {
@@ -64,6 +74,10 @@ class GetReaderContentUseCase @Inject constructor(
                                 readerMode = prefs.readerMode,
                                 arabicFontScale = prefs.arabicFontScale,
                                 translationSourceId = sourceId,
+                                showTransliteration = prefs.showTransliteration,
+                                showTranslation = prefs.showTranslation,
+                                arabicLineSpacing = prefs.arabicLineSpacing,
+                                translationScale = prefs.translationScale,
                             )
                         },
                     )
@@ -74,6 +88,10 @@ class GetReaderContentUseCase @Inject constructor(
         val readerMode: ReaderMode,
         val translationSourceId: String?,
         val arabicFontScale: Float,
+        val showTransliteration: Boolean,
+        val showTranslation: Boolean,
+        val arabicLineSpacing: Float,
+        val translationScale: Float,
     )
 }
 
@@ -83,4 +101,8 @@ data class ReaderContent(
     val readerMode: ReaderMode,
     val arabicFontScale: Float,
     val translationSourceId: String,
+    val showTransliteration: Boolean = false,
+    val showTranslation: Boolean = true,
+    val arabicLineSpacing: Float = 1f,
+    val translationScale: Float = 1f,
 )

@@ -89,6 +89,16 @@ class SurahReaderViewModel @AssistedInject constructor(
                 initialValue = null,
             )
 
+    /** Whether to keep the screen on while reading (advanced reader preference). */
+    val keepScreenOn: StateFlow<Boolean> =
+        userDataRepository.userData
+            .map { it.readerKeepScreenOn }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = false,
+            )
+
     val playerState: StateFlow<PlayerUiState> =
         playerController.state
             .stateIn(
@@ -181,6 +191,26 @@ class SurahReaderViewModel @AssistedInject constructor(
 
     fun setTranslationSource(sourceId: String) {
         viewModelScope.launch { userDataRepository.setTranslationSourceId(sourceId) }
+    }
+
+    fun setShowTransliteration(show: Boolean) {
+        viewModelScope.launch { userDataRepository.setReaderShowTransliteration(show) }
+    }
+
+    fun setShowTranslation(show: Boolean) {
+        viewModelScope.launch { userDataRepository.setReaderShowTranslation(show) }
+    }
+
+    fun setArabicLineSpacing(spacing: Float) {
+        viewModelScope.launch { userDataRepository.setReaderArabicLineSpacing(spacing) }
+    }
+
+    fun setTranslationScale(scale: Float) {
+        viewModelScope.launch { userDataRepository.setReaderTranslationScale(scale) }
+    }
+
+    fun setKeepScreenOn(enabled: Boolean) {
+        viewModelScope.launch { userDataRepository.setReaderKeepScreenOn(enabled) }
     }
 
     /** Plays from [ayahNumber]: seeks if this surah is already loaded, else fetches + plays. */

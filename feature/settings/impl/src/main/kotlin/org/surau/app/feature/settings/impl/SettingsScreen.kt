@@ -56,6 +56,7 @@ import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauButtonGroup
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauOutlinedButton
+import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.component.SurauTextButton
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.designsystem.theme.supportsDynamicTheming
@@ -89,6 +90,11 @@ fun SettingsScreen(
         onChangeTranslationSource = viewModel::updateTranslationSource,
         onChangeRecitation = viewModel::updateRecitation,
         onChangeArabicFontScale = viewModel::updateArabicFontScale,
+        onChangeShowTransliteration = viewModel::updateShowTransliteration,
+        onChangeShowTranslation = viewModel::updateShowTranslation,
+        onChangeArabicLineSpacing = viewModel::updateArabicLineSpacing,
+        onChangeTranslationScale = viewModel::updateTranslationScale,
+        onChangeKeepScreenOn = viewModel::updateKeepScreenOn,
         modifier = modifier,
     )
 }
@@ -107,6 +113,11 @@ internal fun SettingsScreen(
     onChangeArabicFontScale: (Float) -> Unit,
     modifier: Modifier = Modifier,
     onChangeRecitation: (String) -> Unit = {},
+    onChangeShowTransliteration: (Boolean) -> Unit = {},
+    onChangeShowTranslation: (Boolean) -> Unit = {},
+    onChangeArabicLineSpacing: (Float) -> Unit = {},
+    onChangeTranslationScale: (Float) -> Unit = {},
+    onChangeKeepScreenOn: (Boolean) -> Unit = {},
     supportDynamicColor: Boolean = supportsDynamicTheming(),
 ) {
     TrackScreenViewEvent(screenName = "Settings")
@@ -171,6 +182,14 @@ internal fun SettingsScreen(
                 ArabicFontScaleChooser(
                     scale = uiState.settings.arabicFontScale,
                     onChangeArabicFontScale = onChangeArabicFontScale,
+                )
+                ReaderDisplayChooser(
+                    settings = uiState.settings,
+                    onChangeShowTransliteration = onChangeShowTransliteration,
+                    onChangeShowTranslation = onChangeShowTranslation,
+                    onChangeArabicLineSpacing = onChangeArabicLineSpacing,
+                    onChangeTranslationScale = onChangeTranslationScale,
+                    onChangeKeepScreenOn = onChangeKeepScreenOn,
                 )
                 if (uiState.translationSources.isNotEmpty()) {
                     TranslationSourceChooser(
@@ -383,6 +402,77 @@ private fun ArabicFontScaleChooser(
         fontScale = scale,
         color = MaterialTheme.colorScheme.onSurface,
     )
+}
+
+@Composable
+private fun ReaderDisplayChooser(
+    settings: UserEditableSettings,
+    onChangeShowTransliteration: (Boolean) -> Unit,
+    onChangeShowTranslation: (Boolean) -> Unit,
+    onChangeArabicLineSpacing: (Float) -> Unit,
+    onChangeTranslationScale: (Float) -> Unit,
+    onChangeKeepScreenOn: (Boolean) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.feature_settings_impl_reader_line_spacing),
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.padding(top = 16.dp),
+    )
+    Slider(
+        value = settings.arabicLineSpacing,
+        onValueChange = onChangeArabicLineSpacing,
+        valueRange = 1f..2f,
+        steps = 3,
+    )
+
+    Text(
+        text = stringResource(R.string.feature_settings_impl_reader_translation_size),
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.padding(top = 16.dp),
+    )
+    Slider(
+        value = settings.translationScale,
+        onValueChange = onChangeTranslationScale,
+        valueRange = 0.8f..1.6f,
+        steps = 3,
+    )
+
+    SettingsSwitchRow(
+        text = stringResource(R.string.feature_settings_impl_reader_transliteration),
+        checked = settings.showTransliteration,
+        onCheckedChange = onChangeShowTransliteration,
+    )
+    SettingsSwitchRow(
+        text = stringResource(R.string.feature_settings_impl_reader_show_translation),
+        checked = settings.showTranslation,
+        onCheckedChange = onChangeShowTranslation,
+    )
+    SettingsSwitchRow(
+        text = stringResource(R.string.feature_settings_impl_reader_keep_screen_on),
+        checked = settings.keepScreenOn,
+        onCheckedChange = onChangeKeepScreenOn,
+    )
+}
+
+@Composable
+private fun SettingsSwitchRow(
+    text: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        SurauSwitch(checked = checked, onCheckedChange = onCheckedChange)
+    }
 }
 
 @Composable

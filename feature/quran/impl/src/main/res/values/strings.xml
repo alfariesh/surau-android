@@ -42,6 +42,12 @@
     <string name="feature_quran_impl_reader_mode_arabic">Arab</string>
     <string name="feature_quran_impl_arabic_font_scale">Ukuran huruf Arab</string>
     <string name="feature_quran_impl_translation_source">Sumber terjemahan</string>
+    <string name="feature_quran_impl_reader_display">Tampilan bacaan</string>
+    <string name="feature_quran_impl_reader_transliteration">Transliterasi Latin</string>
+    <string name="feature_quran_impl_reader_show_translation">Tampilkan terjemahan</string>
+    <string name="feature_quran_impl_reader_line_spacing">Spasi baris Arab</string>
+    <string name="feature_quran_impl_reader_translation_size">Ukuran teks terjemahan</string>
+    <string name="feature_quran_impl_reader_keep_screen_on">Layar tetap nyala</string>
     <string name="feature_quran_impl_copy">Salin</string>
     <string name="feature_quran_impl_share">Bagikan</string>
     <string name="feature_quran_impl_copied">Ayat disalin</string>

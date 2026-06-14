@@ -60,4 +60,31 @@ class SurauPreferencesDataSourceTest {
         subject.setDarkThemeConfig(DarkThemeConfig.DARK)
         assertEquals(DarkThemeConfig.DARK, subject.userData.first().darkThemeConfig)
     }
+
+    @Test
+    fun advancedReaderPrefs_haveCorrectDefaults() = testScope.runTest {
+        val data = subject.userData.first()
+        // Inverse-bool defaults: transliteration off, translation + keep-screen-on on.
+        assertFalse(data.readerShowTransliteration)
+        assertTrue(data.readerShowTranslation)
+        assertTrue(data.readerKeepScreenOn)
+        assertEquals(1f, data.readerArabicLineSpacing)
+        assertEquals(1f, data.readerTranslationScale)
+    }
+
+    @Test
+    fun advancedReaderPrefs_roundTripThroughSetters() = testScope.runTest {
+        subject.setReaderShowTransliteration(true)
+        subject.setReaderShowTranslation(false)
+        subject.setReaderKeepScreenOn(false)
+        subject.setReaderArabicLineSpacing(1.5f)
+        subject.setReaderTranslationScale(1.2f)
+
+        val data = subject.userData.first()
+        assertTrue(data.readerShowTransliteration)
+        assertFalse(data.readerShowTranslation)
+        assertFalse(data.readerKeepScreenOn)
+        assertEquals(1.5f, data.readerArabicLineSpacing)
+        assertEquals(1.2f, data.readerTranslationScale)
+    }
 }

@@ -36,8 +36,16 @@ data class UserData(
     val flowShowTranslation: Boolean = false,
     val flowAutoContinue: Boolean = true,
     val flowKeepScreenOn: Boolean = true,
+    // Reader (normal SurahReader) advanced display preferences — local-only.
+    val readerShowTransliteration: Boolean = false,
+    val readerShowTranslation: Boolean = true,
+    val readerArabicLineSpacing: Float = DEFAULT_LINE_SPACING,
+    val readerTranslationScale: Float = DEFAULT_TRANSLATION_SCALE,
+    val readerKeepScreenOn: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_ARABIC_FONT_SCALE = 1f
+        const val DEFAULT_LINE_SPACING = 1f
+        const val DEFAULT_TRANSLATION_SCALE = 1f
     }
 }
