@@ -19,6 +19,7 @@
 package org.surau.app.feature.quran.impl
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -68,10 +69,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -113,6 +116,7 @@ fun SurahReaderScreen(
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     val playingAyah by viewModel.playingAyah.collectAsStateWithLifecycle()
     val keepScreenOn by viewModel.keepScreenOn.collectAsStateWithLifecycle()
+    val bookmarkedAyahNumbers by viewModel.bookmarkedAyahNumbers.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val offlineMessage = stringResource(R.string.feature_quran_impl_audio_offline)
@@ -148,6 +152,8 @@ fun SurahReaderScreen(
         onArabicLineSpacingChange = viewModel::setArabicLineSpacing,
         onTranslationScaleChange = viewModel::setTranslationScale,
         onKeepScreenOnChange = viewModel::setKeepScreenOn,
+        bookmarkedAyahNumbers = bookmarkedAyahNumbers,
+        onToggleBookmark = viewModel::toggleBookmark,
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
@@ -179,6 +185,8 @@ internal fun SurahReaderScreen(
     onArabicLineSpacingChange: (Float) -> Unit = {},
     onTranslationScaleChange: (Float) -> Unit = {},
     onKeepScreenOnChange: (Boolean) -> Unit = {},
+    bookmarkedAyahNumbers: Set<Int> = emptySet(),
+    onToggleBookmark: (Int) -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     ReportDrawnWhen { uiState !is ReaderUiState.Loading }
@@ -302,9 +310,11 @@ internal fun SurahReaderScreen(
                                 translationScale = content.translationScale,
                                 isActive = isActive,
                                 isPlaying = isActive && playerState.isPlaying,
+                                isBookmarked = ayahNumber in bookmarkedAyahNumbers,
                                 onPlayClick = {
                                     if (isActive) onPlayPause() else onPlayAyah(ayahNumber)
                                 },
+                                onToggleBookmark = { onToggleBookmark(ayahNumber) },
                             )
                         }
                     }
@@ -442,14 +452,27 @@ private fun AyahItem(
     translationScale: Float,
     isActive: Boolean,
     isPlaying: Boolean,
+    isBookmarked: Boolean,
     onPlayClick: () -> Unit,
+    onToggleBookmark: () -> Unit,
 ) {
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val copiedMessage = stringResource(R.string.feature_quran_impl_copied)
+    var showActions by rememberSaveable { mutableStateOf(false) }
 
     val shareText = buildString {
         append(populated.ayah.textQpcHafs)
         populated.translation?.let { append("\n\n").append(it.text) }
         append("\n(QS ").append(populated.ayah.ayahKey.value).append(")")
+    }
+
+    fun share() {
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        context.startActivity(Intent.createChooser(sendIntent, null))
     }
 
     val highlightColor by animateColorAsState(
@@ -466,13 +489,7 @@ private fun AyahItem(
             .fillMaxWidth()
             .combinedClickable(
                 onClick = {},
-                onLongClick = {
-                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, shareText)
-                    }
-                    context.startActivity(Intent.createChooser(sendIntent, null))
-                },
+                onLongClick = { showActions = true },
             )
             .background(highlightColor)
             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -484,6 +501,31 @@ private fun AyahItem(
         ) {
             AyahNumberBadge(populated.ayah.ayahNumber)
             Spacer(modifier = Modifier.weight(1f))
+            IconToggleButton(
+                checked = isBookmarked,
+                onCheckedChange = { onToggleBookmark() },
+                modifier = Modifier.testTag("reader:bookmark:${populated.ayah.ayahNumber}"),
+            ) {
+                Icon(
+                    imageVector = if (isBookmarked) {
+                        SurauIcons.Bookmark
+                    } else {
+                        SurauIcons.BookmarkBorder
+                    },
+                    contentDescription = stringResource(
+                        if (isBookmarked) {
+                            R.string.feature_quran_impl_unbookmark
+                        } else {
+                            R.string.feature_quran_impl_bookmark
+                        },
+                    ),
+                    tint = if (isBookmarked) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
             IconButton(
                 onClick = onPlayClick,
                 modifier = Modifier.testTag("reader:play:${populated.ayah.ayahNumber}"),
@@ -547,6 +589,62 @@ private fun AyahItem(
             modifier = Modifier.padding(top = 16.dp),
             color = MaterialTheme.colorScheme.outlineVariant,
         )
+    }
+
+    if (showActions) {
+        ModalBottomSheet(
+            onDismissRequest = { showActions = false },
+            modifier = Modifier.testTag("reader:ayahActions"),
+        ) {
+            Column(modifier = Modifier.padding(bottom = 24.dp)) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.feature_quran_impl_copy)) },
+                    leadingContent = { Icon(SurauIcons.ContentCopy, contentDescription = null) },
+                    modifier = Modifier.clickable {
+                        clipboardManager.setText(AnnotatedString(shareText))
+                        Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
+                        showActions = false
+                    },
+                )
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.feature_quran_impl_share)) },
+                    leadingContent = { Icon(SurauIcons.Share, contentDescription = null) },
+                    modifier = Modifier.clickable {
+                        share()
+                        showActions = false
+                    },
+                )
+                ListItem(
+                    headlineContent = {
+                        Text(
+                            stringResource(
+                                if (isBookmarked) {
+                                    R.string.feature_quran_impl_unbookmark
+                                } else {
+                                    R.string.feature_quran_impl_bookmark
+                                },
+                            ),
+                        )
+                    },
+                    leadingContent = {
+                        Icon(
+                            imageVector = if (isBookmarked) {
+                                SurauIcons.Bookmark
+                            } else {
+                                SurauIcons.BookmarkBorder
+                            },
+                            contentDescription = null,
+                        )
+                    },
+                    modifier = Modifier
+                        .testTag("reader:ayahActions:bookmark")
+                        .clickable {
+                            onToggleBookmark()
+                            showActions = false
+                        },
+                )
+            }
+        }
     }
 }
 

@@ -29,6 +29,8 @@ import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Grid3x3
 import androidx.compose.material.icons.rounded.LocationSearching
@@ -40,6 +42,7 @@ import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material.icons.rounded.Upcoming
@@ -59,6 +62,8 @@ object SurauIcons {
     val BookmarksBorder = Icons.Outlined.Bookmarks
     val Check = Icons.Rounded.Check
     val Close = Icons.Rounded.Close
+    val ContentCopy = Icons.Rounded.ContentCopy
+    val Delete = Icons.Rounded.Delete
     val Grid3x3 = Icons.Rounded.Grid3x3
     val MoreVert = Icons.Default.MoreVert
     val Flow = Icons.Rounded.GraphicEq
@@ -71,6 +76,7 @@ object SurauIcons {
     val RepeatOne = Icons.Rounded.RepeatOne
     val Search = Icons.Rounded.Search
     val Settings = Icons.Rounded.Settings
+    val Share = Icons.Rounded.Share
     val ShortText = Icons.AutoMirrored.Rounded.ShortText
     val SkipNext = Icons.Rounded.SkipNext
     val SkipPrevious = Icons.Rounded.SkipPrevious

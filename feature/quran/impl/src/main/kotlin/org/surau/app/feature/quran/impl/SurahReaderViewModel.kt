@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.surau.app.core.common.result.Result
 import org.surau.app.core.common.result.asResult
+import org.surau.app.core.data.repository.BookmarkRepository
 import org.surau.app.core.data.repository.QuranAudioRepository
 import org.surau.app.core.data.repository.QuranProgressRepository
 import org.surau.app.core.data.repository.QuranRepository
@@ -58,6 +59,7 @@ class SurahReaderViewModel @AssistedInject constructor(
     getReaderContent: GetReaderContentUseCase,
     quranRepository: QuranRepository,
     private val quranProgressRepository: QuranProgressRepository,
+    private val bookmarkRepository: BookmarkRepository,
     private val userDataRepository: UserDataRepository,
     private val quranAudioRepository: QuranAudioRepository,
     private val playerController: SurauPlayerController,
@@ -97,6 +99,20 @@ class SurahReaderViewModel @AssistedInject constructor(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = false,
+            )
+
+    /** Ayah numbers in this surah that are bookmarked — drives the per-ayah toggle. */
+    val bookmarkedAyahNumbers: StateFlow<Set<Int>> =
+        bookmarkRepository.observeBookmarks()
+            .map { bookmarks ->
+                bookmarks.filter { it.surahId == navKey.surahId }
+                    .map { it.ayahNumber }
+                    .toSet()
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptySet(),
             )
 
     val playerState: StateFlow<PlayerUiState> =
@@ -211,6 +227,18 @@ class SurahReaderViewModel @AssistedInject constructor(
 
     fun setKeepScreenOn(enabled: Boolean) {
         viewModelScope.launch { userDataRepository.setReaderKeepScreenOn(enabled) }
+    }
+
+    /** Adds or removes the bookmark for [ayahNumber] in this surah. */
+    fun toggleBookmark(ayahNumber: Int) {
+        viewModelScope.launch {
+            val key = AyahKey.of(navKey.surahId, ayahNumber)
+            if (ayahNumber in bookmarkedAyahNumbers.value) {
+                bookmarkRepository.removeBookmark(key)
+            } else {
+                bookmarkRepository.addBookmark(key)
+            }
+        }
     }
 
     /** Plays from [ayahNumber]: seeks if this surah is already loaded, else fetches + plays. */
