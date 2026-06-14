@@ -56,16 +56,20 @@ fun surahNameGlyphCode(surahId: Int): String = "surah%03d".format(surahId)
 /** Base font size for ayah text before the user's Arabic font scale is applied. */
 val QURAN_BASE_FONT_SIZE = 24
 
+/** Base line-height (in `em`) before the user's line-spacing multiplier is applied. */
+private const val QURAN_BASE_LINE_HEIGHT_EM = 2.0
+
 /**
  * Text style for Quran ayah text.
  *
  * @param fontScale the user-selected Arabic font scale (1.0 = default).
+ * @param lineHeightMultiplier the user-selected line-spacing multiplier (1.0 = default).
  */
-fun quranTextStyle(fontScale: Float = 1f): TextStyle = TextStyle(
+fun quranTextStyle(fontScale: Float = 1f, lineHeightMultiplier: Float = 1f): TextStyle = TextStyle(
     fontFamily = UthmanicHafsFontFamily,
     fontSize = (QURAN_BASE_FONT_SIZE * fontScale).sp,
     // Generous line height keeps stacked harakat and waqf marks from clipping.
-    lineHeight = 2.0.em,
+    lineHeight = (QURAN_BASE_LINE_HEIGHT_EM * lineHeightMultiplier).em,
     lineHeightStyle = LineHeightStyle(
         alignment = LineHeightStyle.Alignment.Center,
         trim = LineHeightStyle.Trim.None,

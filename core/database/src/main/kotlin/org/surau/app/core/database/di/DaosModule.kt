@@ -22,6 +22,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.surau.app.core.database.SurauDatabase
 import org.surau.app.core.database.dao.AyahDao
+import org.surau.app.core.database.dao.BookmarkDao
 import org.surau.app.core.database.dao.JuzDao
 import org.surau.app.core.database.dao.ReadingProgressDao
 import org.surau.app.core.database.dao.RecitationDao
@@ -60,4 +61,9 @@ internal object DaosModule {
     fun providesReadingProgressDao(
         database: SurauDatabase,
     ): ReadingProgressDao = database.readingProgressDao()
+
+    @Provides
+    fun providesBookmarkDao(
+        database: SurauDatabase,
+    ): BookmarkDao = database.bookmarkDao()
 }

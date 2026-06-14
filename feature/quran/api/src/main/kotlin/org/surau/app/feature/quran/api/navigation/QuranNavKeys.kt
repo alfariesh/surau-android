@@ -57,6 +57,12 @@ data class SurahFlowNavKey(
 @Serializable
 object QuranSearchNavKey : NavKey
 
+/**
+ * The user's saved ayat (bookmarks).
+ */
+@Serializable
+object QuranBookmarksNavKey : NavKey
+
 fun Navigator.navigateToSurahReader(surahId: Int, ayahNumber: Int? = null) {
     navigate(SurahReaderNavKey(surahId = surahId, ayahNumber = ayahNumber))
 }
@@ -67,4 +73,8 @@ fun Navigator.navigateToSurahFlow(surahId: Int, ayahNumber: Int? = null) {
 
 fun Navigator.navigateToQuranSearch() {
     navigate(QuranSearchNavKey)
+}
+
+fun Navigator.navigateToQuranBookmarks() {
+    navigate(QuranBookmarksNavKey)
 }

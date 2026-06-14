@@ -43,6 +43,11 @@
     <string name="feature_settings_impl_translation_source">Sumber terjemahan</string>
     <string name="feature_settings_impl_qari">Qari</string>
     <string name="feature_settings_impl_arabic_font_scale">Ukuran huruf Arab</string>
+    <string name="feature_settings_impl_reader_line_spacing">Spasi baris Arab</string>
+    <string name="feature_settings_impl_reader_translation_size">Ukuran teks terjemahan</string>
+    <string name="feature_settings_impl_reader_transliteration">Transliterasi Latin</string>
+    <string name="feature_settings_impl_reader_show_translation">Tampilkan terjemahan</string>
+    <string name="feature_settings_impl_reader_keep_screen_on">Layar tetap nyala</string>
     <string name="feature_settings_impl_section_about">Tentang</string>
     <string name="feature_settings_impl_version">Versi %1$s</string>
 </resources>

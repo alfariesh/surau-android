@@ -25,8 +25,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import org.surau.app.core.data.repository.AuthRepository
+import org.surau.app.core.data.repository.BookmarkRepository
 import org.surau.app.core.data.repository.QuranProgressRepository
 import org.surau.app.core.data.repository.UserRepository
+import org.surau.app.core.data.test.repository.FakeBookmarkRepository
 import org.surau.app.core.data.test.repository.FakeQuranProgressRepository
 import org.surau.app.core.data.test.repository.FakeUserDataRepository
 import org.surau.app.core.data.test.repository.FakeUserRepository
@@ -69,6 +71,7 @@ class LoginViewModelTest {
 
     private val authRepository = ScriptedAuthRepository()
     private val progressRepository: QuranProgressRepository = FakeQuranProgressRepository()
+    private val bookmarkRepository: BookmarkRepository = FakeBookmarkRepository()
     private val userRepository: UserRepository = FakeUserRepository()
     private val userDataRepository = FakeUserDataRepository(
         SurauPreferencesDataSource(InMemoryDataStore(UserPreferences.getDefaultInstance())),
@@ -79,6 +82,7 @@ class LoginViewModelTest {
         syncUserDataAfterLogin = SyncUserDataAfterLoginUseCase(
             userRepository = userRepository,
             quranProgressRepository = progressRepository,
+            bookmarkRepository = bookmarkRepository,
         ),
         userDataRepository = userDataRepository,
     )

@@ -19,6 +19,7 @@
 package org.surau.app.feature.quran.impl
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -55,6 +56,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,9 +69,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -79,8 +85,10 @@ import kotlinx.coroutines.launch
 import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButtonGroup
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
+import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.media.PlayerUiState
+import org.surau.app.core.model.data.quran.Bookmark
 import org.surau.app.core.model.data.quran.PopulatedAyah
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.model.data.quran.Recitation
@@ -108,6 +116,8 @@ fun SurahReaderScreen(
     val selectedRecitationId by viewModel.selectedRecitationId.collectAsStateWithLifecycle()
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     val playingAyah by viewModel.playingAyah.collectAsStateWithLifecycle()
+    val keepScreenOn by viewModel.keepScreenOn.collectAsStateWithLifecycle()
+    val bookmarksByAyah by viewModel.bookmarksByAyah.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val offlineMessage = stringResource(R.string.feature_quran_impl_audio_offline)
@@ -137,6 +147,15 @@ fun SurahReaderScreen(
         onPrevious = viewModel::onPrevious,
         onRecitationChange = viewModel::setRecitation,
         onFlowClick = onFlowClick,
+        keepScreenOn = keepScreenOn,
+        onShowTransliterationChange = viewModel::setShowTransliteration,
+        onShowTranslationChange = viewModel::setShowTranslation,
+        onArabicLineSpacingChange = viewModel::setArabicLineSpacing,
+        onTranslationScaleChange = viewModel::setTranslationScale,
+        onKeepScreenOnChange = viewModel::setKeepScreenOn,
+        bookmarksByAyah = bookmarksByAyah,
+        onToggleBookmark = viewModel::toggleBookmark,
+        onSaveBookmark = viewModel::saveBookmark,
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
@@ -162,10 +181,26 @@ internal fun SurahReaderScreen(
     onPrevious: () -> Unit = {},
     onRecitationChange: (String) -> Unit = {},
     onFlowClick: (Int?) -> Unit = {},
+    keepScreenOn: Boolean = false,
+    onShowTransliterationChange: (Boolean) -> Unit = {},
+    onShowTranslationChange: (Boolean) -> Unit = {},
+    onArabicLineSpacingChange: (Float) -> Unit = {},
+    onTranslationScaleChange: (Float) -> Unit = {},
+    onKeepScreenOnChange: (Boolean) -> Unit = {},
+    bookmarksByAyah: Map<Int, Bookmark> = emptyMap(),
+    onToggleBookmark: (Int) -> Unit = {},
+    onSaveBookmark: (ayahNumber: Int, note: String?, tags: List<String>) -> Unit = { _, _, _ -> },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     ReportDrawnWhen { uiState !is ReaderUiState.Loading }
     TrackScreenViewEvent(screenName = "SurahReader")
+
+    // Keep the screen awake while reading when the user has opted in.
+    val view = LocalView.current
+    DisposableEffect(keepScreenOn) {
+        view.keepScreenOn = keepScreenOn
+        onDispose { view.keepScreenOn = false }
+    }
 
     var showReaderSettings by rememberSaveable { mutableStateOf(false) }
 
@@ -268,14 +303,27 @@ internal fun SurahReaderScreen(
                         items(content.ayahs, key = { it.ayah.ayahNumber }) { populated ->
                             val ayahNumber = populated.ayah.ayahNumber
                             val isActive = ayahNumber == playingAyah
+                            val bookmark = bookmarksByAyah[ayahNumber]
                             AyahItem(
                                 populated = populated,
                                 readerMode = content.readerMode,
                                 fontScale = content.arabicFontScale,
+                                showTransliteration = content.showTransliteration,
+                                showTranslation = content.showTranslation,
+                                arabicLineSpacing = content.arabicLineSpacing,
+                                translationScale = content.translationScale,
                                 isActive = isActive,
                                 isPlaying = isActive && playerState.isPlaying,
+                                isBookmarked = bookmark != null,
+                                surahName = surah?.nameLatin.orEmpty(),
+                                bookmarkNote = bookmark?.note,
+                                bookmarkTags = bookmark?.tags ?: emptyList(),
                                 onPlayClick = {
                                     if (isActive) onPlayPause() else onPlayAyah(ayahNumber)
+                                },
+                                onToggleBookmark = { onToggleBookmark(ayahNumber) },
+                                onSaveBookmark = { note, tags ->
+                                    onSaveBookmark(ayahNumber, note, tags)
                                 },
                             )
                         }
@@ -318,10 +366,20 @@ internal fun SurahReaderScreen(
                     translationSources = translationSources,
                     recitations = recitations,
                     selectedRecitationId = selectedRecitationId,
+                    showTransliteration = content.showTransliteration,
+                    showTranslation = content.showTranslation,
+                    arabicLineSpacing = content.arabicLineSpacing,
+                    translationScale = content.translationScale,
+                    keepScreenOn = keepScreenOn,
                     onReaderModeChange = onReaderModeChange,
                     onFontScaleChange = onFontScaleChange,
                     onTranslationSourceChange = onTranslationSourceChange,
                     onRecitationChange = onRecitationChange,
+                    onShowTransliterationChange = onShowTransliterationChange,
+                    onShowTranslationChange = onShowTranslationChange,
+                    onArabicLineSpacingChange = onArabicLineSpacingChange,
+                    onTranslationScaleChange = onTranslationScaleChange,
+                    onKeepScreenOnChange = onKeepScreenOnChange,
                     onDismiss = { showReaderSettings = false },
                 )
             }
@@ -398,16 +456,38 @@ private fun AyahItem(
     populated: PopulatedAyah,
     readerMode: ReaderMode,
     fontScale: Float,
+    showTransliteration: Boolean,
+    showTranslation: Boolean,
+    arabicLineSpacing: Float,
+    translationScale: Float,
     isActive: Boolean,
     isPlaying: Boolean,
+    isBookmarked: Boolean,
+    surahName: String,
+    bookmarkNote: String?,
+    bookmarkTags: List<String>,
     onPlayClick: () -> Unit,
+    onToggleBookmark: () -> Unit,
+    onSaveBookmark: (note: String?, tags: List<String>) -> Unit,
 ) {
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val copiedMessage = stringResource(R.string.feature_quran_impl_copied)
+    var showActions by rememberSaveable { mutableStateOf(false) }
+    var showEditor by rememberSaveable { mutableStateOf(false) }
 
     val shareText = buildString {
         append(populated.ayah.textQpcHafs)
         populated.translation?.let { append("\n\n").append(it.text) }
         append("\n(QS ").append(populated.ayah.ayahKey.value).append(")")
+    }
+
+    fun share() {
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        context.startActivity(Intent.createChooser(sendIntent, null))
     }
 
     val highlightColor by animateColorAsState(
@@ -424,13 +504,7 @@ private fun AyahItem(
             .fillMaxWidth()
             .combinedClickable(
                 onClick = {},
-                onLongClick = {
-                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, shareText)
-                    }
-                    context.startActivity(Intent.createChooser(sendIntent, null))
-                },
+                onLongClick = { showActions = true },
             )
             .background(highlightColor)
             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -442,6 +516,31 @@ private fun AyahItem(
         ) {
             AyahNumberBadge(populated.ayah.ayahNumber)
             Spacer(modifier = Modifier.weight(1f))
+            IconToggleButton(
+                checked = isBookmarked,
+                onCheckedChange = { onToggleBookmark() },
+                modifier = Modifier.testTag("reader:bookmark:${populated.ayah.ayahNumber}"),
+            ) {
+                Icon(
+                    imageVector = if (isBookmarked) {
+                        SurauIcons.Bookmark
+                    } else {
+                        SurauIcons.BookmarkBorder
+                    },
+                    contentDescription = stringResource(
+                        if (isBookmarked) {
+                            R.string.feature_quran_impl_unbookmark
+                        } else {
+                            R.string.feature_quran_impl_bookmark
+                        },
+                    ),
+                    tint = if (isBookmarked) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
             IconButton(
                 onClick = onPlayClick,
                 modifier = Modifier.testTag("reader:play:${populated.ayah.ayahNumber}"),
@@ -464,16 +563,37 @@ private fun AyahItem(
             AyahText(
                 text = populated.ayah.textQpcHafs,
                 fontScale = fontScale,
+                lineHeightMultiplier = arabicLineSpacing,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(top = 8.dp),
             )
+
+            if (showTransliteration) {
+                populated.transliteration?.let { transliteration ->
+                    Text(
+                        text = transliteration.text,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontStyle = FontStyle.Italic,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize * translationScale,
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
         }
 
-        if (readerMode != ReaderMode.ARABIC_ONLY) {
+        // The translation is shown when the mode allows it AND the user hasn't hidden it; in
+        // translation-only mode it is always shown (it's the only content).
+        val translationVisible = readerMode == ReaderMode.TRANSLATION_ONLY ||
+            (readerMode != ReaderMode.ARABIC_ONLY && showTranslation)
+        if (translationVisible) {
             populated.translation?.let { translation ->
                 Text(
                     text = translation.text,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = MaterialTheme.typography.bodyLarge.fontSize * translationScale,
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp),
                 )
@@ -484,6 +604,99 @@ private fun AyahItem(
             modifier = Modifier.padding(top = 16.dp),
             color = MaterialTheme.colorScheme.outlineVariant,
         )
+    }
+
+    if (showActions) {
+        ModalBottomSheet(
+            onDismissRequest = { showActions = false },
+            modifier = Modifier.testTag("reader:ayahActions"),
+        ) {
+            Column(modifier = Modifier.padding(bottom = 24.dp)) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.feature_quran_impl_copy)) },
+                    leadingContent = { Icon(SurauIcons.ContentCopy, contentDescription = null) },
+                    modifier = Modifier.clickable {
+                        clipboardManager.setText(AnnotatedString(shareText))
+                        Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
+                        showActions = false
+                    },
+                )
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.feature_quran_impl_share)) },
+                    leadingContent = { Icon(SurauIcons.Share, contentDescription = null) },
+                    modifier = Modifier.clickable {
+                        share()
+                        showActions = false
+                    },
+                )
+                ListItem(
+                    headlineContent = {
+                        Text(
+                            stringResource(
+                                if (isBookmarked) {
+                                    R.string.feature_quran_impl_unbookmark
+                                } else {
+                                    R.string.feature_quran_impl_bookmark
+                                },
+                            ),
+                        )
+                    },
+                    leadingContent = {
+                        Icon(
+                            imageVector = if (isBookmarked) {
+                                SurauIcons.Bookmark
+                            } else {
+                                SurauIcons.BookmarkBorder
+                            },
+                            contentDescription = null,
+                        )
+                    },
+                    modifier = Modifier
+                        .testTag("reader:ayahActions:bookmark")
+                        .clickable {
+                            onToggleBookmark()
+                            showActions = false
+                        },
+                )
+                ListItem(
+                    headlineContent = {
+                        Text(stringResource(R.string.feature_quran_impl_bookmark_note))
+                    },
+                    leadingContent = {
+                        Icon(SurauIcons.ShortText, contentDescription = null)
+                    },
+                    modifier = Modifier
+                        .testTag("reader:ayahActions:note")
+                        .clickable {
+                            showActions = false
+                            showEditor = true
+                        },
+                )
+            }
+        }
+    }
+
+    if (showEditor) {
+        ModalBottomSheet(
+            onDismissRequest = { showEditor = false },
+            modifier = Modifier.testTag("reader:bookmarkEditor"),
+        ) {
+            BookmarkEditorContent(
+                item = BookmarkListItem(
+                    ayahKey = populated.ayah.ayahKey,
+                    surahId = populated.ayah.surahId,
+                    ayahNumber = populated.ayah.ayahNumber,
+                    surahName = surahName,
+                    arabicText = populated.ayah.textQpcHafs,
+                    note = bookmarkNote,
+                    tags = bookmarkTags,
+                ),
+                onSave = { note, tags ->
+                    onSaveBookmark(note, tags)
+                    showEditor = false
+                },
+            )
+        }
     }
 }
 
@@ -616,10 +829,20 @@ private fun ReaderSettingsSheet(
     translationSources: List<TranslationSource>,
     recitations: List<Recitation>,
     selectedRecitationId: String?,
+    showTransliteration: Boolean,
+    showTranslation: Boolean,
+    arabicLineSpacing: Float,
+    translationScale: Float,
+    keepScreenOn: Boolean,
     onReaderModeChange: (ReaderMode) -> Unit,
     onFontScaleChange: (Float) -> Unit,
     onTranslationSourceChange: (String) -> Unit,
     onRecitationChange: (String) -> Unit,
+    onShowTransliterationChange: (Boolean) -> Unit,
+    onShowTranslationChange: (Boolean) -> Unit,
+    onArabicLineSpacingChange: (Float) -> Unit,
+    onTranslationScaleChange: (Float) -> Unit,
+    onKeepScreenOnChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -657,7 +880,53 @@ private fun ReaderSettingsSheet(
             AyahText(
                 text = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
                 fontScale = fontScale,
+                lineHeightMultiplier = arabicLineSpacing,
                 color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            Spacer(modifier = Modifier.size(24.dp))
+            Text(
+                text = stringResource(R.string.feature_quran_impl_reader_line_spacing),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Slider(
+                value = arabicLineSpacing,
+                onValueChange = onArabicLineSpacingChange,
+                valueRange = 1f..2f,
+                steps = 3,
+            )
+
+            Spacer(modifier = Modifier.size(24.dp))
+            Text(
+                text = stringResource(R.string.feature_quran_impl_reader_display),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            ReaderSwitchRow(
+                label = stringResource(R.string.feature_quran_impl_reader_transliteration),
+                checked = showTransliteration,
+                onCheckedChange = onShowTransliterationChange,
+            )
+            ReaderSwitchRow(
+                label = stringResource(R.string.feature_quran_impl_reader_show_translation),
+                checked = showTranslation,
+                onCheckedChange = onShowTranslationChange,
+            )
+            ReaderSwitchRow(
+                label = stringResource(R.string.feature_quran_impl_reader_keep_screen_on),
+                checked = keepScreenOn,
+                onCheckedChange = onKeepScreenOnChange,
+            )
+
+            Spacer(modifier = Modifier.size(24.dp))
+            Text(
+                text = stringResource(R.string.feature_quran_impl_reader_translation_size),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Slider(
+                value = translationScale,
+                onValueChange = onTranslationScaleChange,
+                valueRange = 0.8f..1.6f,
+                steps = 3,
             )
 
             if (translationSources.isNotEmpty()) {
@@ -711,5 +980,26 @@ private fun ReaderSettingsSheet(
             }
             Spacer(modifier = Modifier.size(24.dp))
         }
+    }
+}
+
+@Composable
+private fun ReaderSwitchRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        SurauSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

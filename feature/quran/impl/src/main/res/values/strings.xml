@@ -35,6 +35,33 @@
     <string name="feature_quran_impl_search_empty">Tidak ada hasil untuk \"%1$s\"</string>
     <string name="feature_quran_impl_search_min_chars">Ketik minimal 3 huruf untuk mencari.</string>
     <string name="feature_quran_impl_settings">Pengaturan</string>
+    <string name="feature_quran_impl_bookmarks">Bookmark</string>
+    <string name="feature_quran_impl_bookmarks_title">Bookmark</string>
+    <string name="feature_quran_impl_bookmarks_empty">Belum ada ayat tersimpan</string>
+    <string name="feature_quran_impl_bookmarks_empty_hint">Tekan lama sebuah ayat untuk menyimpannya.</string>
+    <string name="feature_quran_impl_bookmarks_no_results">Tidak ada bookmark dengan tag ini.</string>
+    <string name="feature_quran_impl_bookmarks_filter_all">Semua</string>
+    <string name="feature_quran_impl_bookmarks_edit">Edit</string>
+    <string name="feature_quran_impl_bookmarks_delete">Hapus</string>
+    <string name="feature_quran_impl_bookmarks_delete_confirm_title">Hapus bookmark?</string>
+    <string name="feature_quran_impl_bookmarks_delete_confirm_body">Bookmark ayat ini akan dihapus.</string>
+    <string name="feature_quran_impl_bookmarks_note_hint">Catatan</string>
+    <string name="feature_quran_impl_bookmarks_collections">Koleksi</string>
+    <string name="feature_quran_impl_bookmarks_tags">Tag</string>
+    <string name="feature_quran_impl_bookmarks_tag_hint">Tag khusus</string>
+    <string name="feature_quran_impl_bookmarks_add_tag">Tambahkan</string>
+    <string name="feature_quran_impl_bookmarks_remove_tag">Hapus tag</string>
+
+    <!-- Preset collections (also stored verbatim as the tag value). -->
+    <string-array name="feature_quran_impl_bookmark_collections">
+        <item>Hafalan</item>
+        <item>Doa</item>
+        <item>Favorit</item>
+        <item>Renungan</item>
+        <item>Tadabbur</item>
+    </string-array>
+    <string name="feature_quran_impl_bookmarks_save">Simpan</string>
+    <string name="feature_quran_impl_bookmarks_cancel">Batal</string>
     <string name="feature_quran_impl_reader_settings">Pengaturan baca</string>
     <string name="feature_quran_impl_reader_mode">Mode tampilan</string>
     <string name="feature_quran_impl_reader_mode_arabic_translation">Arab &amp; Terjemahan</string>
@@ -42,9 +69,19 @@
     <string name="feature_quran_impl_reader_mode_arabic">Arab</string>
     <string name="feature_quran_impl_arabic_font_scale">Ukuran huruf Arab</string>
     <string name="feature_quran_impl_translation_source">Sumber terjemahan</string>
+    <string name="feature_quran_impl_reader_display">Tampilan bacaan</string>
+    <string name="feature_quran_impl_reader_transliteration">Transliterasi Latin</string>
+    <string name="feature_quran_impl_reader_show_translation">Tampilkan terjemahan</string>
+    <string name="feature_quran_impl_reader_line_spacing">Spasi baris Arab</string>
+    <string name="feature_quran_impl_reader_translation_size">Ukuran teks terjemahan</string>
+    <string name="feature_quran_impl_reader_keep_screen_on">Layar tetap nyala</string>
     <string name="feature_quran_impl_copy">Salin</string>
     <string name="feature_quran_impl_share">Bagikan</string>
     <string name="feature_quran_impl_copied">Ayat disalin</string>
+    <string name="feature_quran_impl_bookmark">Simpan bookmark</string>
+    <string name="feature_quran_impl_unbookmark">Hapus bookmark</string>
+    <string name="feature_quran_impl_bookmark_note">Catatan &amp; koleksi</string>
+    <string name="feature_quran_impl_ayah_actions">Aksi ayat</string>
     <string name="feature_quran_impl_back">Kembali</string>
     <string name="feature_quran_impl_page_indicator">Hal. %1$d</string>
     <string name="feature_quran_impl_qari">Qari</string>

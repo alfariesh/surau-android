@@ -63,6 +63,11 @@ class SettingsViewModel @Inject constructor(
                     translationSourceId = userData.translationSourceId,
                     recitationId = userData.recitationId,
                     arabicFontScale = userData.arabicFontScale,
+                    showTransliteration = userData.readerShowTransliteration,
+                    showTranslation = userData.readerShowTranslation,
+                    arabicLineSpacing = userData.readerArabicLineSpacing,
+                    translationScale = userData.readerTranslationScale,
+                    keepScreenOn = userData.readerKeepScreenOn,
                 ),
                 authState = authState,
                 translationSources = translationSources,
@@ -114,6 +119,26 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateShowTransliteration(show: Boolean) {
+        viewModelScope.launch { userDataRepository.setReaderShowTransliteration(show) }
+    }
+
+    fun updateShowTranslation(show: Boolean) {
+        viewModelScope.launch { userDataRepository.setReaderShowTranslation(show) }
+    }
+
+    fun updateArabicLineSpacing(spacing: Float) {
+        viewModelScope.launch { userDataRepository.setReaderArabicLineSpacing(spacing) }
+    }
+
+    fun updateTranslationScale(scale: Float) {
+        viewModelScope.launch { userDataRepository.setReaderTranslationScale(scale) }
+    }
+
+    fun updateKeepScreenOn(enabled: Boolean) {
+        viewModelScope.launch { userDataRepository.setReaderKeepScreenOn(enabled) }
+    }
+
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()
@@ -131,6 +156,11 @@ data class UserEditableSettings(
     val translationSourceId: String?,
     val arabicFontScale: Float,
     val recitationId: String? = null,
+    val showTransliteration: Boolean = false,
+    val showTranslation: Boolean = true,
+    val arabicLineSpacing: Float = 1f,
+    val translationScale: Float = 1f,
+    val keepScreenOn: Boolean = true,
 )
 
 sealed interface SettingsUiState {

@@ -36,6 +36,7 @@ dependencies {
     api(projects.core.model)
 
     implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)

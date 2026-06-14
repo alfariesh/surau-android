@@ -16,11 +16,21 @@
 
 package org.surau.app.core.network.retrofit
 
+import org.surau.app.core.network.model.me.CreateSavedItemRequestDto
+import org.surau.app.core.network.model.me.PatchSavedItemRequestDto
 import org.surau.app.core.network.model.me.PutQuranProgressRequestDto
 import org.surau.app.core.network.model.me.QuranProgressDto
+import org.surau.app.core.network.model.me.SavedItemDto
+import org.surau.app.core.network.model.me.SavedItemsResponseDto
+import org.surau.app.core.network.model.me.SavedItemsTagsResponseDto
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
+import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * Authenticated personal-data endpoints, served by the auth client (Bearer + token refresh).
@@ -32,4 +42,28 @@ interface SurauMeApi {
 
     @PUT("me/quran/progress")
     suspend fun putQuranProgress(@Body body: PutQuranProgressRequestDto): QuranProgressDto
+
+    @GET("me/saved-items")
+    suspend fun savedItems(
+        @Query("item_type") itemType: String = "quran_ayah",
+        @Query("surah_id") surahId: Int? = null,
+        @Query("tag") tag: String? = null,
+        @Query("limit") limit: Int = 50,
+        @Query("offset") offset: Int = 0,
+    ): SavedItemsResponseDto
+
+    @GET("me/saved-items/tags")
+    suspend fun savedItemTags(): SavedItemsTagsResponseDto
+
+    @POST("me/saved-items")
+    suspend fun createSavedItem(@Body body: CreateSavedItemRequestDto): SavedItemDto
+
+    @PATCH("me/saved-items/{id}")
+    suspend fun patchSavedItem(
+        @Path("id") id: String,
+        @Body body: PatchSavedItemRequestDto,
+    ): SavedItemDto
+
+    @DELETE("me/saved-items/{id}")
+    suspend fun deleteSavedItem(@Path("id") id: String)
 }

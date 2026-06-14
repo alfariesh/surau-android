@@ -25,6 +25,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import org.surau.app.core.data.test.repository.FakeBookmarkRepository
 import org.surau.app.core.data.test.repository.FakeQuranAudioRepository
 import org.surau.app.core.data.test.repository.FakeQuranProgressRepository
 import org.surau.app.core.data.test.repository.FakeQuranRepository
@@ -55,6 +56,7 @@ class SurahReaderViewModelTest {
 
     private val quranRepository = FakeQuranRepository()
     private val progressRepository = FakeQuranProgressRepository()
+    private val bookmarkRepository = FakeBookmarkRepository()
     private val audioRepository = FakeQuranAudioRepository()
     private val playerController = FakeSurauPlayerController()
     private val userDataRepository = FakeUserDataRepository(
@@ -68,6 +70,7 @@ class SurahReaderViewModelTest {
         ),
         quranRepository = quranRepository,
         quranProgressRepository = progressRepository,
+        bookmarkRepository = bookmarkRepository,
         userDataRepository = userDataRepository,
         quranAudioRepository = audioRepository,
         playerController = playerController,
@@ -115,6 +118,39 @@ class SurahReaderViewModelTest {
         runCurrent()
 
         assertEquals(ReaderMode.ARABIC_ONLY, userDataRepository.userData.first().readerMode)
+    }
+
+    @Test
+    fun toggleBookmark_addsThenRemoves() = runTest {
+        val viewModel = viewModel(SurahReaderNavKey(surahId = 73))
+
+        viewModel.bookmarksByAyah.test {
+            assertEquals(emptySet<Int>(), awaitItem().keys)
+
+            viewModel.toggleBookmark(4)
+            assertEquals(setOf(4), awaitItem().keys)
+
+            viewModel.toggleBookmark(4)
+            assertEquals(emptySet<Int>(), awaitItem().keys)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun saveBookmark_createsBookmarkWithNoteAndTags() = runTest {
+        val viewModel = viewModel(SurahReaderNavKey(surahId = 73))
+
+        viewModel.bookmarksByAyah.test {
+            assertEquals(emptySet<Int>(), awaitItem().keys)
+
+            viewModel.saveBookmark(4, note = "tadabbur", tags = listOf("Hafalan"))
+            val saved = awaitItem()[4]
+            assertEquals("tadabbur", saved?.note)
+            assertEquals(listOf("Hafalan"), saved?.tags)
+
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test

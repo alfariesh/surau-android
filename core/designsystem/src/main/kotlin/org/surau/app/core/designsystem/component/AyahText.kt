@@ -35,18 +35,20 @@ import org.surau.app.core.designsystem.theme.quranTextStyle
  *
  * @param text the ayah text from the backend's `text_qpc_hafs` field.
  * @param fontScale the user-selected Arabic font scale (1.0 = default).
+ * @param lineHeightMultiplier the user-selected line-spacing multiplier (1.0 = default).
  */
 @Composable
 fun AyahText(
     text: String,
     modifier: Modifier = Modifier,
     fontScale: Float = 1f,
+    lineHeightMultiplier: Float = 1f,
     color: Color = Color.Unspecified,
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Text(
             text = text,
-            style = quranTextStyle(fontScale),
+            style = quranTextStyle(fontScale, lineHeightMultiplier),
             color = color,
             modifier = modifier.fillMaxWidth(),
         )

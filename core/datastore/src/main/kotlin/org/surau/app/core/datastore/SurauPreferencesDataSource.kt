@@ -66,6 +66,19 @@ class SurauPreferencesDataSource @Inject constructor(
                 flowShowTranslation = it.flowShowTranslation,
                 flowAutoContinue = !it.flowAutoContinueDisabled,
                 flowKeepScreenOn = !it.flowKeepScreenOnDisabled,
+                readerShowTransliteration = it.readerShowTransliteration,
+                readerShowTranslation = !it.readerTranslationHidden,
+                readerArabicLineSpacing = if (it.readerArabicLineSpacingPercent <= 0) {
+                    UserData.DEFAULT_LINE_SPACING
+                } else {
+                    it.readerArabicLineSpacingPercent / 100f
+                },
+                readerTranslationScale = if (it.readerTranslationScalePercent <= 0) {
+                    UserData.DEFAULT_TRANSLATION_SCALE
+                } else {
+                    it.readerTranslationScalePercent / 100f
+                },
+                readerKeepScreenOn = !it.readerKeepScreenOnDisabled,
             )
         }
 
@@ -139,6 +152,36 @@ class SurauPreferencesDataSource @Inject constructor(
     suspend fun setFlowKeepScreenOn(enabled: Boolean) {
         userPreferences.updateData {
             it.copy { this.flowKeepScreenOnDisabled = !enabled }
+        }
+    }
+
+    suspend fun setReaderShowTransliteration(show: Boolean) {
+        userPreferences.updateData {
+            it.copy { this.readerShowTransliteration = show }
+        }
+    }
+
+    suspend fun setReaderShowTranslation(show: Boolean) {
+        userPreferences.updateData {
+            it.copy { this.readerTranslationHidden = !show }
+        }
+    }
+
+    suspend fun setReaderArabicLineSpacing(spacing: Float) {
+        userPreferences.updateData {
+            it.copy { this.readerArabicLineSpacingPercent = (spacing * 100).toInt() }
+        }
+    }
+
+    suspend fun setReaderTranslationScale(scale: Float) {
+        userPreferences.updateData {
+            it.copy { this.readerTranslationScalePercent = (scale * 100).toInt() }
+        }
+    }
+
+    suspend fun setReaderKeepScreenOn(enabled: Boolean) {
+        userPreferences.updateData {
+            it.copy { this.readerKeepScreenOnDisabled = !enabled }
         }
     }
 

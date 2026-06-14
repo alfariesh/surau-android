@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.surau.app.core.common.result.Result
 import org.surau.app.core.common.result.asResult
+import org.surau.app.core.data.repository.BookmarkRepository
 import org.surau.app.core.data.repository.QuranAudioRepository
 import org.surau.app.core.data.repository.QuranProgressRepository
 import org.surau.app.core.data.repository.QuranRepository
@@ -46,6 +47,7 @@ import org.surau.app.core.domain.ReaderContent
 import org.surau.app.core.media.PlayerUiState
 import org.surau.app.core.media.SurauPlayerController
 import org.surau.app.core.model.data.quran.AyahKey
+import org.surau.app.core.model.data.quran.Bookmark
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.model.data.quran.Recitation
 import org.surau.app.core.model.data.quran.TranslationSource
@@ -58,6 +60,7 @@ class SurahReaderViewModel @AssistedInject constructor(
     getReaderContent: GetReaderContentUseCase,
     quranRepository: QuranRepository,
     private val quranProgressRepository: QuranProgressRepository,
+    private val bookmarkRepository: BookmarkRepository,
     private val userDataRepository: UserDataRepository,
     private val quranAudioRepository: QuranAudioRepository,
     private val playerController: SurauPlayerController,
@@ -87,6 +90,29 @@ class SurahReaderViewModel @AssistedInject constructor(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = null,
+            )
+
+    /** Whether to keep the screen on while reading (advanced reader preference). */
+    val keepScreenOn: StateFlow<Boolean> =
+        userDataRepository.userData
+            .map { it.readerKeepScreenOn }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = false,
+            )
+
+    /** Bookmarks in this surah keyed by ayah number — drives the per-ayah toggle and the editor. */
+    val bookmarksByAyah: StateFlow<Map<Int, Bookmark>> =
+        bookmarkRepository.observeBookmarks()
+            .map { bookmarks ->
+                bookmarks.filter { it.surahId == navKey.surahId }
+                    .associateBy { it.ayahNumber }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyMap(),
             )
 
     val playerState: StateFlow<PlayerUiState> =
@@ -181,6 +207,53 @@ class SurahReaderViewModel @AssistedInject constructor(
 
     fun setTranslationSource(sourceId: String) {
         viewModelScope.launch { userDataRepository.setTranslationSourceId(sourceId) }
+    }
+
+    fun setShowTransliteration(show: Boolean) {
+        viewModelScope.launch { userDataRepository.setReaderShowTransliteration(show) }
+    }
+
+    fun setShowTranslation(show: Boolean) {
+        viewModelScope.launch { userDataRepository.setReaderShowTranslation(show) }
+    }
+
+    fun setArabicLineSpacing(spacing: Float) {
+        viewModelScope.launch { userDataRepository.setReaderArabicLineSpacing(spacing) }
+    }
+
+    fun setTranslationScale(scale: Float) {
+        viewModelScope.launch { userDataRepository.setReaderTranslationScale(scale) }
+    }
+
+    fun setKeepScreenOn(enabled: Boolean) {
+        viewModelScope.launch { userDataRepository.setReaderKeepScreenOn(enabled) }
+    }
+
+    /** Adds or removes the bookmark for [ayahNumber] in this surah. */
+    fun toggleBookmark(ayahNumber: Int) {
+        viewModelScope.launch {
+            val key = AyahKey.of(navKey.surahId, ayahNumber)
+            if (ayahNumber in bookmarksByAyah.value) {
+                bookmarkRepository.removeBookmark(key)
+            } else {
+                bookmarkRepository.addBookmark(key)
+            }
+        }
+    }
+
+    /**
+     * Saves a note + collections/tags for [ayahNumber], creating the bookmark first if the ayah
+     * is not yet bookmarked. Backs the reader's inline bookmark editor.
+     */
+    fun saveBookmark(ayahNumber: Int, note: String?, tags: List<String>) {
+        viewModelScope.launch {
+            val key = AyahKey.of(navKey.surahId, ayahNumber)
+            if (ayahNumber in bookmarksByAyah.value) {
+                bookmarkRepository.updateBookmark(key, note, tags)
+            } else {
+                bookmarkRepository.addBookmark(key, note, tags)
+            }
+        }
     }
 
     /** Plays from [ayahNumber]: seeks if this surah is already loaded, else fetches + plays. */

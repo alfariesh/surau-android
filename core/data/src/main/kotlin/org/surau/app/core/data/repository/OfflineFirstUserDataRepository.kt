@@ -74,6 +74,26 @@ internal class OfflineFirstUserDataRepository @Inject constructor(
         surauPreferencesDataSource.setFlowKeepScreenOn(enabled)
     }
 
+    override suspend fun setReaderShowTransliteration(show: Boolean) {
+        surauPreferencesDataSource.setReaderShowTransliteration(show)
+    }
+
+    override suspend fun setReaderShowTranslation(show: Boolean) {
+        surauPreferencesDataSource.setReaderShowTranslation(show)
+    }
+
+    override suspend fun setReaderArabicLineSpacing(spacing: Float) {
+        surauPreferencesDataSource.setReaderArabicLineSpacing(spacing)
+    }
+
+    override suspend fun setReaderTranslationScale(scale: Float) {
+        surauPreferencesDataSource.setReaderTranslationScale(scale)
+    }
+
+    override suspend fun setReaderKeepScreenOn(enabled: Boolean) {
+        surauPreferencesDataSource.setReaderKeepScreenOn(enabled)
+    }
+
     override suspend fun setWelcomeShown(shown: Boolean) {
         surauPreferencesDataSource.setWelcomeShown(shown)
     }

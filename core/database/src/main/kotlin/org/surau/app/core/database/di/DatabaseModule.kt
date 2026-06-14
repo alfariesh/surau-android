@@ -42,6 +42,7 @@ internal object DatabaseModule {
         .addMigrations(
             SurauDatabaseMigrations.MIGRATION_1_2,
             SurauDatabaseMigrations.MIGRATION_2_3,
+            SurauDatabaseMigrations.MIGRATION_3_4,
         )
         .build()
 }

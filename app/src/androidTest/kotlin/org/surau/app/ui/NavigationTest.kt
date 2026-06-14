@@ -87,6 +87,21 @@ class NavigationTest {
     }
 
     @Test
+    fun quranHome_openBookmarks_thenBackReturnsHome() {
+        composeTestRule.apply {
+            awaitWelcomeGuest()
+            onNodeWithTag("welcome:guest").performClick()
+
+            onNodeWithTag("quranHome:bookmarks").performClick()
+            // The fake data layer has no bookmarks, so the Bookmarks screen shows its empty state.
+            onNodeWithTag("bookmarks:back").assertIsDisplayed()
+
+            onNodeWithTag("bookmarks:back").performClick()
+            onNodeWithText("Al-Fatihah").assertIsDisplayed()
+        }
+    }
+
+    @Test
     fun quranHome_settings_showsAccountSection_signInOpensLogin() {
         composeTestRule.apply {
             awaitWelcomeGuest()

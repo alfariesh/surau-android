@@ -57,4 +57,32 @@ internal object SurauDatabaseMigrations {
             db.execSQL("DELETE FROM recitations")
         }
     }
+
+    /**
+     * v3 → v4: adds the `bookmarks` table for milestone 3 (saved ayat). Purely additive; existing
+     * tables are untouched. The `CREATE TABLE`/`CREATE INDEX` statements mirror the Room-generated
+     * v4 schema (see `schemas/.../4.json`) verbatim.
+     */
+    val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `bookmarks` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`ayah_key` TEXT NOT NULL, " +
+                    "`surah_id` INTEGER NOT NULL, " +
+                    "`label` TEXT, " +
+                    "`note` TEXT, " +
+                    "`tags` TEXT NOT NULL, " +
+                    "`created_at` INTEGER NOT NULL, " +
+                    "`updated_at` INTEGER NOT NULL, " +
+                    "`server_id` TEXT, " +
+                    "`pending_sync` INTEGER NOT NULL, " +
+                    "`pending_delete` INTEGER NOT NULL)",
+            )
+            db.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS `index_bookmarks_ayah_key` " +
+                    "ON `bookmarks` (`ayah_key`)",
+            )
+        }
+    }
 }

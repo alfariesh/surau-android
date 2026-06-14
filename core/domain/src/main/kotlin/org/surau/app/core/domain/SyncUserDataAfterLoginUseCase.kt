@@ -16,6 +16,7 @@
 
 package org.surau.app.core.domain
 
+import org.surau.app.core.data.repository.BookmarkRepository
 import org.surau.app.core.data.repository.QuranProgressRepository
 import org.surau.app.core.data.repository.UserRepository
 import javax.inject.Inject
@@ -24,17 +25,20 @@ import javax.inject.Inject
  * Runs the post-login data reconciliation:
  * 1. adopt server reader preferences where local ones are unset,
  * 2. merge guest reading progress with the server position (newest wins),
- * 3. silently complete backend onboarding (milestone 1 has no onboarding UI).
+ * 3. merge guest bookmarks with the server's saved items (newest wins),
+ * 4. silently complete backend onboarding (milestone 1 has no onboarding UI).
  *
  * Each step is best-effort and independent; a failing step never blocks login.
  */
 class SyncUserDataAfterLoginUseCase @Inject constructor(
     private val userRepository: UserRepository,
     private val quranProgressRepository: QuranProgressRepository,
+    private val bookmarkRepository: BookmarkRepository,
 ) {
     suspend operator fun invoke() {
         userRepository.pullPreferencesIntoSettings()
         quranProgressRepository.reconcile()
+        bookmarkRepository.reconcile()
         userRepository.completeOnboardingIfNeeded()
     }
 }
