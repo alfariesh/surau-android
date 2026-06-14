@@ -65,6 +65,7 @@ class SurauPreferencesDataSource @Inject constructor(
                 },
                 flowShowTranslation = it.flowShowTranslation,
                 flowAutoContinue = !it.flowAutoContinueDisabled,
+                flowKeepScreenOn = !it.flowKeepScreenOnDisabled,
             )
         }
 
@@ -132,6 +133,12 @@ class SurauPreferencesDataSource @Inject constructor(
     suspend fun setFlowAutoContinue(enabled: Boolean) {
         userPreferences.updateData {
             it.copy { this.flowAutoContinueDisabled = !enabled }
+        }
+    }
+
+    suspend fun setFlowKeepScreenOn(enabled: Boolean) {
+        userPreferences.updateData {
+            it.copy { this.flowKeepScreenOnDisabled = !enabled }
         }
     }
 

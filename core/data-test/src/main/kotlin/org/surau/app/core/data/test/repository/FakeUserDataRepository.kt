@@ -71,6 +71,10 @@ class FakeUserDataRepository @Inject constructor(
         surauPreferencesDataSource.setFlowAutoContinue(enabled)
     }
 
+    override suspend fun setFlowKeepScreenOn(enabled: Boolean) {
+        surauPreferencesDataSource.setFlowKeepScreenOn(enabled)
+    }
+
     override suspend fun setWelcomeShown(shown: Boolean) {
         surauPreferencesDataSource.setWelcomeShown(shown)
     }

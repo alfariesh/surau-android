@@ -122,6 +122,7 @@ fun SurahFlowScreen(
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val showTranslation by viewModel.showTranslation.collectAsStateWithLifecycle()
     val autoContinue by viewModel.autoContinue.collectAsStateWithLifecycle()
+    val keepScreenOn by viewModel.keepScreenOn.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val offlineMessage = stringResource(R.string.feature_quran_impl_audio_offline)
@@ -136,6 +137,7 @@ fun SurahFlowScreen(
         fontScale = fontScale,
         showTranslation = showTranslation,
         autoContinue = autoContinue,
+        keepScreenOn = keepScreenOn,
         onBackClick = onBackClick,
         onPlayPause = viewModel::onPlayPause,
         onNext = viewModel::onNext,
@@ -144,8 +146,10 @@ fun SurahFlowScreen(
         onSetFontScale = viewModel::setFontScale,
         onToggleTranslation = viewModel::toggleTranslation,
         onToggleAutoContinue = viewModel::toggleAutoContinue,
+        onToggleKeepScreenOn = viewModel::toggleKeepScreenOn,
         onSetRepeat = viewModel::onSetRepeat,
         onSetSleepTimer = viewModel::onSetSleepTimer,
+        onSetSpeed = viewModel::onSetSpeed,
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
@@ -159,6 +163,7 @@ internal fun SurahFlowScreen(
     fontScale: Float,
     showTranslation: Boolean,
     autoContinue: Boolean,
+    keepScreenOn: Boolean,
     onBackClick: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
@@ -167,8 +172,10 @@ internal fun SurahFlowScreen(
     onSetFontScale: (Float) -> Unit,
     onToggleTranslation: () -> Unit,
     onToggleAutoContinue: () -> Unit,
+    onToggleKeepScreenOn: () -> Unit,
     onSetRepeat: (RepeatScope, Int) -> Unit,
     onSetSleepTimer: (SleepTimerOption) -> Unit,
+    onSetSpeed: (Float) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     initialChromeVisible: Boolean = true,
@@ -208,6 +215,7 @@ internal fun SurahFlowScreen(
             fontScale = fontScale,
             showTranslation = showTranslation,
             autoContinue = autoContinue,
+            keepScreenOn = keepScreenOn,
             onBackClick = onBackClick,
             onPlayPause = onPlayPause,
             onNext = onNext,
@@ -216,8 +224,10 @@ internal fun SurahFlowScreen(
             onSetFontScale = onSetFontScale,
             onToggleTranslation = onToggleTranslation,
             onToggleAutoContinue = onToggleAutoContinue,
+            onToggleKeepScreenOn = onToggleKeepScreenOn,
             onSetRepeat = onSetRepeat,
             onSetSleepTimer = onSetSleepTimer,
+            onSetSpeed = onSetSpeed,
             snackbarHostState = snackbarHostState,
             initialChromeVisible = initialChromeVisible,
             modifier = modifier,
@@ -233,6 +243,7 @@ private fun FlowSuccess(
     fontScale: Float,
     showTranslation: Boolean,
     autoContinue: Boolean,
+    keepScreenOn: Boolean,
     onBackClick: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
@@ -241,8 +252,10 @@ private fun FlowSuccess(
     onSetFontScale: (Float) -> Unit,
     onToggleTranslation: () -> Unit,
     onToggleAutoContinue: () -> Unit,
+    onToggleKeepScreenOn: () -> Unit,
     onSetRepeat: (RepeatScope, Int) -> Unit,
     onSetSleepTimer: (SleepTimerOption) -> Unit,
+    onSetSpeed: (Float) -> Unit,
     snackbarHostState: SnackbarHostState,
     initialChromeVisible: Boolean,
     modifier: Modifier,
@@ -277,9 +290,10 @@ private fun FlowSuccess(
         onDispose { controller?.show(WindowInsetsCompat.Type.systemBars()) }
     }
 
-    // Keep the screen awake while reciting (you're reading along); let it sleep when paused/left.
-    DisposableEffect(playerState.isPlaying) {
-        view.keepScreenOn = playerState.isPlaying
+    // Keep the screen awake while reciting (when enabled); let it sleep when paused/left/disabled.
+    val awake = playerState.isPlaying && keepScreenOn
+    DisposableEffect(awake) {
+        view.keepScreenOn = awake
         onDispose { view.keepScreenOn = false }
     }
 
@@ -384,11 +398,15 @@ private fun FlowSuccess(
             fontScale = fontScale,
             showTranslation = showTranslation,
             autoContinue = autoContinue,
+            keepScreenOn = keepScreenOn,
+            speed = playerState.speed,
             repeatScope = playerState.repeatScope,
             repeatCount = playerState.repeatCount,
             onFontScaleChange = onSetFontScale,
             onToggleTranslation = onToggleTranslation,
             onToggleAutoContinue = onToggleAutoContinue,
+            onToggleKeepScreenOn = onToggleKeepScreenOn,
+            onSetSpeed = onSetSpeed,
             onSetRepeat = onSetRepeat,
             onDismiss = { showSettings = false },
         )
@@ -680,16 +698,25 @@ private fun formatTimer(ms: Long): String {
     return "%d:%02d".format(totalSeconds / 60, totalSeconds % 60)
 }
 
+private fun formatSpeed(speed: Float): String {
+    val text = if (speed == speed.toInt().toFloat()) speed.toInt().toString() else speed.toString()
+    return "$text×"
+}
+
 @Composable
 private fun FlowSettingsSheet(
     fontScale: Float,
     showTranslation: Boolean,
     autoContinue: Boolean,
+    keepScreenOn: Boolean,
+    speed: Float,
     repeatScope: RepeatScope,
     repeatCount: Int,
     onFontScaleChange: (Float) -> Unit,
     onToggleTranslation: () -> Unit,
     onToggleAutoContinue: () -> Unit,
+    onToggleKeepScreenOn: () -> Unit,
+    onSetSpeed: (Float) -> Unit,
     onSetRepeat: (RepeatScope, Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -730,6 +757,37 @@ private fun FlowSettingsSheet(
                     modifier = Modifier.weight(1f),
                 )
                 Switch(checked = autoContinue, onCheckedChange = { onToggleAutoContinue() })
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.feature_quran_impl_flow_keep_screen_on),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                Switch(checked = keepScreenOn, onCheckedChange = { onToggleKeepScreenOn() })
+            }
+
+            Text(
+                text = stringResource(R.string.feature_quran_impl_flow_speed),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 20.dp),
+            )
+            Row(
+                modifier = Modifier.padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                for (option in SPEEDS) {
+                    FilterChip(
+                        selected = abs(speed - option) < 0.01f,
+                        onClick = { onSetSpeed(option) },
+                        label = { Text(formatSpeed(option)) },
+                    )
+                }
             }
 
             Text(
@@ -816,3 +874,4 @@ private val FADE_HEIGHT = 120.dp
 private const val CHROME_IDLE_MS = 3_000L
 private val SLEEP_TIMER_MINUTES = listOf(15, 30, 45, 60)
 private val REPEAT_COUNTS = listOf(0, 3, 5, 7) // 0 = unlimited
+private val SPEEDS = listOf(0.75f, 1f, 1.25f, 1.5f)

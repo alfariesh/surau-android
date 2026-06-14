@@ -60,5 +60,8 @@ interface SurauPlayerController {
     /** Arms (or with [SleepTimerOption.Off] clears) the sleep timer. */
     fun setSleepTimer(option: SleepTimerOption)
 
+    /** Sets the playback speed multiplier (1.0 = normal); pitch is preserved. */
+    fun setSpeed(speed: Float)
+
     fun stop()
 }

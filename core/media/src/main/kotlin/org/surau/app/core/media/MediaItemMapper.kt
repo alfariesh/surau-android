@@ -24,6 +24,9 @@ import org.surau.app.core.model.data.quran.SurahAudioManifest
 internal const val KEY_SURAH_ID = "org.surau.app.media.SURAH_ID"
 internal const val KEY_AYAH_NUMBER = "org.surau.app.media.AYAH_NUMBER"
 
+/** Ascending per-ayah start times (ms) on a surah-mode item, so the player can skip by ayah. */
+internal const val KEY_AYAH_STARTS = "org.surau.app.media.AYAH_STARTS"
+
 /**
  * Maps a [SurahAudioManifest] to one [MediaItem] per ayah, in order. Tracks without an ayah number
  * (e.g. bismillah or whole-surah audio) or without a playable URL (e.g. a missing ayah) are
@@ -56,9 +59,15 @@ internal fun SurahAudioManifest.toMediaItems(surahName: String): List<MediaItem>
  * `mediaId` deliberately has no trailing ayah number (so the position-based [AyahTimeline] is the
  * sole source of the active ayah); the surah id rides in the metadata extras.
  */
-internal fun SurahAudioManifest.toSurahModeMediaItem(surahName: String): MediaItem? {
+internal fun SurahAudioManifest.toSurahModeMediaItem(
+    surahName: String,
+    ayahStartsMs: LongArray,
+): MediaItem? {
     val track = tracks.firstOrNull { it.url.isNotBlank() } ?: return null
-    val extras = Bundle().apply { putInt(KEY_SURAH_ID, surahId) }
+    val extras = Bundle().apply {
+        putInt(KEY_SURAH_ID, surahId)
+        putLongArray(KEY_AYAH_STARTS, ayahStartsMs)
+    }
     val metadata = MediaMetadata.Builder()
         .setTitle(surahName)
         .setArtist(recitationName)

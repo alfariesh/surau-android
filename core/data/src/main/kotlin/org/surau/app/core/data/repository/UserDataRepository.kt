@@ -74,6 +74,11 @@ interface UserDataRepository {
     suspend fun setFlowAutoContinue(enabled: Boolean)
 
     /**
+     * Sets whether Flow keeps the screen on while a recitation is playing. Local-only.
+     */
+    suspend fun setFlowKeepScreenOn(enabled: Boolean)
+
+    /**
      * Marks the first-launch welcome screen as shown.
      */
     suspend fun setWelcomeShown(shown: Boolean)

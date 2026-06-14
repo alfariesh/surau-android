@@ -21,6 +21,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.surau.app.core.model.data.quran.AudioTrack
 import org.surau.app.core.model.data.quran.SurahAudioManifest
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -65,13 +66,22 @@ class MediaItemMapperTest {
             missingAyahKeys = emptyList(),
         )
 
-        val item = assertNotNull(manifest.toSurahModeMediaItem(surahName = "Al-Fatihah"))
+        val item = assertNotNull(
+            manifest.toSurahModeMediaItem(
+                surahName = "Al-Fatihah",
+                ayahStartsMs = longArrayOf(0, 5000, 10000),
+            ),
+        )
 
         assertEquals("surah:1:full", item.mediaId)
         assertEquals("Al-Fatihah", item.mediaMetadata.title.toString())
         assertEquals("Yasser Al-Dosari", item.mediaMetadata.artist.toString())
         assertEquals("https://cdn/surah1.mp3", item.localConfiguration?.uri.toString())
         assertEquals(1, item.mediaMetadata.extras?.getInt(KEY_SURAH_ID))
+        assertContentEquals(
+            longArrayOf(0, 5000, 10000),
+            item.mediaMetadata.extras?.getLongArray(KEY_AYAH_STARTS),
+        )
     }
 
     @Test
@@ -85,7 +95,7 @@ class MediaItemMapperTest {
             missingAyahKeys = emptyList(),
         )
 
-        assertNull(manifest.toSurahModeMediaItem(surahName = "Al-Fatihah"))
+        assertNull(manifest.toSurahModeMediaItem(surahName = "Al-Fatihah", ayahStartsMs = longArrayOf(0)))
     }
 
     private fun track(ayahKey: String, ayahNumber: Int?, url: String) = AudioTrack(

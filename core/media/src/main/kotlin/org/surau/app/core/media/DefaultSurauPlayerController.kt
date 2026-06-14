@@ -20,6 +20,7 @@ import android.content.ComponentName
 import android.content.Context
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -92,6 +93,8 @@ class DefaultSurauPlayerController @Inject constructor(
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) = syncState()
 
+        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) = syncState()
+
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
                 if (stopAtSurahEnd) {
@@ -116,8 +119,9 @@ class DefaultSurauPlayerController @Inject constructor(
             controller.volume = 1f
             if (manifest.mode == MODE_SURAH) {
                 // One audio file for the whole surah; the active ayah comes from the timeline.
-                val item = manifest.toSurahModeMediaItem(surahName) ?: return@controllerAction
                 val timeline = AyahTimeline.from(manifest)
+                val item = manifest.toSurahModeMediaItem(surahName, timeline.startTimes())
+                    ?: return@controllerAction
                 ayahTimeline = timeline
                 controller.setMediaItems(listOf(item), 0, timeline.startMsOf(startAyah) ?: 0L)
             } else {
@@ -238,6 +242,8 @@ class DefaultSurauPlayerController @Inject constructor(
         }
     }
 
+    override fun setSpeed(speed: Float) = controllerAction { it.setPlaybackSpeed(speed) }
+
     override fun stop() = controllerAction {
         it.stop()
         it.clearMediaItems()
@@ -349,7 +355,11 @@ class DefaultSurauPlayerController @Inject constructor(
                 isPlaying = controller.isPlaying,
                 currentItem = controller.currentMediaItem,
                 durationMs = controller.duration,
-            ).copy(positionMs = position, currentAyahNumber = currentAyah(position))
+            ).copy(
+                positionMs = position,
+                currentAyahNumber = currentAyah(position),
+                speed = controller.playbackParameters.speed,
+            )
         }
     }
 

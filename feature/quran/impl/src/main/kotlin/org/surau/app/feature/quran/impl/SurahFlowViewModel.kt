@@ -120,6 +120,11 @@ class SurahFlowViewModel @AssistedInject constructor(
             .map { it.flowAutoContinue }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
+    val keepScreenOn: StateFlow<Boolean> =
+        userDataRepository.userData
+            .map { it.flowKeepScreenOn }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
     private val _audioError = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val audioError: SharedFlow<Unit> = _audioError
 
@@ -174,6 +179,8 @@ class SurahFlowViewModel @AssistedInject constructor(
 
     fun onSetSleepTimer(option: SleepTimerOption) = playerController.setSleepTimer(option)
 
+    fun onSetSpeed(speed: Float) = playerController.setSpeed(speed)
+
     fun setFontScale(scale: Float) {
         viewModelScope.launch { userDataRepository.setFlowArabicFontScale(scale) }
     }
@@ -187,6 +194,12 @@ class SurahFlowViewModel @AssistedInject constructor(
     fun toggleAutoContinue() {
         viewModelScope.launch {
             userDataRepository.setFlowAutoContinue(!autoContinue.value)
+        }
+    }
+
+    fun toggleKeepScreenOn() {
+        viewModelScope.launch {
+            userDataRepository.setFlowKeepScreenOn(!keepScreenOn.value)
         }
     }
 

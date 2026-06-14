@@ -62,6 +62,9 @@ internal class AyahTimeline private constructor(
 
     fun lastAyah(): Int? = entries.lastOrNull()?.ayah
 
+    /** Each ayah's earliest start (ms), ascending — the cut points for ayah-by-ayah skipping. */
+    fun startTimes(): LongArray = LongArray(entries.size) { entries[it].startMs }
+
     /** The ayah after [current] in playback order, or `null` at the last ayah (no wrap). */
     fun nextAyah(current: Int): Int? {
         val i = entries.indexOfFirst { it.ayah == current }

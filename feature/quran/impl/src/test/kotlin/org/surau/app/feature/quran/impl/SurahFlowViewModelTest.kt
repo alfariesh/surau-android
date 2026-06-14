@@ -196,4 +196,13 @@ class SurahFlowViewModelTest {
 
         assertEquals(SleepTimerOption.EndOfSurah, playerController.sleepTimerCalls.single())
     }
+
+    @Test
+    fun onSetSpeed_forwardsToController() = runTest {
+        val viewModel = viewModel(SurahFlowNavKey(surahId = 1))
+
+        viewModel.onSetSpeed(1.25f)
+
+        assertEquals(1.25f, playerController.speedCalls.single())
+    }
 }

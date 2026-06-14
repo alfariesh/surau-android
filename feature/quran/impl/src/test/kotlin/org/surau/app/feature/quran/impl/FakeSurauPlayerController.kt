@@ -44,6 +44,7 @@ internal class FakeSurauPlayerController : SurauPlayerController {
 
     val repeatCalls = mutableListOf<RepeatCall>()
     val sleepTimerCalls = mutableListOf<SleepTimerOption>()
+    val speedCalls = mutableListOf<Float>()
 
     override fun playSurah(manifest: SurahAudioManifest, surahName: String, startAyah: Int) {
         playCalls += PlayCall(manifest, surahName, startAyah)
@@ -59,6 +60,10 @@ internal class FakeSurauPlayerController : SurauPlayerController {
 
     override fun setSleepTimer(option: SleepTimerOption) {
         sleepTimerCalls += option
+    }
+
+    override fun setSpeed(speed: Float) {
+        speedCalls += speed
     }
 
     override fun stop() = Unit

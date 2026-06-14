@@ -100,6 +100,12 @@ class TestUserDataRepository : UserDataRepository {
         }
     }
 
+    override suspend fun setFlowKeepScreenOn(enabled: Boolean) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(flowKeepScreenOn = enabled))
+        }
+    }
+
     override suspend fun setWelcomeShown(shown: Boolean) {
         currentUserData.let { current ->
             _userData.tryEmit(current.copy(welcomeShown = shown))
