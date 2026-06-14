@@ -88,8 +88,8 @@ import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.media.PlayerUiState
-import org.surau.app.core.model.data.quran.PopulatedAyah
 import org.surau.app.core.model.data.quran.Bookmark
+import org.surau.app.core.model.data.quran.PopulatedAyah
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.model.data.quran.Recitation
 import org.surau.app.core.model.data.quran.TranslationSource
