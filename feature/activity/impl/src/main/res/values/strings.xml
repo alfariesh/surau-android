@@ -23,17 +23,27 @@
     <string name="feature_activity_impl_error_generic">Terjadi kesalahan. Coba lagi.</string>
 
     <!-- Streak -->
-    <string name="feature_activity_impl_streak_days">%1$d hari beruntun</string>
+    <string name="feature_activity_impl_streak_unit">hari beruntun</string>
     <string name="feature_activity_impl_streak_longest">Terpanjang: %1$d hari</string>
     <string name="feature_activity_impl_streak_active_today">Sudah membaca hari ini</string>
     <string name="feature_activity_impl_streak_inactive_today">Belum membaca hari ini</string>
 
     <!-- Heatmap -->
     <string name="feature_activity_impl_heatmap_title">Aktivitas membaca</string>
+    <string name="feature_activity_impl_activity_summary">%1$d hari aktif · %2$d ayat dibaca</string>
+    <string name="feature_activity_impl_heatmap_empty">Belum ada aktivitas membaca. Mulai baca untuk mengisi kalender.</string>
+    <string name="feature_activity_impl_heatmap_day">%1$s · %2$d ayat</string>
+    <string name="feature_activity_impl_heatmap_cell_desc">%1$s, %2$d ayat dibaca</string>
+    <string name="feature_activity_impl_heatmap_legend_less">Sedikit</string>
+    <string name="feature_activity_impl_heatmap_legend_more">Banyak</string>
+    <string name="feature_activity_impl_weekday_mon">Sen</string>
+    <string name="feature_activity_impl_weekday_wed">Rab</string>
+    <string name="feature_activity_impl_weekday_fri">Jum</string>
 
     <!-- Khatam -->
     <string name="feature_activity_impl_khatam_title">Khatam Al-Qur\'an</string>
     <string name="feature_activity_impl_khatam_progress">%1$d / %2$d juz</string>
+    <string name="feature_activity_impl_juz_number">Juz %1$d</string>
     <string name="feature_activity_impl_khatam_start">Mulai khatam</string>
     <string name="feature_activity_impl_khatam_complete">Tandai selesai</string>
     <string name="feature_activity_impl_khatam_none_desc">Mulai khatam untuk melacak progres 30 juz.</string>

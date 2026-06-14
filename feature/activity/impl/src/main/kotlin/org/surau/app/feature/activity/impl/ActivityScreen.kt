@@ -17,6 +17,7 @@
 package org.surau.app.feature.activity.impl
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,8 +30,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -52,24 +55,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.isoDayNumber
-import kotlinx.datetime.minus
-import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
@@ -247,14 +250,20 @@ private fun StreakHeader(streak: ReadingStreak) {
                 },
             )
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(
-                        R.string.feature_activity_impl_streak_days,
-                        streak.currentStreakDays,
-                    ),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                )
+                // Number and unit on one baseline so a short streak never wraps awkwardly.
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = streak.currentStreakDays.toString(),
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.feature_activity_impl_streak_unit),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 4.dp),
+                    )
+                }
                 Text(
                     text = stringResource(
                         R.string.feature_activity_impl_streak_longest,
@@ -285,51 +294,167 @@ private fun ActivityHeatmapCard(today: LocalDate, activity: ReadingActivity) {
                 text = stringResource(R.string.feature_activity_impl_heatmap_title),
                 style = MaterialTheme.typography.titleMedium,
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(
+                    R.string.feature_activity_impl_activity_summary,
+                    activity.activeDays,
+                    activity.totalQuranAyahs,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Spacer(modifier = Modifier.height(12.dp))
             ActivityHeatmap(today = today, countsByDate = activity.quranAyahsByDate)
+            if (activity.quranAyahsByDate.values.none { it > 0 }) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.feature_activity_impl_heatmap_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
 
 /**
- * A GitHub-style heatmap: 7 rows (Sun..Sat) × [WEEKS] columns ending at [today]'s week. Cell
- * intensity is derived from the Quran ayahs read that day; future cells are blank.
+ * A GitHub-style heatmap: weekday-labelled, 7 rows (Sun..Sat) × [HEATMAP_WEEKS] columns ending at
+ * [today]'s week. Cell intensity comes from the Quran ayahs read that day; tapping a day shows its
+ * count, otherwise a legend is shown. Layout/bucketing live in [buildHeatmapColumns] (unit-tested).
  */
 @Composable
 private fun ActivityHeatmap(
     today: LocalDate,
     countsByDate: Map<LocalDate, Int>,
 ) {
-    val sundayOffset = today.dayOfWeek.isoDayNumber % 7 // Sun -> 0 .. Sat -> 6
-    val lastColumnStart = today.minus(sundayOffset, DateTimeUnit.DAY)
-    val gridStart = lastColumnStart.minus((WEEKS - 1) * DAYS_PER_WEEK, DateTimeUnit.DAY)
-    val emptyColor = MaterialTheme.colorScheme.surfaceVariant
-    val filledColor = MaterialTheme.colorScheme.primary
+    val columns = remember(today, countsByDate) { buildHeatmapColumns(today, countsByDate) }
+    var selected by remember { mutableStateOf<HeatmapCell?>(null) }
 
-    Row(horizontalArrangement = Arrangement.spacedBy(CELL_GAP)) {
-        for (col in 0 until WEEKS) {
+    Column {
+        Row {
             Column(verticalArrangement = Arrangement.spacedBy(CELL_GAP)) {
-                for (row in 0 until DAYS_PER_WEEK) {
-                    val date = gridStart.plus(col * DAYS_PER_WEEK + row, DateTimeUnit.DAY)
-                    val isFuture = date > today
-                    val count = countsByDate[date] ?: 0
-                    val alpha = intensityAlpha(count)
-                    val color = when {
-                        isFuture -> Color.Transparent
-                        alpha == 0f -> emptyColor
-                        else -> filledColor.copy(alpha = alpha)
-                    }
+                WEEKDAY_LABELS.forEach { labelRes ->
                     Box(
                         modifier = Modifier
-                            .size(CELL_SIZE)
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .background(color)
-                            .testTag(if (count > 0 && !isFuture) "activity:heatmap:active" else "activity:heatmap:cell"),
-                    )
+                            .height(CELL_SIZE)
+                            .width(28.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        if (labelRes != 0) {
+                            Text(
+                                text = stringResource(labelRes),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(CELL_GAP)) {
+                columns.forEach { week ->
+                    Column(verticalArrangement = Arrangement.spacedBy(CELL_GAP)) {
+                        week.forEach { cell ->
+                            HeatmapCellBox(
+                                cell = cell,
+                                selected = cell == selected,
+                                onClick = { selected = cell },
+                            )
+                        }
+                    }
                 }
             }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        val chosen = selected
+        if (chosen != null && !chosen.isFuture) {
+            Text(
+                text = stringResource(
+                    R.string.feature_activity_impl_heatmap_day,
+                    chosen.date.formatShort(),
+                    chosen.count,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        } else {
+            HeatmapLegend()
+        }
     }
+}
+
+@Composable
+private fun HeatmapCellBox(cell: HeatmapCell, selected: Boolean, onClick: () -> Unit) {
+    val color = if (cell.isFuture) Color.Transparent else heatmapLevelColor(cell.level)
+    val description = if (cell.isFuture) {
+        null
+    } else {
+        stringResource(
+            R.string.feature_activity_impl_heatmap_cell_desc,
+            cell.date.formatShort(),
+            cell.count,
+        )
+    }
+    Box(
+        modifier = Modifier
+            .size(CELL_SIZE)
+            .clip(MaterialTheme.shapes.extraSmall)
+            .background(color)
+            .then(
+                if (selected) {
+                    Modifier.border(1.5.dp, MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.extraSmall)
+                } else {
+                    Modifier
+                },
+            )
+            .then(if (cell.isFuture) Modifier else Modifier.clickable(onClick = onClick))
+            .then(
+                if (description != null) {
+                    Modifier.semantics { contentDescription = description }
+                } else {
+                    Modifier
+                },
+            )
+            .testTag(
+                if (cell.count > 0 && !cell.isFuture) "activity:heatmap:active" else "activity:heatmap:cell",
+            ),
+    )
+}
+
+@Composable
+private fun HeatmapLegend() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.feature_activity_impl_heatmap_legend_less),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        for (level in 0..HEATMAP_MAX_LEVEL) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(MaterialTheme.shapes.extraSmall)
+                    .background(heatmapLevelColor(level)),
+            )
+        }
+        Text(
+            text = stringResource(R.string.feature_activity_impl_heatmap_legend_more),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun heatmapLevelColor(level: Int): Color = when (level) {
+    0 -> MaterialTheme.colorScheme.surfaceVariant
+    1 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+    2 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+    3 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.78f)
+    else -> MaterialTheme.colorScheme.primary
 }
 
 @Composable
@@ -459,6 +584,7 @@ private fun JuzGrid(
                     JuzCell(
                         juz = juz,
                         checked = juz in completedJuz,
+                        inFlight = juz in juzInFlight,
                         onToggle = { if (juz in completedJuz) onUnmarkJuz(juz) else onMarkJuz(juz) },
                         modifier = Modifier.weight(1f),
                     )
@@ -472,6 +598,7 @@ private fun JuzGrid(
 private fun JuzCell(
     juz: Int,
     checked: Boolean,
+    inFlight: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -485,20 +612,37 @@ private fun JuzCell(
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
+    val label = stringResource(R.string.feature_activity_impl_juz_number, juz)
     Box(
         modifier = modifier
             .height(44.dp)
             .clip(MaterialTheme.shapes.small)
             .background(container)
-            .clickable(onClick = onToggle)
+            // Real checkbox semantics so TalkBack announces the marked/unmarked state.
+            .toggleable(
+                value = checked,
+                enabled = !inFlight,
+                role = Role.Checkbox,
+                onValueChange = { onToggle() },
+            )
+            .alpha(if (inFlight) 0.5f else 1f)
+            .semantics { contentDescription = label }
             .testTag("activity:juz:$juz"),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = juz.toString(),
-            style = MaterialTheme.typography.titleSmall,
-            color = content,
-        )
+        if (inFlight) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                strokeWidth = 2.dp,
+                color = content,
+            )
+        } else {
+            Text(
+                text = juz.toString(),
+                style = MaterialTheme.typography.titleSmall,
+                color = content,
+            )
+        }
     }
 }
 
@@ -633,31 +777,37 @@ private fun CenteredBox(content: @Composable () -> Unit) {
     }
 }
 
-private fun intensityAlpha(count: Int): Float = when {
-    count <= 0 -> 0f
-    count <= 2 -> 0.25f
-    count <= 5 -> 0.45f
-    count <= 10 -> 0.7f
-    else -> 1f
-}
-
 /** Formats an [Instant] as a short local date (e.g. "12 Jun 2026"), or "—" when null. */
 private fun Instant?.toDisplayDate(): String {
     val date = this?.toLocalDateTime(TimeZone.currentSystemDefault())?.date ?: return "—"
-    val month = MONTHS_ID.getOrElse(date.monthNumber - 1) { date.monthNumber.toString() }
-    return "${date.dayOfMonth} $month ${date.year}"
+    return "${date.dayOfMonth} ${date.monthAbbrevId()} ${date.year}"
 }
+
+/** Short day+month for a [LocalDate] (e.g. "12 Jun"). */
+private fun LocalDate.formatShort(): String = "$dayOfMonth ${monthAbbrevId()}"
+
+private fun LocalDate.monthAbbrevId(): String =
+    MONTHS_ID.getOrElse(monthNumber - 1) { monthNumber.toString() }
 
 private val MONTHS_ID = listOf(
     "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
     "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
 )
 
-private const val WEEKS = 5
-private const val DAYS_PER_WEEK = 7
 private const val JUZ_COLUMNS = 5
 private val CELL_SIZE = 28.dp
 private val CELL_GAP = 4.dp
+
+// Weekday labels for a Sunday-first column (Sen/Rab/Jum shown, like common heatmaps); 0 = blank.
+private val WEEKDAY_LABELS = listOf(
+    0,
+    R.string.feature_activity_impl_weekday_mon,
+    0,
+    R.string.feature_activity_impl_weekday_wed,
+    0,
+    R.string.feature_activity_impl_weekday_fri,
+    0,
+)
 
 @Preview(showBackground = true)
 @Composable
