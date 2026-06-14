@@ -116,6 +116,18 @@ private class FakeBookmarkApi : SurauMeApi {
     override suspend fun putQuranProgress(body: PutQuranProgressRequestDto): QuranProgressDto =
         throw UnsupportedOperationException()
 
+    override suspend fun activeKhatam() = throw UnsupportedOperationException()
+    override suspend fun startKhatam(
+        body: org.surau.app.core.network.model.me.StartKhatamRequestDto,
+    ) = throw UnsupportedOperationException()
+    override suspend fun markKhatamJuz(juz: Int) = throw UnsupportedOperationException()
+    override suspend fun unmarkKhatamJuz(juz: Int) = throw UnsupportedOperationException()
+    override suspend fun completeKhatam() = throw UnsupportedOperationException()
+    override suspend fun khatamHistory(limit: Int, offset: Int) = throw UnsupportedOperationException()
+    override suspend fun activity(from: String, to: String) = throw UnsupportedOperationException()
+    override suspend fun streak(today: String) = throw UnsupportedOperationException()
+    override suspend fun surahProgress() = throw UnsupportedOperationException()
+
     private fun http404() = HttpException(
         Response.error<Any>(404, ResponseBody.create(null, """{"code":"NOT_FOUND"}""")),
     )

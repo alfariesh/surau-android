@@ -86,6 +86,18 @@ private class FakeMeApi : SurauMeApi {
     ): org.surau.app.core.network.model.me.SavedItemDto = throw UnsupportedOperationException()
 
     override suspend fun deleteSavedItem(id: String) = throw UnsupportedOperationException()
+
+    override suspend fun activeKhatam() = throw UnsupportedOperationException()
+    override suspend fun startKhatam(
+        body: org.surau.app.core.network.model.me.StartKhatamRequestDto,
+    ) = throw UnsupportedOperationException()
+    override suspend fun markKhatamJuz(juz: Int) = throw UnsupportedOperationException()
+    override suspend fun unmarkKhatamJuz(juz: Int) = throw UnsupportedOperationException()
+    override suspend fun completeKhatam() = throw UnsupportedOperationException()
+    override suspend fun khatamHistory(limit: Int, offset: Int) = throw UnsupportedOperationException()
+    override suspend fun activity(from: String, to: String) = throw UnsupportedOperationException()
+    override suspend fun streak(today: String) = throw UnsupportedOperationException()
+    override suspend fun surahProgress() = throw UnsupportedOperationException()
 }
 
 @RunWith(RobolectricTestRunner::class)
