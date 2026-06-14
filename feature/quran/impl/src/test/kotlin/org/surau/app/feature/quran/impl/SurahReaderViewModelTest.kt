@@ -18,8 +18,6 @@ package org.surau.app.feature.quran.impl
 
 import app.cash.turbine.TurbineTestContext
 import app.cash.turbine.test
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -36,9 +34,7 @@ import org.surau.app.core.datastore.UserPreferences
 import org.surau.app.core.datastore.test.InMemoryDataStore
 import org.surau.app.core.domain.GetReaderContentUseCase
 import org.surau.app.core.media.PlayerUiState
-import org.surau.app.core.media.SurauPlayerController
 import org.surau.app.core.model.data.quran.ReaderMode
-import org.surau.app.core.model.data.quran.SurahAudioManifest
 import org.surau.app.core.testing.util.MainDispatcherRule
 import org.surau.app.feature.quran.api.navigation.SurahReaderNavKey
 import java.io.IOException
@@ -162,21 +158,4 @@ class SurahReaderViewModelTest {
 
         assertEquals("abdul-basit-murattal", userDataRepository.userData.first().recitationId)
     }
-}
-
-private class FakeSurauPlayerController : SurauPlayerController {
-    val playerState = MutableStateFlow(PlayerUiState())
-    override val state: StateFlow<PlayerUiState> = playerState
-
-    val playedManifests = mutableListOf<SurahAudioManifest>()
-
-    override fun playSurah(manifest: SurahAudioManifest, surahName: String, startAyah: Int) {
-        playedManifests += manifest
-    }
-
-    override fun playPause() = Unit
-    override fun next() = Unit
-    override fun previous() = Unit
-    override fun seekToAyah(ayahNumber: Int) = Unit
-    override fun stop() = Unit
 }

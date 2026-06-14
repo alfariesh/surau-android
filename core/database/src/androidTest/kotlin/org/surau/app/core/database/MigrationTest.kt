@@ -64,6 +64,42 @@ class MigrationTest {
         db.close()
     }
 
+    @Test
+    fun migrate2To3_addsModeColumn_andClearsStaleCache() {
+        helper.createDatabase(TEST_DB, 2).apply {
+            execSQL(
+                "INSERT INTO recitations " +
+                    "(id, display_name, reciter_name, style, is_default, fetched_at) " +
+                    "VALUES ('mishari', 'Mishari', 'Mishari', 'murattal', 1, 0)",
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(
+            TEST_DB,
+            3,
+            true,
+            SurauDatabaseMigrations.MIGRATION_2_3,
+        )
+
+        // The pre-`mode` cache row is cleared so the catalog refetches and backfills `mode`.
+        db.query("SELECT COUNT(*) FROM recitations").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(0, cursor.getInt(0))
+        }
+        // The new `mode` column exists and is writable.
+        db.execSQL(
+            "INSERT INTO recitations " +
+                "(id, display_name, reciter_name, style, mode, is_default, fetched_at) " +
+                "VALUES ('yasser', 'Yasser', 'Yasser', NULL, 'surah', 0, 1)",
+        )
+        db.query("SELECT mode FROM recitations WHERE id = 'yasser'").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals("surah", cursor.getString(0))
+        }
+        db.close()
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }

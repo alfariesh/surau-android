@@ -89,6 +89,20 @@ class OfflineFirstQuranAudioRepositoryTest {
     }
 
     @Test
+    fun resolveRecitationId_byMode_picksMatchingMode() = runTest {
+        quranApi.recitationsResponse = PagedResponseDto(
+            listOf(
+                RecitationDto(id = "afasy", displayName = "Afasy", reciterName = "Afasy", mode = "ayah", isDefault = true),
+                RecitationDto(id = "dosari", displayName = "Dosari", reciterName = "Dosari", mode = "surah"),
+            ),
+        )
+
+        assertEquals("dosari", subject.resolveRecitationId(null, "surah"))
+        // An ayah-mode preference is ignored when surah mode is required.
+        assertEquals("dosari", subject.resolveRecitationId("afasy", "surah"))
+    }
+
+    @Test
     fun observeRecitations_fetchesOnce_thenServesCache() = runTest {
         quranApi.recitationsResponse = recitations(default = "afasy", other = "basit")
 

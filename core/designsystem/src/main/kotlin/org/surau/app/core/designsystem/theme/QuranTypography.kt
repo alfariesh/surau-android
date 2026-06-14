@@ -37,6 +37,22 @@ val UthmanicHafsFontFamily = FontFamily(
     Font(R.font.core_designsystem_uthmanic_hafs),
 )
 
+/**
+ * Surah Name (v4) — a decorative glyph font where each surah's calligraphic name is encoded as a
+ * standard ligature. Rendering the literal token `surahNNN` (zero-padded surah id, see
+ * [surahNameGlyphCode]) makes the font's `liga` feature substitute the single ornament glyph.
+ * Always pair it with [surahNameGlyphCode]; the raw Arabic name will not trigger the ligature.
+ */
+val SurahNameFontFamily = FontFamily(
+    Font(R.font.core_designsystem_surah_name),
+)
+
+/**
+ * The ligature token that [SurahNameFontFamily] substitutes for surah [surahId]'s ornament glyph,
+ * e.g. `surahNameGlyphCode(2)` -> `"surah002"`.
+ */
+fun surahNameGlyphCode(surahId: Int): String = "surah%03d".format(surahId)
+
 /** Base font size for ayah text before the user's Arabic font scale is applied. */
 val QURAN_BASE_FONT_SIZE = 24
 

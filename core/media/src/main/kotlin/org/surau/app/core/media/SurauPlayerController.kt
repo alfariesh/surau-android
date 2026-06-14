@@ -16,6 +16,7 @@
 
 package org.surau.app.core.media
 
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.surau.app.core.model.data.quran.SurahAudioManifest
 
@@ -28,6 +29,13 @@ interface SurauPlayerController {
 
     /** The current playback snapshot; `surahId == null` means no active session. */
     val state: StateFlow<PlayerUiState>
+
+    /**
+     * Emits the surahId of a surah-mode session that just finished playing naturally — i.e. not while
+     * looping and not when stopped by an "end of surah" sleep timer. Used to auto-advance to the next
+     * surah. Replay is 0, so it only reaches collectors active at completion time.
+     */
+    val surahCompletions: SharedFlow<Int>
 
     /** Loads [manifest] and starts playback at [startAyah], replacing any current session. */
     fun playSurah(manifest: SurahAudioManifest, surahName: String, startAyah: Int)
@@ -42,6 +50,18 @@ interface SurauPlayerController {
 
     /** Seeks to [ayahNumber] within the loaded session, if present. */
     fun seekToAyah(ayahNumber: Int)
+
+    /**
+     * Loops the active surah-mode session per [scope], stopping after [count] plays (or repeating
+     * forever when [count] is `0`). A no-op without a loaded surah-mode timeline.
+     */
+    fun setRepeat(scope: RepeatScope, count: Int)
+
+    /** Arms (or with [SleepTimerOption.Off] clears) the sleep timer. */
+    fun setSleepTimer(option: SleepTimerOption)
+
+    /** Sets the playback speed multiplier (1.0 = normal); pitch is preserved. */
+    fun setSpeed(speed: Float)
 
     fun stop()
 }

@@ -71,6 +71,7 @@ object QuranTestData {
     )
 
     const val TEST_RECITATION_ID = "mishari-al-afasy"
+    const val TEST_SURAH_RECITATION_ID = "qul-surah-recitation-yasser-al-dosari"
 
     val recitations = listOf(
         Recitation(
@@ -78,6 +79,7 @@ object QuranTestData {
             displayName = "Mishari Rashid Al-Afasy",
             reciterName = "Mishari Rashid Al-Afasy",
             style = "murattal",
+            mode = "ayah",
             isDefault = true,
         ),
         Recitation(
@@ -85,7 +87,41 @@ object QuranTestData {
             displayName = "Abdul Basit Abdus Samad",
             reciterName = "Abdul Basit Abdus Samad",
             style = "murattal",
+            mode = "ayah",
         ),
+        Recitation(
+            id = TEST_SURAH_RECITATION_ID,
+            displayName = "Yasser Al-Dosari",
+            reciterName = "Yasser Al-Dosari",
+            mode = "surah",
+        ),
+    )
+
+    /**
+     * Al-Fatihah surah-mode manifest: 1 track, segments intentionally unordered with a 2nd segment
+     * for ayah 1, ayah 3 missing, and a gap before ayah 5 — exercises the Flow [AyahTimeline].
+     */
+    val fatihahSurahModeManifest = SurahAudioManifest(
+        surahId = 1,
+        recitationId = TEST_SURAH_RECITATION_ID,
+        recitationName = "Yasser Al-Dosari",
+        mode = "surah",
+        tracks = listOf(
+            AudioTrack(
+                ayahKey = "1",
+                ayahNumber = null,
+                url = "https://cdn.surau.test/audio/dosari/1.mp3",
+                durationMs = null,
+                segments = listOf(
+                    AudioSegment(3, "1:2", 4000, 7000, 3000),
+                    AudioSegment(1, "1:1", 0, 3000, 3000),
+                    AudioSegment(2, "1:1", 3000, 4000, 1000),
+                    AudioSegment(5, "1:5", 9000, 12000, 3000),
+                    AudioSegment(4, "1:4", 7000, 8000, 1000),
+                ),
+            ),
+        ),
+        missingAyahKeys = emptyList(),
     )
 
     /** Al-Fatihah (7 ayahs) audio manifest with fake CDN track URLs. */

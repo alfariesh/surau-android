@@ -39,6 +39,19 @@ data class SurahReaderNavKey(
 ) : NavKey
 
 /**
+ * The immersive "Flow" reader: surah-mode recitation with the active ayah centered and
+ * auto-scrolling, for focused listening (tadabbur).
+ *
+ * @property surahId surah to open.
+ * @property ayahNumber optional ayah to start from.
+ */
+@Serializable
+data class SurahFlowNavKey(
+    val surahId: Int,
+    val ayahNumber: Int? = null,
+) : NavKey
+
+/**
  * Server-side Quran search.
  */
 @Serializable
@@ -46,6 +59,10 @@ object QuranSearchNavKey : NavKey
 
 fun Navigator.navigateToSurahReader(surahId: Int, ayahNumber: Int? = null) {
     navigate(SurahReaderNavKey(surahId = surahId, ayahNumber = ayahNumber))
+}
+
+fun Navigator.navigateToSurahFlow(surahId: Int, ayahNumber: Int? = null) {
+    navigate(SurahFlowNavKey(surahId = surahId, ayahNumber = ayahNumber))
 }
 
 fun Navigator.navigateToQuranSearch() {

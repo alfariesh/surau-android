@@ -35,67 +35,81 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 /**
- * Light Surau color scheme
+ * Light Surau color scheme — HeroUI Pro neutral sage palette with an olive-green accent.
  */
 @VisibleForTesting
 val LightSurauColorScheme = lightColorScheme(
-    primary = Emerald40,
+    primary = HeroLightAccent,
     onPrimary = Color.White,
-    primaryContainer = Emerald90,
-    onPrimaryContainer = Emerald10,
-    secondary = Gold40,
+    primaryContainer = HeroLightPrimaryContainer,
+    onPrimaryContainer = HeroLightOnPrimaryContainer,
+    secondary = HeroLightSecondary,
     onSecondary = Color.White,
-    secondaryContainer = Gold90,
-    onSecondaryContainer = Gold10,
-    tertiary = Teal40,
+    secondaryContainer = HeroLightSecondaryContainer,
+    onSecondaryContainer = HeroLightOnSecondaryContainer,
+    tertiary = HeroLightTertiary,
     onTertiary = Color.White,
-    tertiaryContainer = Teal90,
-    onTertiaryContainer = Teal10,
+    tertiaryContainer = HeroLightTertiaryContainer,
+    onTertiaryContainer = HeroLightOnTertiaryContainer,
     error = Red40,
     onError = Color.White,
     errorContainer = Red90,
     onErrorContainer = Red10,
-    background = DarkGreenGray99,
-    onBackground = DarkGreenGray10,
-    surface = DarkGreenGray99,
-    onSurface = DarkGreenGray10,
-    surfaceVariant = GreenGray90,
-    onSurfaceVariant = GreenGray30,
-    inverseSurface = DarkGreenGray20,
-    inverseOnSurface = DarkGreenGray95,
-    outline = GreenGray50,
+    background = HeroLightBackground,
+    onBackground = HeroLightForeground,
+    surface = HeroLightSurface,
+    onSurface = HeroLightForeground,
+    surfaceVariant = HeroLightSurfaceSecondary,
+    onSurfaceVariant = HeroLightMuted,
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = HeroLightBackground,
+    surfaceContainer = HeroLightSurfaceSecondary,
+    surfaceContainerHigh = HeroLightSurfaceTertiary,
+    surfaceContainerHighest = HeroLightSeparator,
+    inverseSurface = HeroDarkBackground,
+    inverseOnSurface = HeroLightBackground,
+    inversePrimary = HeroDarkAccent,
+    outline = HeroLightBorder,
+    outlineVariant = HeroLightSeparator,
 )
 
 /**
- * Dark Surau color scheme
+ * Dark Surau color scheme — HeroUI Pro dark-olive palette with a lime-green accent.
  */
 @VisibleForTesting
 val DarkSurauColorScheme = darkColorScheme(
-    primary = Emerald80,
-    onPrimary = Emerald20,
-    primaryContainer = Emerald30,
-    onPrimaryContainer = Emerald90,
-    secondary = Gold80,
-    onSecondary = Gold20,
-    secondaryContainer = Gold30,
-    onSecondaryContainer = Gold90,
-    tertiary = Teal80,
-    onTertiary = Teal20,
-    tertiaryContainer = Teal30,
-    onTertiaryContainer = Teal90,
+    primary = HeroDarkAccent,
+    onPrimary = HeroDarkOnAccent,
+    primaryContainer = HeroDarkPrimaryContainer,
+    onPrimaryContainer = HeroDarkOnPrimaryContainer,
+    secondary = HeroDarkSecondary,
+    onSecondary = Color(0xFF26301E),
+    secondaryContainer = HeroDarkSecondaryContainer,
+    onSecondaryContainer = HeroDarkOnSecondaryContainer,
+    tertiary = HeroDarkTertiary,
+    onTertiary = Color(0xFF0E3438),
+    tertiaryContainer = HeroDarkTertiaryContainer,
+    onTertiaryContainer = HeroDarkOnTertiaryContainer,
     error = Red80,
     onError = Red20,
     errorContainer = Red30,
     onErrorContainer = Red90,
-    background = DarkGreenGray10,
-    onBackground = DarkGreenGray90,
-    surface = DarkGreenGray10,
-    onSurface = DarkGreenGray90,
-    surfaceVariant = GreenGray30,
-    onSurfaceVariant = GreenGray80,
-    inverseSurface = DarkGreenGray90,
-    inverseOnSurface = DarkGreenGray10,
-    outline = GreenGray60,
+    background = HeroDarkBackground,
+    onBackground = HeroDarkForeground,
+    surface = HeroDarkSurface,
+    onSurface = HeroDarkForeground,
+    surfaceVariant = HeroDarkSurfaceSecondary,
+    onSurfaceVariant = HeroDarkMuted,
+    surfaceContainerLowest = HeroDarkBackground,
+    surfaceContainerLow = HeroDarkSurface,
+    surfaceContainer = HeroDarkSurfaceSecondary,
+    surfaceContainerHigh = HeroDarkSurfaceTertiary,
+    surfaceContainerHighest = HeroDarkSegment,
+    inverseSurface = HeroLightBackground,
+    inverseOnSurface = HeroDarkSurface,
+    inversePrimary = HeroLightAccent,
+    outline = HeroDarkBorder,
+    outlineVariant = HeroDarkSeparator,
 )
 
 /**
@@ -143,11 +157,19 @@ fun SurauTheme(
         !disableDynamicTheming && supportsDynamicTheming() -> TintTheme(colorScheme.primary)
         else -> TintTheme()
     }
+    // Extended HeroUI semantic tokens: static by default, derived from the dynamic scheme when on.
+    val semanticColors = when {
+        !disableDynamicTheming && supportsDynamicTheming() ->
+            surauSemanticColorsFromScheme(colorScheme, darkTheme)
+
+        else -> if (darkTheme) DarkSurauSemanticColors else LightSurauSemanticColors
+    }
     // Composition locals
     CompositionLocalProvider(
         LocalGradientColors provides gradientColors,
         LocalBackgroundTheme provides backgroundTheme,
         LocalTintTheme provides tintTheme,
+        LocalSurauColors provides semanticColors,
     ) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,

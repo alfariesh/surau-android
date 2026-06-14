@@ -59,6 +59,26 @@ interface UserDataRepository {
     suspend fun setArabicFontScale(scale: Float)
 
     /**
+     * Sets the immersive Flow reader's Arabic font scale (1.0 = default). Local-only.
+     */
+    suspend fun setFlowArabicFontScale(scale: Float)
+
+    /**
+     * Sets whether the immersive Flow reader shows the translation. Local-only.
+     */
+    suspend fun setFlowShowTranslation(show: Boolean)
+
+    /**
+     * Sets whether Flow auto-continues to the next surah when one finishes. Local-only.
+     */
+    suspend fun setFlowAutoContinue(enabled: Boolean)
+
+    /**
+     * Sets whether Flow keeps the screen on while a recitation is playing. Local-only.
+     */
+    suspend fun setFlowKeepScreenOn(enabled: Boolean)
+
+    /**
      * Marks the first-launch welcome screen as shown.
      */
     suspend fun setWelcomeShown(shown: Boolean)

@@ -49,7 +49,8 @@ class PlaybackService : MediaSessionService() {
             )
             .setHandleAudioBecomingNoisy(true)
             .build()
-        mediaSession = MediaSession.Builder(this, player).build()
+        // Wrap so the notification/lock-screen skip buttons move by ayah in surah mode.
+        mediaSession = MediaSession.Builder(this, AyahForwardingPlayer(player)).build()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? =

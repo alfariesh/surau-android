@@ -17,13 +17,14 @@
 package org.surau.app.core.model.data.quran
 
 /**
- * A Quran audio recitation (reciter + style). Playback ships in milestone 2; the model exists so
- * settings and storage stay forward-compatible.
+ * A Quran audio recitation (reciter + style). [mode] is `"ayah"` (one audio file per ayah) or
+ * `"surah"` (one audio file per surah, used by the immersive Flow reader).
  */
 data class Recitation(
     val id: String,
     val displayName: String,
     val reciterName: String,
     val style: String? = null,
+    val mode: String? = null,
     val isDefault: Boolean = false,
 )

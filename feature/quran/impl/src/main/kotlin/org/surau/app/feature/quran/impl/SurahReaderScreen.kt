@@ -37,6 +37,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -91,6 +93,7 @@ import org.surau.app.feature.quran.api.navigation.SurahReaderNavKey
 fun SurahReaderScreen(
     navKey: SurahReaderNavKey,
     onBackClick: () -> Unit,
+    onFlowClick: (Int?) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SurahReaderViewModel =
         hiltViewModel<SurahReaderViewModel, SurahReaderViewModel.Factory>(
@@ -133,6 +136,7 @@ fun SurahReaderScreen(
         onNext = viewModel::onNext,
         onPrevious = viewModel::onPrevious,
         onRecitationChange = viewModel::setRecitation,
+        onFlowClick = onFlowClick,
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
@@ -157,6 +161,7 @@ internal fun SurahReaderScreen(
     onNext: () -> Unit = {},
     onPrevious: () -> Unit = {},
     onRecitationChange: (String) -> Unit = {},
+    onFlowClick: (Int?) -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     ReportDrawnWhen { uiState !is ReaderUiState.Loading }
@@ -177,7 +182,13 @@ internal fun SurahReaderScreen(
         }
 
         ReaderUiState.Error -> Column(modifier = modifier.fillMaxSize()) {
-            ReaderTopBar(title = "", subtitle = null, onBackClick = onBackClick, onSettingsClick = {})
+            ReaderTopBar(
+                title = "",
+                subtitle = null,
+                onBackClick = onBackClick,
+                onSettingsClick = {},
+                onFlowClick = {},
+            )
             QuranErrorContent(modifier = Modifier.fillMaxSize())
         }
 
@@ -236,6 +247,13 @@ internal fun SurahReaderScreen(
                         },
                         onBackClick = onBackClick,
                         onSettingsClick = { showReaderSettings = true },
+                        onFlowClick = {
+                            onFlowClick(
+                                playerState.currentAyahNumber
+                                    ?.takeIf { playerState.surahId == surah?.surahId }
+                                    ?: visibleAyah?.ayahNumber,
+                            )
+                        },
                     )
 
                     TrackScrollJank(scrollableState = listState, stateName = "reader:ayahs")
@@ -325,6 +343,7 @@ private fun ReaderTopBar(
     subtitle: String?,
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onFlowClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -350,6 +369,20 @@ private fun ReaderTopBar(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            AssistChip(
+                onClick = onFlowClick,
+                label = { Text(stringResource(R.string.feature_quran_impl_flow)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = SurauIcons.Flow,
+                        contentDescription = null,
+                        modifier = Modifier.size(AssistChipDefaults.IconSize),
+                    )
+                },
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .testTag("reader:flow"),
+            )
         }
         IconButton(onClick = onSettingsClick, modifier = Modifier.testTag("reader:settings")) {
             Icon(

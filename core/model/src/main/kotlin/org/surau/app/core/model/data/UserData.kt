@@ -32,6 +32,10 @@ data class UserData(
     val recitationId: String?,
     val arabicFontScale: Float,
     val welcomeShown: Boolean,
+    val flowArabicFontScale: Float = DEFAULT_ARABIC_FONT_SCALE,
+    val flowShowTranslation: Boolean = false,
+    val flowAutoContinue: Boolean = true,
+    val flowKeepScreenOn: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_ARABIC_FONT_SCALE = 1f

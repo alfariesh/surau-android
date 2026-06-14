@@ -40,4 +40,21 @@ internal object SurauDatabaseMigrations {
             )
         }
     }
+
+    /**
+     * v2 → v3: adds the nullable `mode` column ("ayah"/"surah") to `recitations` so the immersive
+     * Flow reader can pick the surah-mode reciter.
+     *
+     * The existing rows are cleared as well: `recitations` is a weekly-refreshed cache, and rows
+     * written before this column existed would carry `mode = NULL`. Since the cache still looks
+     * fresh (within its TTL), the repository would skip the network refresh and never learn each
+     * reciter's mode, leaving Flow unable to resolve the surah-mode reciter. Emptying the table
+     * forces a refetch on next access, which backfills `mode` for every row.
+     */
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE recitations ADD COLUMN mode TEXT")
+            db.execSQL("DELETE FROM recitations")
+        }
+    }
 }

@@ -56,4 +56,23 @@
     <string name="feature_quran_impl_now_playing">%1$s • Ayat %2$d</string>
     <string name="feature_quran_impl_audio_offline">Audio tidak tersedia saat offline.</string>
     <string name="feature_quran_impl_audio_partial">Sebagian ayat tidak memiliki audio.</string>
+    <string name="feature_quran_impl_flow">Flow</string>
+    <string name="feature_quran_impl_flow_settings">Pengaturan Flow</string>
+    <string name="feature_quran_impl_flow_font_size">Ukuran huruf</string>
+    <string name="feature_quran_impl_flow_show_translation">Tampilkan terjemahan</string>
+    <string name="feature_quran_impl_flow_auto_continue">Lanjut otomatis</string>
+    <string name="feature_quran_impl_flow_keep_screen_on">Layar tetap nyala</string>
+    <string name="feature_quran_impl_flow_speed">Kecepatan</string>
+    <string name="feature_quran_impl_repeat">Pengulangan</string>
+    <string name="feature_quran_impl_repeat_action">Ulangi</string>
+    <string name="feature_quran_impl_repeat_off">Mati</string>
+    <string name="feature_quran_impl_repeat_ayah">Ayat ini</string>
+    <string name="feature_quran_impl_repeat_surah">Surah</string>
+    <string name="feature_quran_impl_repeat_count">Jumlah</string>
+    <string name="feature_quran_impl_repeat_infinite">Terus</string>
+    <string name="feature_quran_impl_repeat_times">%1$d×</string>
+    <string name="feature_quran_impl_sleep_timer">Timer tidur</string>
+    <string name="feature_quran_impl_sleep_off">Matikan</string>
+    <string name="feature_quran_impl_sleep_minutes">%1$d menit</string>
+    <string name="feature_quran_impl_sleep_end_of_surah">Akhir surah</string>
 </resources>

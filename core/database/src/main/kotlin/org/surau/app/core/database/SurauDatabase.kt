@@ -48,7 +48,7 @@ import org.surau.app.core.database.util.InstantConverter
         ReadingProgressEntity::class,
         AyahFetchMetadataEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 @TypeConverters(

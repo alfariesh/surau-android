@@ -95,6 +95,7 @@ data class RecitationDto(
     @SerialName("display_name") val displayName: String = "",
     @SerialName("reciter_name") val reciterName: String = "",
     @SerialName("style") val style: String? = null,
+    @SerialName("mode") val mode: String? = null,
     @SerialName("is_default") val isDefault: Boolean = false,
 )
 

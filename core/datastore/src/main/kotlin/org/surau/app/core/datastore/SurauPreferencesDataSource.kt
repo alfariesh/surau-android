@@ -58,6 +58,14 @@ class SurauPreferencesDataSource @Inject constructor(
                     it.arabicFontScalePercent / 100f
                 },
                 welcomeShown = it.welcomeShown,
+                flowArabicFontScale = if (it.flowArabicFontScalePercent <= 0) {
+                    UserData.DEFAULT_ARABIC_FONT_SCALE
+                } else {
+                    it.flowArabicFontScalePercent / 100f
+                },
+                flowShowTranslation = it.flowShowTranslation,
+                flowAutoContinue = !it.flowAutoContinueDisabled,
+                flowKeepScreenOn = !it.flowKeepScreenOnDisabled,
             )
         }
 
@@ -107,6 +115,30 @@ class SurauPreferencesDataSource @Inject constructor(
     suspend fun setArabicFontScale(scale: Float) {
         userPreferences.updateData {
             it.copy { this.arabicFontScalePercent = (scale * 100).toInt() }
+        }
+    }
+
+    suspend fun setFlowArabicFontScale(scale: Float) {
+        userPreferences.updateData {
+            it.copy { this.flowArabicFontScalePercent = (scale * 100).toInt() }
+        }
+    }
+
+    suspend fun setFlowShowTranslation(show: Boolean) {
+        userPreferences.updateData {
+            it.copy { this.flowShowTranslation = show }
+        }
+    }
+
+    suspend fun setFlowAutoContinue(enabled: Boolean) {
+        userPreferences.updateData {
+            it.copy { this.flowAutoContinueDisabled = !enabled }
+        }
+    }
+
+    suspend fun setFlowKeepScreenOn(enabled: Boolean) {
+        userPreferences.updateData {
+            it.copy { this.flowKeepScreenOnDisabled = !enabled }
         }
     }
 
