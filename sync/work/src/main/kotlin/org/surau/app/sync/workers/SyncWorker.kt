@@ -30,19 +30,21 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.surau.app.core.common.network.Dispatcher
 import org.surau.app.core.common.network.SurauDispatchers.IO
+import org.surau.app.core.data.repository.BookmarkRepository
 import org.surau.app.core.data.repository.QuranProgressRepository
 import org.surau.app.sync.initializers.SyncConstraints
 import org.surau.app.sync.initializers.syncForegroundInfo
 
 /**
- * Reconciles the user's reading progress with the backend: pulls a newer remote position or
- * pushes a pending local one. A no-op for guests.
+ * Reconciles the user's personal data (reading progress + bookmarks) with the backend: pulls newer
+ * remote state or pushes pending local changes. A no-op for guests.
  */
 @HiltWorker
 internal class SyncWorker @AssistedInject constructor(
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val quranProgressRepository: QuranProgressRepository,
+    private val bookmarkRepository: BookmarkRepository,
     @Dispatcher(IO) private val ioDispatcher: CoroutineDispatcher,
 ) : CoroutineWorker(appContext, workerParams) {
 
@@ -54,6 +56,7 @@ internal class SyncWorker @AssistedInject constructor(
             // reconcile() is best-effort and swallows transient failures internally, so a
             // completed run is always a success; the next app start retries anyway.
             quranProgressRepository.reconcile()
+            bookmarkRepository.reconcile()
             Result.success()
         }
     }
