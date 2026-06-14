@@ -322,6 +322,16 @@ private fun BookmarkEditorSheet(
     onDismiss: () -> Unit,
     onSave: (note: String?, tags: List<String>) -> Unit,
 ) {
+    ModalBottomSheet(onDismissRequest = onDismiss, modifier = Modifier.testTag("bookmarks:editor")) {
+        BookmarkEditorContent(item = item, onSave = onSave)
+    }
+}
+
+@Composable
+internal fun BookmarkEditorContent(
+    item: BookmarkListItem,
+    onSave: (note: String?, tags: List<String>) -> Unit,
+) {
     var note by rememberSaveable(item.ayahKey.value) { mutableStateOf(item.note.orEmpty()) }
     val tags = remember(item.ayahKey.value) { item.tags.toMutableStateList() }
     var tagInput by rememberSaveable(item.ayahKey.value) { mutableStateOf("") }
@@ -332,77 +342,75 @@ private fun BookmarkEditorSheet(
         tagInput = ""
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, modifier = Modifier.testTag("bookmarks:editor")) {
-        Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-            Text(
-                text = "${item.surahName} : ${item.ayahNumber}",
-                style = MaterialTheme.typography.titleMedium,
-            )
+    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+        Text(
+            text = "${item.surahName} : ${item.ayahNumber}",
+            style = MaterialTheme.typography.titleMedium,
+        )
 
-            Spacer(modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.size(16.dp))
+        OutlinedTextField(
+            value = note,
+            onValueChange = { note = it },
+            label = { Text(stringResource(R.string.feature_quran_impl_bookmarks_note_hint)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("bookmarks:editor:note"),
+        )
+
+        Spacer(modifier = Modifier.size(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                label = { Text(stringResource(R.string.feature_quran_impl_bookmarks_note_hint)) },
+                value = tagInput,
+                onValueChange = { tagInput = it },
+                label = { Text(stringResource(R.string.feature_quran_impl_bookmarks_tag_hint)) },
+                singleLine = true,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("bookmarks:editor:note"),
+                    .weight(1f)
+                    .testTag("bookmarks:editor:tagInput"),
             )
-
-            Spacer(modifier = Modifier.size(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = tagInput,
-                    onValueChange = { tagInput = it },
-                    label = { Text(stringResource(R.string.feature_quran_impl_bookmarks_tag_hint)) },
-                    singleLine = true,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("bookmarks:editor:tagInput"),
-                )
-                SurauTextButton(onClick = { addTag() }) {
-                    Text(stringResource(R.string.feature_quran_impl_bookmarks_add_tag))
-                }
+            SurauTextButton(onClick = { addTag() }) {
+                Text(stringResource(R.string.feature_quran_impl_bookmarks_add_tag))
             }
+        }
 
-            if (tags.isNotEmpty()) {
-                Spacer(modifier = Modifier.size(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    tags.toList().forEach { tag ->
-                        InputChip(
-                            selected = false,
-                            onClick = { tags.remove(tag) },
-                            label = { Text(tag) },
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = SurauIcons.Close,
-                                    contentDescription = stringResource(
-                                        R.string.feature_quran_impl_bookmarks_remove_tag,
-                                    ),
-                                    modifier = Modifier.size(16.dp),
-                                )
-                            },
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.size(24.dp))
-            SurauButton(
-                onClick = { onSave(note.ifBlank { null }, tags.toList()) },
+        if (tags.isNotEmpty()) {
+            Spacer(modifier = Modifier.size(8.dp))
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("bookmarks:editor:save"),
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(stringResource(R.string.feature_quran_impl_bookmarks_save))
+                tags.toList().forEach { tag ->
+                    InputChip(
+                        selected = false,
+                        onClick = { tags.remove(tag) },
+                        label = { Text(tag) },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = SurauIcons.Close,
+                                contentDescription = stringResource(
+                                    R.string.feature_quran_impl_bookmarks_remove_tag,
+                                ),
+                                modifier = Modifier.size(16.dp),
+                            )
+                        },
+                    )
+                }
             }
-            Spacer(modifier = Modifier.size(16.dp))
         }
+
+        Spacer(modifier = Modifier.size(24.dp))
+        SurauButton(
+            onClick = { onSave(note.ifBlank { null }, tags.toList()) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("bookmarks:editor:save"),
+        ) {
+            Text(stringResource(R.string.feature_quran_impl_bookmarks_save))
+        }
+        Spacer(modifier = Modifier.size(16.dp))
     }
 }
 
