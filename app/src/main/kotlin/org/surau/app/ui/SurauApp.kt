@@ -52,6 +52,8 @@ import org.surau.app.feature.activity.impl.navigation.activityEntry
 import org.surau.app.feature.auth.api.navigation.ResetPasswordNavKey
 import org.surau.app.feature.auth.api.navigation.WelcomeNavKey
 import org.surau.app.feature.auth.api.navigation.navigateToLogin
+import org.surau.app.feature.auth.api.navigation.navigateToManageAccount
+import org.surau.app.feature.auth.impl.navigation.accountEntries
 import org.surau.app.feature.auth.impl.navigation.authEntries
 import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import org.surau.app.feature.quran.impl.navigation.quranBookmarksEntry
@@ -151,9 +153,14 @@ fun SurauApp(
                         navigator = navigator,
                         onAuthFlowDone = { navigator.navigate(QuranHomeNavKey) },
                     )
+                    accountEntries(
+                        navigator = navigator,
+                        onSignedOut = { navigator.navigate(WelcomeNavKey) },
+                    )
                     settingsEntry(
                         navigator = navigator,
                         onSignInClick = navigator::navigateToLogin,
+                        onManageAccountClick = navigator::navigateToManageAccount,
                         appVersionName = appVersionName,
                     )
                 }

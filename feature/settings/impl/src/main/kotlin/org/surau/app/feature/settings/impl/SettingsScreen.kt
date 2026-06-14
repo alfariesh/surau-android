@@ -73,6 +73,7 @@ import org.surau.app.feature.settings.impl.SettingsUiState.Success
 fun SettingsScreen(
     onBackClick: () -> Unit,
     onSignInClick: () -> Unit,
+    onManageAccountClick: () -> Unit,
     appVersionName: String,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
@@ -83,6 +84,7 @@ fun SettingsScreen(
         appVersionName = appVersionName,
         onBackClick = onBackClick,
         onSignInClick = onSignInClick,
+        onManageAccountClick = onManageAccountClick,
         onLogout = viewModel::logout,
         onChangeDynamicColorPreference = viewModel::updateDynamicColorPreference,
         onChangeDarkThemeConfig = viewModel::updateDarkThemeConfig,
@@ -105,6 +107,7 @@ internal fun SettingsScreen(
     appVersionName: String,
     onBackClick: () -> Unit,
     onSignInClick: () -> Unit,
+    onManageAccountClick: () -> Unit,
     onLogout: () -> Unit,
     onChangeDynamicColorPreference: (Boolean) -> Unit,
     onChangeDarkThemeConfig: (DarkThemeConfig) -> Unit,
@@ -159,6 +162,7 @@ internal fun SettingsScreen(
                 AccountSection(
                     authState = uiState.authState,
                     onSignInClick = onSignInClick,
+                    onManageAccountClick = onManageAccountClick,
                     onLogout = onLogout,
                 )
 
@@ -223,6 +227,7 @@ internal fun SettingsScreen(
 private fun AccountSection(
     authState: AuthState,
     onSignInClick: () -> Unit,
+    onManageAccountClick: () -> Unit,
     onLogout: () -> Unit,
 ) {
     var showLogoutConfirm by rememberSaveable { mutableStateOf(false) }
@@ -240,6 +245,13 @@ private fun AccountSection(
                 style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.size(12.dp))
+            SurauButton(
+                onClick = onManageAccountClick,
+                modifier = Modifier.testTag("settings:manageAccount"),
+            ) {
+                Text(stringResource(R.string.feature_settings_impl_manage_account))
+            }
+            Spacer(modifier = Modifier.size(8.dp))
             SurauOutlinedButton(
                 onClick = { showLogoutConfirm = true },
                 modifier = Modifier.testTag("settings:logout"),

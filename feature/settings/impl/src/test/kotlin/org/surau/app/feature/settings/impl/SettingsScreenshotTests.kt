@@ -77,6 +77,7 @@ class SettingsScreenshotTests {
             appVersionName = "0.1.0",
             onBackClick = {},
             onSignInClick = {},
+            onManageAccountClick = {},
             onLogout = {},
             onChangeDynamicColorPreference = {},
             onChangeDarkThemeConfig = {},
