@@ -64,6 +64,28 @@ private class FakeMeApi : SurauMeApi {
             observedAt = body.clientObservedAt,
         )
     }
+
+    override suspend fun savedItems(
+        itemType: String,
+        surahId: Int?,
+        tag: String?,
+        limit: Int,
+        offset: Int,
+    ) = org.surau.app.core.network.model.me.SavedItemsResponseDto()
+
+    override suspend fun savedItemTags() =
+        org.surau.app.core.network.model.me.SavedItemsTagsResponseDto()
+
+    override suspend fun createSavedItem(
+        body: org.surau.app.core.network.model.me.CreateSavedItemRequestDto,
+    ): org.surau.app.core.network.model.me.SavedItemDto = throw UnsupportedOperationException()
+
+    override suspend fun patchSavedItem(
+        id: String,
+        body: org.surau.app.core.network.model.me.PatchSavedItemRequestDto,
+    ): org.surau.app.core.network.model.me.SavedItemDto = throw UnsupportedOperationException()
+
+    override suspend fun deleteSavedItem(id: String) = throw UnsupportedOperationException()
 }
 
 @RunWith(RobolectricTestRunner::class)
