@@ -124,14 +124,30 @@ class SurahReaderViewModelTest {
     fun toggleBookmark_addsThenRemoves() = runTest {
         val viewModel = viewModel(SurahReaderNavKey(surahId = 73))
 
-        viewModel.bookmarkedAyahNumbers.test {
-            assertEquals(emptySet<Int>(), awaitItem())
+        viewModel.bookmarksByAyah.test {
+            assertEquals(emptySet<Int>(), awaitItem().keys)
 
             viewModel.toggleBookmark(4)
-            assertEquals(setOf(4), awaitItem())
+            assertEquals(setOf(4), awaitItem().keys)
 
             viewModel.toggleBookmark(4)
-            assertEquals(emptySet<Int>(), awaitItem())
+            assertEquals(emptySet<Int>(), awaitItem().keys)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun saveBookmark_createsBookmarkWithNoteAndTags() = runTest {
+        val viewModel = viewModel(SurahReaderNavKey(surahId = 73))
+
+        viewModel.bookmarksByAyah.test {
+            assertEquals(emptySet<Int>(), awaitItem().keys)
+
+            viewModel.saveBookmark(4, note = "tadabbur", tags = listOf("Hafalan"))
+            val saved = awaitItem()[4]
+            assertEquals("tadabbur", saved?.note)
+            assertEquals(listOf("Hafalan"), saved?.tags)
 
             cancelAndIgnoreRemainingEvents()
         }

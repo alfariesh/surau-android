@@ -47,6 +47,7 @@ import org.surau.app.core.domain.ReaderContent
 import org.surau.app.core.media.PlayerUiState
 import org.surau.app.core.media.SurauPlayerController
 import org.surau.app.core.model.data.quran.AyahKey
+import org.surau.app.core.model.data.quran.Bookmark
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.model.data.quran.Recitation
 import org.surau.app.core.model.data.quran.TranslationSource
@@ -101,18 +102,17 @@ class SurahReaderViewModel @AssistedInject constructor(
                 initialValue = false,
             )
 
-    /** Ayah numbers in this surah that are bookmarked — drives the per-ayah toggle. */
-    val bookmarkedAyahNumbers: StateFlow<Set<Int>> =
+    /** Bookmarks in this surah keyed by ayah number — drives the per-ayah toggle and the editor. */
+    val bookmarksByAyah: StateFlow<Map<Int, Bookmark>> =
         bookmarkRepository.observeBookmarks()
             .map { bookmarks ->
                 bookmarks.filter { it.surahId == navKey.surahId }
-                    .map { it.ayahNumber }
-                    .toSet()
+                    .associateBy { it.ayahNumber }
             }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptySet(),
+                initialValue = emptyMap(),
             )
 
     val playerState: StateFlow<PlayerUiState> =
@@ -233,10 +233,25 @@ class SurahReaderViewModel @AssistedInject constructor(
     fun toggleBookmark(ayahNumber: Int) {
         viewModelScope.launch {
             val key = AyahKey.of(navKey.surahId, ayahNumber)
-            if (ayahNumber in bookmarkedAyahNumbers.value) {
+            if (ayahNumber in bookmarksByAyah.value) {
                 bookmarkRepository.removeBookmark(key)
             } else {
                 bookmarkRepository.addBookmark(key)
+            }
+        }
+    }
+
+    /**
+     * Saves a note + collections/tags for [ayahNumber], creating the bookmark first if the ayah
+     * is not yet bookmarked. Backs the reader's inline bookmark editor.
+     */
+    fun saveBookmark(ayahNumber: Int, note: String?, tags: List<String>) {
+        viewModelScope.launch {
+            val key = AyahKey.of(navKey.surahId, ayahNumber)
+            if (ayahNumber in bookmarksByAyah.value) {
+                bookmarkRepository.updateBookmark(key, note, tags)
+            } else {
+                bookmarkRepository.addBookmark(key, note, tags)
             }
         }
     }

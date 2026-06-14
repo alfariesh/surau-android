@@ -19,8 +19,12 @@ package org.surau.app.feature.quran.impl
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import dagger.hilt.android.testing.HiltTestApplication
 import org.junit.Rule
 import org.junit.Test
@@ -54,8 +58,33 @@ class SurahReaderInteractionTest {
         assertEquals(1, toggled)
     }
 
+    @Test
+    fun ayahActions_noteAndCollection_savesPresetTag() {
+        var saved: Triple<Int, String?, List<String>>? = null
+        composeTestRule.setContent {
+            SurauTheme {
+                Reader(onSaveBookmark = { ayah, note, tags -> saved = Triple(ayah, note, tags) })
+            }
+        }
+
+        // Long-press an ayah -> actions sheet -> "Catatan & koleksi" -> inline editor.
+        composeTestRule.onNodeWithTag("reader:ayah:1").performTouchInput { longClick() }
+        composeTestRule.onNodeWithTag("reader:ayahActions:note").performClick()
+
+        // Pick a preset collection, then save.
+        composeTestRule.onNodeWithText("Hafalan").performClick()
+        composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
+
+        assertEquals(1, saved?.first)
+        assertEquals(null, saved?.second)
+        assertEquals(listOf("Hafalan"), saved?.third)
+    }
+
     @Composable
-    private fun Reader(onToggleBookmark: (Int) -> Unit) {
+    private fun Reader(
+        onToggleBookmark: (Int) -> Unit = {},
+        onSaveBookmark: (Int, String?, List<String>) -> Unit = { _, _, _ -> },
+    ) {
         SurahReaderScreen(
             uiState = ReaderUiState.Success(
                 content = ReaderContent(
@@ -73,8 +102,9 @@ class SurahReaderInteractionTest {
             onFontScaleChange = {},
             onTranslationSourceChange = {},
             translationSources = QuranTestData.translationSources,
-            bookmarkedAyahNumbers = emptySet(),
+            bookmarksByAyah = emptyMap(),
             onToggleBookmark = onToggleBookmark,
+            onSaveBookmark = onSaveBookmark,
         )
     }
 }

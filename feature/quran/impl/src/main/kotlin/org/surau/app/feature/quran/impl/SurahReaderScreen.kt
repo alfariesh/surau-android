@@ -89,6 +89,7 @@ import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.media.PlayerUiState
 import org.surau.app.core.model.data.quran.PopulatedAyah
+import org.surau.app.core.model.data.quran.Bookmark
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.model.data.quran.Recitation
 import org.surau.app.core.model.data.quran.TranslationSource
@@ -116,7 +117,7 @@ fun SurahReaderScreen(
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     val playingAyah by viewModel.playingAyah.collectAsStateWithLifecycle()
     val keepScreenOn by viewModel.keepScreenOn.collectAsStateWithLifecycle()
-    val bookmarkedAyahNumbers by viewModel.bookmarkedAyahNumbers.collectAsStateWithLifecycle()
+    val bookmarksByAyah by viewModel.bookmarksByAyah.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val offlineMessage = stringResource(R.string.feature_quran_impl_audio_offline)
@@ -152,8 +153,9 @@ fun SurahReaderScreen(
         onArabicLineSpacingChange = viewModel::setArabicLineSpacing,
         onTranslationScaleChange = viewModel::setTranslationScale,
         onKeepScreenOnChange = viewModel::setKeepScreenOn,
-        bookmarkedAyahNumbers = bookmarkedAyahNumbers,
+        bookmarksByAyah = bookmarksByAyah,
         onToggleBookmark = viewModel::toggleBookmark,
+        onSaveBookmark = viewModel::saveBookmark,
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
@@ -185,8 +187,9 @@ internal fun SurahReaderScreen(
     onArabicLineSpacingChange: (Float) -> Unit = {},
     onTranslationScaleChange: (Float) -> Unit = {},
     onKeepScreenOnChange: (Boolean) -> Unit = {},
-    bookmarkedAyahNumbers: Set<Int> = emptySet(),
+    bookmarksByAyah: Map<Int, Bookmark> = emptyMap(),
     onToggleBookmark: (Int) -> Unit = {},
+    onSaveBookmark: (ayahNumber: Int, note: String?, tags: List<String>) -> Unit = { _, _, _ -> },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     ReportDrawnWhen { uiState !is ReaderUiState.Loading }
@@ -300,6 +303,7 @@ internal fun SurahReaderScreen(
                         items(content.ayahs, key = { it.ayah.ayahNumber }) { populated ->
                             val ayahNumber = populated.ayah.ayahNumber
                             val isActive = ayahNumber == playingAyah
+                            val bookmark = bookmarksByAyah[ayahNumber]
                             AyahItem(
                                 populated = populated,
                                 readerMode = content.readerMode,
@@ -310,11 +314,17 @@ internal fun SurahReaderScreen(
                                 translationScale = content.translationScale,
                                 isActive = isActive,
                                 isPlaying = isActive && playerState.isPlaying,
-                                isBookmarked = ayahNumber in bookmarkedAyahNumbers,
+                                isBookmarked = bookmark != null,
+                                surahName = surah?.nameLatin.orEmpty(),
+                                bookmarkNote = bookmark?.note,
+                                bookmarkTags = bookmark?.tags ?: emptyList(),
                                 onPlayClick = {
                                     if (isActive) onPlayPause() else onPlayAyah(ayahNumber)
                                 },
                                 onToggleBookmark = { onToggleBookmark(ayahNumber) },
+                                onSaveBookmark = { note, tags ->
+                                    onSaveBookmark(ayahNumber, note, tags)
+                                },
                             )
                         }
                     }
@@ -453,13 +463,18 @@ private fun AyahItem(
     isActive: Boolean,
     isPlaying: Boolean,
     isBookmarked: Boolean,
+    surahName: String,
+    bookmarkNote: String?,
+    bookmarkTags: List<String>,
     onPlayClick: () -> Unit,
     onToggleBookmark: () -> Unit,
+    onSaveBookmark: (note: String?, tags: List<String>) -> Unit,
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val copiedMessage = stringResource(R.string.feature_quran_impl_copied)
     var showActions by rememberSaveable { mutableStateOf(false) }
+    var showEditor by rememberSaveable { mutableStateOf(false) }
 
     val shareText = buildString {
         append(populated.ayah.textQpcHafs)
@@ -643,7 +658,44 @@ private fun AyahItem(
                             showActions = false
                         },
                 )
+                ListItem(
+                    headlineContent = {
+                        Text(stringResource(R.string.feature_quran_impl_bookmark_note))
+                    },
+                    leadingContent = {
+                        Icon(SurauIcons.ShortText, contentDescription = null)
+                    },
+                    modifier = Modifier
+                        .testTag("reader:ayahActions:note")
+                        .clickable {
+                            showActions = false
+                            showEditor = true
+                        },
+                )
             }
+        }
+    }
+
+    if (showEditor) {
+        ModalBottomSheet(
+            onDismissRequest = { showEditor = false },
+            modifier = Modifier.testTag("reader:bookmarkEditor"),
+        ) {
+            BookmarkEditorContent(
+                item = BookmarkListItem(
+                    ayahKey = populated.ayah.ayahKey,
+                    surahId = populated.ayah.surahId,
+                    ayahNumber = populated.ayah.ayahNumber,
+                    surahName = surahName,
+                    arabicText = populated.ayah.textQpcHafs,
+                    note = bookmarkNote,
+                    tags = bookmarkTags,
+                ),
+                onSave = { note, tags ->
+                    onSaveBookmark(note, tags)
+                    showEditor = false
+                },
+            )
         }
     }
 }

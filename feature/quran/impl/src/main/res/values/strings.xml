@@ -80,6 +80,7 @@
     <string name="feature_quran_impl_copied">Ayat disalin</string>
     <string name="feature_quran_impl_bookmark">Simpan bookmark</string>
     <string name="feature_quran_impl_unbookmark">Hapus bookmark</string>
+    <string name="feature_quran_impl_bookmark_note">Catatan &amp; koleksi</string>
     <string name="feature_quran_impl_ayah_actions">Aksi ayat</string>
     <string name="feature_quran_impl_back">Kembali</string>
     <string name="feature_quran_impl_page_indicator">Hal. %1$d</string>
