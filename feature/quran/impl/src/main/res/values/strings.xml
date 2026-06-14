@@ -46,9 +46,20 @@
     <string name="feature_quran_impl_bookmarks_delete_confirm_title">Hapus bookmark?</string>
     <string name="feature_quran_impl_bookmarks_delete_confirm_body">Bookmark ayat ini akan dihapus.</string>
     <string name="feature_quran_impl_bookmarks_note_hint">Catatan</string>
-    <string name="feature_quran_impl_bookmarks_tag_hint">Tambah tag</string>
+    <string name="feature_quran_impl_bookmarks_collections">Koleksi</string>
+    <string name="feature_quran_impl_bookmarks_tags">Tag</string>
+    <string name="feature_quran_impl_bookmarks_tag_hint">Tag khusus</string>
     <string name="feature_quran_impl_bookmarks_add_tag">Tambahkan</string>
     <string name="feature_quran_impl_bookmarks_remove_tag">Hapus tag</string>
+
+    <!-- Preset collections (also stored verbatim as the tag value). -->
+    <string-array name="feature_quran_impl_bookmark_collections">
+        <item>Hafalan</item>
+        <item>Doa</item>
+        <item>Favorit</item>
+        <item>Renungan</item>
+        <item>Tadabbur</item>
+    </string-array>
     <string name="feature_quran_impl_bookmarks_save">Simpan</string>
     <string name="feature_quran_impl_bookmarks_cancel">Batal</string>
     <string name="feature_quran_impl_reader_settings">Pengaturan baca</string>

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(
+    androidx.compose.material3.ExperimentalMaterial3Api::class,
+    androidx.compose.foundation.layout.ExperimentalLayoutApi::class,
+)
 
 package org.surau.app.feature.quran.impl
 
@@ -23,6 +26,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,8 +36,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,6 +58,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -61,6 +68,8 @@ import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauTextButton
+import org.surau.app.core.designsystem.component.TagChip
+import org.surau.app.core.designsystem.component.TagDot
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.model.data.quran.AyahKey
 import org.surau.app.core.ui.TrackScreenViewEvent
@@ -201,6 +210,8 @@ private fun BookmarksList(
                     selected = uiState.activeTag == tag,
                     onClick = { onSelectTag(if (uiState.activeTag == tag) null else tag) },
                     label = { Text(tag) },
+                    leadingIcon = { TagDot(tag) },
+                    modifier = Modifier.testTag("bookmarks:filter:$tag"),
                 )
             }
         }
@@ -301,12 +312,15 @@ private fun BookmarkRow(
         }
 
         if (item.tags.isNotEmpty()) {
-            Text(
-                text = item.tags.joinToString("  ") { "#$it" },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item.tags.forEach { tag -> TagChip(label = tag) }
+            }
         }
 
         HorizontalDivider(
@@ -342,7 +356,11 @@ internal fun BookmarkEditorContent(
         tagInput = ""
     }
 
-    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+    ) {
         Text(
             text = "${item.surahName} : ${item.ayahNumber}",
             style = MaterialTheme.typography.titleMedium,
@@ -358,7 +376,47 @@ internal fun BookmarkEditorContent(
                 .testTag("bookmarks:editor:note"),
         )
 
+        // Quick-pick preset collections. The preset name is stored verbatim as the tag value, so
+        // these stay plain strings on the backend while gaining a consistent colour in the UI.
         Spacer(modifier = Modifier.size(16.dp))
+        Text(
+            text = stringResource(R.string.feature_quran_impl_bookmarks_collections),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("bookmarks:editor:collections"),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            stringArrayResource(R.array.feature_quran_impl_bookmark_collections).forEach { preset ->
+                val selected = preset in tags
+                FilterChip(
+                    selected = selected,
+                    onClick = { if (selected) tags.remove(preset) else tags.add(preset) },
+                    label = { Text(preset) },
+                    leadingIcon = {
+                        if (selected) {
+                            Icon(
+                                imageVector = SurauIcons.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize),
+                            )
+                        } else {
+                            TagDot(preset)
+                        }
+                    },
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(16.dp))
+        Text(
+            text = stringResource(R.string.feature_quran_impl_bookmarks_tags),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Spacer(modifier = Modifier.size(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = tagInput,
@@ -376,17 +434,17 @@ internal fun BookmarkEditorContent(
 
         if (tags.isNotEmpty()) {
             Spacer(modifier = Modifier.size(8.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 tags.toList().forEach { tag ->
                     InputChip(
                         selected = false,
                         onClick = { tags.remove(tag) },
                         label = { Text(tag) },
+                        leadingIcon = { TagDot(tag) },
                         trailingIcon = {
                             Icon(
                                 imageVector = SurauIcons.Close,

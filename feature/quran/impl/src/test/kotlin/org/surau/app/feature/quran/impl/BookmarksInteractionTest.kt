@@ -22,6 +22,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import dagger.hilt.android.testing.HiltTestApplication
 import org.junit.Rule
@@ -57,7 +58,7 @@ class BookmarksInteractionTest {
         composeTestRule.onNodeWithTag("bookmarks:editor:note").performTextInput("renungan")
         composeTestRule.onNodeWithTag("bookmarks:editor:tagInput").performTextInput("tafsir")
         composeTestRule.onNodeWithText("Tambahkan").performClick()
-        composeTestRule.onNodeWithTag("bookmarks:editor:save").performClick()
+        composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
 
         assertEquals("renungan", saved?.first)
         assertEquals(listOf("tafsir"), saved?.second)
@@ -76,7 +77,7 @@ class BookmarksInteractionTest {
         }
 
         // Note left blank -> repository receives null (which clears it via PATCH).
-        composeTestRule.onNodeWithTag("bookmarks:editor:save").performClick()
+        composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
 
         assertEquals(null, saved?.first)
         assertEquals(listOf("tafsir"), saved?.second)
@@ -97,9 +98,28 @@ class BookmarksInteractionTest {
         var selected: String? = null
         composeTestRule.setContent { SurauTheme { ScreenWith(onSelectTag = { selected = it }) } }
 
-        composeTestRule.onNodeWithText("favorit").performClick()
+        composeTestRule.onNodeWithTag("bookmarks:filter:favorit").performClick()
 
         assertEquals("favorit", selected)
+    }
+
+    @Test
+    fun editor_pickCollection_save_emitsPresetTag() {
+        var saved: Pair<String?, List<String>>? = null
+        composeTestRule.setContent {
+            SurauTheme {
+                BookmarkEditorContent(
+                    item = listItem(note = null, tags = emptyList()),
+                    onSave = { note, tags -> saved = note to tags },
+                )
+            }
+        }
+
+        // Tapping a preset collection chip adds it as a tag without typing.
+        composeTestRule.onNodeWithText("Hafalan").performClick()
+        composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
+
+        assertEquals(listOf("Hafalan"), saved?.second)
     }
 
     @Test
