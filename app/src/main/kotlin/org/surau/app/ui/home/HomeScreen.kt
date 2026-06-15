@@ -16,9 +16,11 @@
 
 package org.surau.app.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,14 +29,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,7 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.surau.app.R
+import org.surau.app.core.designsystem.component.SurauButton
+import org.surau.app.core.designsystem.component.SurauSurface
 import org.surau.app.core.designsystem.icon.SurauIcons
+import org.surau.app.core.designsystem.theme.SurauTheme
 
 @Composable
 fun HomeScreen(
@@ -60,13 +60,11 @@ fun HomeScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-            start = 20.dp, end = 20.dp, top = 20.dp, bottom = 24.dp,
-        ),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = stringResource(R.string.home_greeting),
                     style = MaterialTheme.typography.headlineMedium,
@@ -75,7 +73,7 @@ fun HomeScreen(
                 Text(
                     text = stringResource(R.string.home_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = SurauTheme.colors.muted,
                 )
             }
         }
@@ -96,9 +94,7 @@ fun HomeScreen(
                         icon = SurauIcons.Streak,
                         title = stringResource(R.string.home_streak_title),
                         value = stringResource(R.string.home_streak_days, streak.currentStreakDays),
-                        caption = stringResource(
-                            R.string.home_streak_longest, streak.longestStreakDays,
-                        ),
+                        caption = stringResource(R.string.home_streak_longest, streak.longestStreakDays),
                         onClick = onSeeActivity,
                     )
                 }
@@ -124,36 +120,32 @@ private fun ContinueReadingCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    SurauSurface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+        contentPadding = PaddingValues(20.dp),
     ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconBadge(SurauIcons.MenuBook)
+            Spacer(Modifier.size(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(R.string.home_continue_title),
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = SurauTheme.colors.muted,
                 )
-                Spacer(Modifier.height(4.dp))
                 Text(
                     text = resume.surahName,
                     style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = stringResource(R.string.home_continue_verse, resume.ayahNumber),
                     style = MaterialTheme.typography.bodyMedium,
+                    color = SurauTheme.colors.muted,
                 )
             }
-            FilledTonalButton(onClick = onClick) {
-                Text(stringResource(R.string.home_continue_action))
-            }
+            SurauButton(onClick = onClick, text = { Text(stringResource(R.string.home_continue_action)) })
         }
     }
 }
@@ -167,19 +159,22 @@ private fun StatCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
+    SurauSurface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(20.dp),
+    ) {
         Row(
-            modifier = Modifier.padding(20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             IconBadge(icon)
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(value, style = MaterialTheme.typography.headlineSmall)
-                Text(caption, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(title, style = MaterialTheme.typography.labelMedium, color = SurauTheme.colors.muted)
+                Text(value, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+                Text(caption, style = MaterialTheme.typography.bodySmall, color = SurauTheme.colors.muted)
             }
-            Icon(SurauIcons.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(SurauIcons.ChevronRight, contentDescription = null, tint = SurauTheme.colors.muted)
         }
     }
 }
@@ -191,8 +186,12 @@ private fun KhatamCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(20.dp)) {
+    SurauSurface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(20.dp),
+    ) {
+        Column {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -201,18 +200,21 @@ private fun KhatamCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         stringResource(R.string.home_khatam_title),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = SurauTheme.colors.muted,
                     )
                     Text(
                         stringResource(R.string.home_khatam_progress, completedJuz),
                         style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
             Spacer(Modifier.height(12.dp))
             LinearProgressIndicator(
                 progress = { (percent / 100f).coerceIn(0f, 1f) },
+                color = SurauTheme.colors.accent,
+                trackColor = SurauTheme.colors.default,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -221,35 +223,37 @@ private fun KhatamCard(
 
 @Composable
 private fun SignInCard(onSignIn: () -> Unit, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    SurauSurface(modifier = modifier.fillMaxWidth(), contentPadding = PaddingValues(20.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 stringResource(R.string.home_signin_title),
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 stringResource(R.string.home_signin_body),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = SurauTheme.colors.muted,
             )
             Spacer(Modifier.height(4.dp))
-            Button(onClick = onSignIn) {
-                Text(stringResource(R.string.home_signin_action))
-            }
+            SurauButton(onClick = onSignIn, text = { Text(stringResource(R.string.home_signin_action)) })
         }
     }
 }
 
 @Composable
 private fun IconBadge(icon: ImageVector) {
-    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.size(48.dp)) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(24.dp),
-            )
-        }
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .background(SurauTheme.colors.accentSoft, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = SurauTheme.colors.accent,
+            modifier = Modifier.size(24.dp),
+        )
     }
 }

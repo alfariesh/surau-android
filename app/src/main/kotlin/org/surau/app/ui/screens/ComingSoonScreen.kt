@@ -16,6 +16,7 @@
 
 package org.surau.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -61,19 +61,18 @@ fun ComingSoonScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier.size(96.dp),
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .background(SurauTheme.colors.accentSoft, CircleShape),
+                contentAlignment = Alignment.Center,
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.size(44.dp),
-                    )
-                }
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = SurauTheme.colors.accent,
+                    modifier = Modifier.size(44.dp),
+                )
             }
             Text(
                 text = title,
@@ -84,14 +83,14 @@ fun ComingSoonScreen(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
+                color = SurauTheme.colors.accent,
                 textAlign = TextAlign.Center,
             )
             if (body != null) {
                 Text(
                     text = body,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = SurauTheme.colors.muted,
                     textAlign = TextAlign.Center,
                 )
             }

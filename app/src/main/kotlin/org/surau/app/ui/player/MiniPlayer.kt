@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.surau.app.R
 import org.surau.app.core.designsystem.icon.SurauIcons
+import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.media.PlayerUiState
 
 /** Height of the mini-player card (excludes the nav bar it sits above). */
@@ -62,8 +64,9 @@ fun MiniPlayer(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 3.dp,
+        color = SurauTheme.colors.surface,
+        shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
+        shadowElevation = 8.dp,
         modifier = modifier.fillMaxWidth(),
     ) {
         Box(
@@ -93,6 +96,8 @@ fun MiniPlayer(
             }
             LinearProgressIndicator(
                 progress = { progress },
+                color = SurauTheme.colors.accent,
+                trackColor = SurauTheme.colors.default,
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.TopCenter),
