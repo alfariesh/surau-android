@@ -49,6 +49,13 @@ private val SnapSpec: AnimationSpec<Float> = spring(stiffness = 400f)
 class PlayerSheetState(
     val draggable: AnchoredDraggableState<PlayerAnchor>,
 ) {
+    /**
+     * Spring driving programmatic expand/collapse and the drag-hand-off settle. Defaults to a gentle
+     * non-bouncy spring; the host overwrites it with the Material 3 [androidx.compose.material3.
+     * MotionScheme] spatial spec so the sheet shares the app's motion language.
+     */
+    var motionSpec: AnimationSpec<Float> = SnapSpec
+
     /** Offset of the [PlayerAnchor.Collapsed] anchor (px); `NaN` until the layout is measured. */
     private var collapsedOffsetPx by mutableFloatStateOf(Float.NaN)
 
@@ -94,13 +101,13 @@ class PlayerSheetState(
     /** Whether the sheet is settling toward (or rests at) the fully-expanded state. */
     val isExpanding: Boolean get() = draggable.targetValue == PlayerAnchor.Expanded
 
-    suspend fun expand() = draggable.animateTo(PlayerAnchor.Expanded)
+    suspend fun expand() = draggable.animateTo(PlayerAnchor.Expanded, motionSpec)
 
-    suspend fun collapse() = draggable.animateTo(PlayerAnchor.Collapsed)
+    suspend fun collapse() = draggable.animateTo(PlayerAnchor.Collapsed, motionSpec)
 
-    suspend fun show() = draggable.animateTo(PlayerAnchor.Collapsed)
+    suspend fun show() = draggable.animateTo(PlayerAnchor.Collapsed, motionSpec)
 
-    suspend fun hide() = draggable.animateTo(PlayerAnchor.Hidden)
+    suspend fun hide() = draggable.animateTo(PlayerAnchor.Hidden, motionSpec)
 
     /**
      * Bridges the expanded Flow list's scroll to the sheet drag, so dragging the content down once
@@ -130,7 +137,7 @@ class PlayerSheetState(
 
         override suspend fun onPreFling(available: Velocity): Velocity {
             return if (available.y < 0f && draggable.offset > 0f) {
-                draggable.settle(SnapSpec)
+                draggable.settle(motionSpec)
                 available
             } else {
                 Velocity.Zero
@@ -138,7 +145,7 @@ class PlayerSheetState(
         }
 
         override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-            draggable.settle(SnapSpec)
+            draggable.settle(motionSpec)
             return available
         }
     }

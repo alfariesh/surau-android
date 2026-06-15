@@ -25,8 +25,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -77,12 +79,22 @@ fun ExpandablePlayerScaffold(
             derivedStateOf { sheetState.progress() < 0.5f }
         }
         val nestedScrollConnection = remember(sheetState) { sheetState.nestedScrollConnection() }
-        val flingBehavior = AnchoredDraggableDefaults.flingBehavior(sheetState.draggable)
+        // Material 3 motion: the sheet's position is a spatial property, so settle/expand/collapse
+        // ride the MotionScheme spatial spring. Publishing it to the state keeps the programmatic
+        // expand()/collapse() calls (from the app shell) on the same spring.
+        val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+        SideEffect { sheetState.motionSpec = spatialSpec }
+        val flingBehavior = AnchoredDraggableDefaults.flingBehavior(
+            state = sheetState.draggable,
+            animationSpec = spatialSpec,
+        )
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .offset { IntOffset(0, sheetState.offsetPx.roundToInt()) }
+                // Clamp to the expanded anchor (0) so a spatial spring's slight overshoot never
+                // lifts the sheet above the top edge; progress() already coerces the cross-fade.
+                .offset { IntOffset(0, sheetState.offsetPx.roundToInt().coerceAtLeast(0)) }
                 .anchoredDraggable(
                     state = sheetState.draggable,
                     orientation = Orientation.Vertical,

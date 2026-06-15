@@ -25,6 +25,10 @@ import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -76,15 +80,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.core.view.WindowInsetsCompat
@@ -273,11 +282,37 @@ private fun FlowSuccess(
     var interactionTick by remember { mutableIntStateOf(0) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
 
+    // Material 3 motion: a spatial spring drives the bars' slide (movement/position) while an effects
+    // spring drives the fade (opacity never bounces). See m3.material.io/styles/motion.
+    val chromeSlideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val chromeFadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+
     // Auto-hide chrome after a few idle seconds (skipped in previews/screenshots).
     LaunchedEffect(chromeVisible, interactionTick) {
         if (!inspection && chromeVisible) {
             delay(CHROME_IDLE_MS)
             chromeVisible = false
+        }
+    }
+
+    // Reveal the chrome when the reader drags back toward the top, hide it when reading forward —
+    // the standard "enter-always" toolbar feel, so a swipe (not only a tap) summons the header.
+    // Observe-only: it never consumes the delta, so the player's collapse hand-off is untouched.
+    // Only user drags count; programmatic centring dispatches as SideEffect and is ignored.
+    val chromeScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput) {
+                    val dy = available.y
+                    if (dy > CHROME_SCROLL_THRESHOLD_PX) {
+                        chromeVisible = true
+                        interactionTick++ // keep the idle timer fresh while dragging back
+                    } else if (dy < -CHROME_SCROLL_THRESHOLD_PX) {
+                        chromeVisible = false
+                    }
+                }
+                return Offset.Zero
+            }
         }
     }
 
@@ -320,6 +355,7 @@ private fun FlowSuccess(
         modifier = modifier
             .fillMaxSize()
             .background(surface)
+            .nestedScroll(chromeScrollConnection)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = {
@@ -368,7 +404,12 @@ private fun FlowSuccess(
                 .background(Brush.verticalGradient(listOf(Color.Transparent, surface))),
         )
 
-        AnimatedVisibility(visible = chromeVisible, modifier = Modifier.align(Alignment.TopCenter)) {
+        AnimatedVisibility(
+            visible = chromeVisible,
+            modifier = Modifier.align(Alignment.TopCenter),
+            enter = slideInVertically(chromeSlideSpec) { -it } + fadeIn(chromeFadeSpec),
+            exit = slideOutVertically(chromeSlideSpec) { -it } + fadeOut(chromeFadeSpec),
+        ) {
             FlowTopBar(
                 surahName = success.surahName,
                 sleepTimerRemainingMs = playerState.sleepTimerRemainingMs,
@@ -385,6 +426,8 @@ private fun FlowSuccess(
         AnimatedVisibility(
             visible = chromeVisible,
             modifier = Modifier.align(Alignment.BottomCenter),
+            enter = slideInVertically(chromeSlideSpec) { it } + fadeIn(chromeFadeSpec),
+            exit = slideOutVertically(chromeSlideSpec) { it } + fadeOut(chromeFadeSpec),
         ) {
             FlowBottomBar(
                 playerState = playerState,
@@ -883,6 +926,9 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 
 private val FADE_HEIGHT = 120.dp
 private const val CHROME_IDLE_MS = 3_000L
+
+/** Per-frame user-drag delta (px) past which a scroll reveals/hides the immersive chrome. */
+private const val CHROME_SCROLL_THRESHOLD_PX = 8f
 private val SLEEP_TIMER_MINUTES = listOf(15, 30, 45, 60)
 private val REPEAT_COUNTS = listOf(0, 3, 5, 7) // 0 = unlimited
 private val SPEEDS = listOf(0.75f, 1f, 1.25f, 1.5f)
