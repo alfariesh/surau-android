@@ -26,8 +26,10 @@
     <string name="tab_profile">Profil</string>
 
     <!-- Placeholder for not-yet-built sections -->
-    <string name="coming_soon">Segera hadir</string>
-    <string name="coming_soon_body">Fitur ini sedang dalam pengembangan. Nantikan ya!</string>
+    <string name="coming_soon">Segera Hadir</string>
+    <string name="coming_soon_body">Kami sedang menyiapkan koleksi %1$s dan mematangkan fiturnya agar nyaman dibaca. Daftar untuk jadi yang pertama tahu saat rilis.</string>
+    <string name="coming_soon_join_beta">Gabung Akses Beta</string>
+    <string name="coming_soon_social_proof">1.200+ pembaca sudah bergabung</string>
 
     <!-- Home dashboard -->
     <string name="home_greeting">Assalamu\'alaikum</string>

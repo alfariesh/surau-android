@@ -100,6 +100,7 @@ fun SurauNavigationBar(
 ) {
     NavigationBar(
         modifier = modifier,
+        containerColor = SurauTheme.colors.surfaceSecondary,
         contentColor = SurauNavigationDefaults.navigationContentColor(),
         tonalElevation = 0.dp,
         content = content,

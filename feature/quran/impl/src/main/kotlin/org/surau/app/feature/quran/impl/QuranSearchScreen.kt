@@ -29,7 +29,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.surau.app.core.data.repository.QuranSearchResult
 import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
+import org.surau.app.core.designsystem.component.SurauTextField
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.ui.TrackScreenViewEvent
 
@@ -94,7 +94,7 @@ internal fun QuranSearchScreen(
                     contentDescription = stringResource(R.string.feature_quran_impl_back),
                 )
             }
-            OutlinedTextField(
+            SurauTextField(
                 value = query,
                 onValueChange = onQueryChanged,
                 placeholder = { Text(stringResource(R.string.feature_quran_impl_search_hint)) },

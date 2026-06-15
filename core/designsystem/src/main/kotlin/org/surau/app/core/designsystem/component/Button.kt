@@ -52,7 +52,7 @@ fun SurauButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    contentPadding: PaddingValues = ButtonDefaults.SmallContentPadding,
     content: @Composable RowScope.() -> Unit,
 ) {
     Button(
@@ -89,11 +89,7 @@ fun SurauButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        contentPadding = if (leadingIcon != null) {
-            ButtonDefaults.ButtonWithIconContentPadding
-        } else {
-            ButtonDefaults.ContentPadding
-        },
+        contentPadding = ButtonDefaults.SmallContentPadding,
     ) {
         SurauButtonContent(
             text = text,
@@ -118,7 +114,7 @@ fun SurauOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    contentPadding: PaddingValues = ButtonDefaults.SmallContentPadding,
     content: @Composable RowScope.() -> Unit,
 ) {
     OutlinedButton(
@@ -165,11 +161,7 @@ fun SurauOutlinedButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        contentPadding = if (leadingIcon != null) {
-            ButtonDefaults.ButtonWithIconContentPadding
-        } else {
-            ButtonDefaults.ContentPadding
-        },
+        contentPadding = ButtonDefaults.SmallContentPadding,
     ) {
         SurauButtonContent(
             text = text,
@@ -192,6 +184,7 @@ fun SurauTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    contentPadding: PaddingValues = ButtonDefaults.SmallContentPadding,
     content: @Composable RowScope.() -> Unit,
 ) {
     TextButton(
@@ -201,6 +194,7 @@ fun SurauTextButton(
         colors = ButtonDefaults.textButtonColors(
             contentColor = MaterialTheme.colorScheme.primary,
         ),
+        contentPadding = contentPadding,
         content = content,
     )
 }
@@ -247,7 +241,7 @@ private fun SurauButtonContent(
     leadingIcon: @Composable (() -> Unit)? = null,
 ) {
     if (leadingIcon != null) {
-        Box(Modifier.sizeIn(maxHeight = ButtonDefaults.IconSize)) {
+        Box(Modifier.sizeIn(maxHeight = ButtonDefaults.SmallIconSize)) {
             leadingIcon()
         }
     }

@@ -66,7 +66,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -104,6 +103,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
+import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.media.PlayerUiState
 import org.surau.app.core.media.RepeatScope
@@ -797,7 +797,7 @@ private fun FlowSettingsSheet(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(checked = showTranslation, onCheckedChange = { onToggleTranslation() })
+                SurauSwitch(checked = showTranslation, onCheckedChange = { onToggleTranslation() })
             }
             Row(
                 modifier = Modifier
@@ -810,7 +810,7 @@ private fun FlowSettingsSheet(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(checked = autoContinue, onCheckedChange = { onToggleAutoContinue() })
+                SurauSwitch(checked = autoContinue, onCheckedChange = { onToggleAutoContinue() })
             }
             Row(
                 modifier = Modifier
@@ -823,7 +823,7 @@ private fun FlowSettingsSheet(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(checked = keepScreenOn, onCheckedChange = { onToggleKeepScreenOn() })
+                SurauSwitch(checked = keepScreenOn, onCheckedChange = { onToggleKeepScreenOn() })
             }
 
             Text(

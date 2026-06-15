@@ -46,7 +46,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,6 +67,7 @@ import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauTextButton
+import org.surau.app.core.designsystem.component.SurauTextField
 import org.surau.app.core.designsystem.component.TagChip
 import org.surau.app.core.designsystem.component.TagDot
 import org.surau.app.core.designsystem.icon.SurauIcons
@@ -367,7 +367,7 @@ internal fun BookmarkEditorContent(
         )
 
         Spacer(modifier = Modifier.size(16.dp))
-        OutlinedTextField(
+        SurauTextField(
             value = note,
             onValueChange = { note = it },
             label = { Text(stringResource(R.string.feature_quran_impl_bookmarks_note_hint)) },
@@ -418,7 +418,7 @@ internal fun BookmarkEditorContent(
         )
         Spacer(modifier = Modifier.size(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
+            SurauTextField(
                 value = tagInput,
                 onValueChange = { tagInput = it },
                 label = { Text(stringResource(R.string.feature_quran_impl_bookmarks_tag_hint)) },

@@ -26,8 +26,10 @@
     <string name="tab_profile">Profile</string>
 
     <!-- Placeholder for not-yet-built sections -->
-    <string name="coming_soon">Coming soon</string>
-    <string name="coming_soon_body">This section is under construction. Stay tuned!</string>
+    <string name="coming_soon">Coming Soon</string>
+    <string name="coming_soon_body">We\'re preparing the %1$s section and polishing the feature to get it just right. Sign up to be the first to know when it launches.</string>
+    <string name="coming_soon_join_beta">Join Beta Access</string>
+    <string name="coming_soon_social_proof">1,200+ readers already joined</string>
 
     <!-- Home dashboard -->
     <string name="home_greeting">Assalamu\'alaikum</string>

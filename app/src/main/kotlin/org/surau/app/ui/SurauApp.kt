@@ -17,6 +17,14 @@
 package org.surau.app.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -56,12 +64,15 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
 import org.surau.app.R
 import org.surau.app.core.designsystem.component.SurauBackground
@@ -92,16 +103,31 @@ import org.surau.app.navigation.HomeNavKey
 import org.surau.app.navigation.KitabsNavKey
 import org.surau.app.navigation.ProfileNavKey
 import org.surau.app.navigation.TOP_LEVEL_NAV_ITEMS
+import org.surau.app.ui.home.HomeScreen
 import org.surau.app.ui.player.AppPlayerViewModel
 import org.surau.app.ui.player.ExpandablePlayerScaffold
 import org.surau.app.ui.player.MiniPlayer
 import org.surau.app.ui.player.MiniPlayerHeight
 import org.surau.app.ui.player.PlayerAnchor
 import org.surau.app.ui.player.rememberPlayerSheetState
-import org.surau.app.ui.home.HomeScreen
 import org.surau.app.ui.profile.ProfileScreen
+import org.surau.app.ui.screens.ComingSoonBook
 import org.surau.app.ui.screens.ComingSoonScreen
 import org.surau.app.util.AppLanguage
+
+/** Decorative preview covers shown on the Hadith "coming soon" screen. */
+private val HadithPreviewBooks = listOf(
+    ComingSoonBook("Sahih al-Bukhari", Color(0xFF0F766E)),
+    ComingSoonBook("Sahih Muslim", Color(0xFFB45309)),
+    ComingSoonBook("Sunan Abu Dawud", Color(0xFF4338CA)),
+)
+
+/** Decorative preview covers shown on the Kitabs "coming soon" screen. */
+private val KitabsPreviewBooks = listOf(
+    ComingSoonBook("Ihya Ulum al-Din", Color(0xFF0F766E)),
+    ComingSoonBook("Al-Risala", Color(0xFFB45309)),
+    ComingSoonBook("Bidayat al-Mujtahid", Color(0xFF4338CA)),
+)
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -155,6 +181,9 @@ fun SurauApp(
         val playerViewModel: AppPlayerViewModel = hiltViewModel()
         val playerState by playerViewModel.state.collectAsStateWithLifecycle()
         val sheetState = rememberPlayerSheetState()
+        // Backdrop for the player's frosted glass: the nav content registers as the Haze source,
+        // the mini player samples it to blur whatever scrolls behind the card.
+        val hazeState = remember { HazeState() }
 
         // A pending request to open the Flow player for a surah that may not be playing yet (the
         // embedded Flow view-model auto-starts surah-mode playback on mount). `expandRequest` makes
@@ -247,16 +276,30 @@ fun SurauApp(
                     quranBookmarksEntry(navigator)
                     entry<HadithNavKey> {
                         ComingSoonScreen(
-                            title = stringResource(R.string.tab_hadith),
+                            heading = stringResource(R.string.coming_soon),
+                            body = stringResource(
+                                R.string.coming_soon_body,
+                                stringResource(R.string.tab_hadith),
+                            ),
                             icon = SurauIcons.AutoStories,
-                            body = stringResource(R.string.coming_soon_body),
+                            books = HadithPreviewBooks,
+                            actionLabel = stringResource(R.string.coming_soon_join_beta),
+                            onActionClick = navigator::navigateToLogin,
+                            socialText = stringResource(R.string.coming_soon_social_proof),
                         )
                     }
                     entry<KitabsNavKey> {
                         ComingSoonScreen(
-                            title = stringResource(R.string.tab_kitabs),
+                            heading = stringResource(R.string.coming_soon),
+                            body = stringResource(
+                                R.string.coming_soon_body,
+                                stringResource(R.string.tab_kitabs),
+                            ),
                             icon = SurauIcons.LibraryBooks,
-                            body = stringResource(R.string.coming_soon_body),
+                            books = KitabsPreviewBooks,
+                            actionLabel = stringResource(R.string.coming_soon_join_beta),
+                            onActionClick = navigator::navigateToLogin,
+                            socialText = stringResource(R.string.coming_soon_social_proof),
                         )
                     }
                     entry<ProfileNavKey> {
@@ -296,20 +339,80 @@ fun SurauApp(
                 Box(
                     Modifier
                         .fillMaxSize()
+                        .hazeSource(state = hazeState)
                         .windowInsetsPadding(
                             WindowInsets.safeDrawing.only(
                                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
                             ),
                         )
-                        .padding(
-                            bottom = navBarHeightDp + if (hasSession) MiniPlayerHeight else 0.dp,
-                        )
+                        // Reserve only the nav bar; content flows behind the translucent mini
+                        // player so its frosted glass has live content to blur.
+                        .padding(bottom = navBarHeightDp)
                         .imePadding(),
                 ) {
                     val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
+
+                    // Screen transitions in the Material 3 motion language (spatial spring for
+                    // movement, effects spring for opacity), in two flavours:
+                    //  • peer destinations (bottom-nav tabs) → fade-through: incoming fades in while
+                    //    scaling up from 92%, outgoing fades out — no spatial link, so no slide.
+                    //  • drill-down (tab → reader/settings/…) → shared-axis X: the child slides in
+                    //    from the right; back slides it off to the right, reading as hierarchy.
+                    // See m3.material.io/styles/motion.
+                    val fadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+                    val scaleSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+                    val slideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+                    val tabForward =
+                        (fadeIn(fadeSpec) + scaleIn(scaleSpec, initialScale = 0.92f)) togetherWith
+                            fadeOut(fadeSpec)
+                    val tabBack =
+                        (fadeIn(fadeSpec) + scaleIn(scaleSpec, initialScale = 1.05f)) togetherWith
+                            (fadeOut(fadeSpec) + scaleOut(scaleSpec, targetScale = 0.92f))
+
+                    // A move is a tab switch only when both ends are top-level destinations;
+                    // anything else (e.g. tab → reader) is a hierarchical drill-down.
+                    fun isTabSwitch(from: Any?, to: Any?): Boolean =
+                        from is NavKey && to is NavKey &&
+                            from in TOP_LEVEL_NAV_ITEMS && to in TOP_LEVEL_NAV_ITEMS
+
+                    fun AnimatedContentTransitionScope<Scene<NavKey>>.sharedAxis(
+                        towards: SlideDirection,
+                    ): ContentTransform {
+                        val enter = slideIntoContainer(towards, slideSpec) + fadeIn(fadeSpec)
+                        val exit = slideOutOfContainer(towards, slideSpec) + fadeOut(fadeSpec)
+                        return enter togetherWith exit
+                    }
+
                     NavDisplay(
                         entries = appState.navigationState.toEntries(entryProvider),
                         sceneStrategies = listOf(sceneStrategy),
+                        transitionSpec = {
+                            val from = initialState.entries.lastOrNull()?.contentKey
+                            val to = targetState.entries.lastOrNull()?.contentKey
+                            if (isTabSwitch(from, to)) {
+                                tabForward
+                            } else {
+                                sharedAxis(SlideDirection.Left)
+                            }
+                        },
+                        popTransitionSpec = {
+                            val from = initialState.entries.lastOrNull()?.contentKey
+                            val to = targetState.entries.lastOrNull()?.contentKey
+                            if (isTabSwitch(from, to)) {
+                                tabBack
+                            } else {
+                                sharedAxis(SlideDirection.Right)
+                            }
+                        },
+                        predictivePopTransitionSpec = {
+                            val from = initialState.entries.lastOrNull()?.contentKey
+                            val to = targetState.entries.lastOrNull()?.contentKey
+                            if (isTabSwitch(from, to)) {
+                                tabBack
+                            } else {
+                                sharedAxis(SlideDirection.Right)
+                            }
+                        },
                         onBack = { navigator.goBack() },
                     )
                 }
@@ -324,6 +427,7 @@ fun SurauApp(
                         collapsedContent = {
                             MiniPlayer(
                                 state = playerState,
+                                hazeState = hazeState,
                                 onExpand = { scope.launch { sheetState.expand() } },
                                 onPlayPause = playerViewModel::playPause,
                                 onPrevious = playerViewModel::previous,

@@ -42,11 +42,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -77,6 +75,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
+import org.surau.app.core.designsystem.component.SurauTextButton
+import org.surau.app.core.designsystem.component.SurauTextField
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.model.data.activity.ReadingActivity
@@ -665,7 +665,7 @@ private fun StartKhatamDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.feature_activity_impl_khatam_start_dialog_title)) },
         text = {
-            OutlinedTextField(
+            SurauTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 label = { Text(stringResource(R.string.feature_activity_impl_khatam_notes_label)) },
@@ -674,12 +674,12 @@ private fun StartKhatamDialog(
             )
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(notes.ifBlank { null }) }) {
+            SurauTextButton(onClick = { onConfirm(notes.ifBlank { null }) }) {
                 Text(stringResource(R.string.feature_activity_impl_khatam_start))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            SurauTextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.feature_activity_impl_cancel))
             }
         },

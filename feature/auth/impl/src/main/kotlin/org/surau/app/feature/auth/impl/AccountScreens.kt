@@ -30,7 +30,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -53,9 +52,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
+import org.surau.app.core.designsystem.component.SurauOtpInput
 import org.surau.app.core.designsystem.component.SurauOutlinedButton
 import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.component.SurauTextButton
+import org.surau.app.core.designsystem.component.SurauTextField
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.model.data.auth.AccountSession
 import org.surau.app.core.model.data.auth.AuthState
@@ -195,7 +196,7 @@ fun EditProfileScreen(
         onBackClick = onBackClick,
         modifier = modifier,
     ) {
-        OutlinedTextField(
+        SurauTextField(
             value = displayName,
             onValueChange = { displayName = it },
             label = { Text(stringResource(R.string.feature_auth_impl_display_name)) },
@@ -211,7 +212,7 @@ fun EditProfileScreen(
                 .testTag("profile:name"),
         )
         Spacer(modifier = Modifier.size(12.dp))
-        OutlinedTextField(
+        SurauTextField(
             value = countryCode,
             onValueChange = { if (it.length <= 2) countryCode = it.uppercase() },
             label = { Text(stringResource(R.string.feature_auth_impl_account_country_code)) },
@@ -553,7 +554,7 @@ fun DeleteAccountScreen(
             modifier = Modifier.testTag("deleteAccount:password"),
         )
         Spacer(modifier = Modifier.size(12.dp))
-        OutlinedTextField(
+        SurauTextField(
             value = confirmText,
             onValueChange = { confirmText = it },
             label = {
@@ -718,22 +719,26 @@ private fun OtpField(
     showError: Boolean,
     testTag: String,
 ) {
-    OutlinedTextField(
-        value = otp,
-        onValueChange = onOtpChange,
-        label = { Text(stringResource(R.string.feature_auth_impl_otp)) },
-        isError = showError,
-        supportingText = if (showError) {
-            { Text(stringResource(R.string.feature_auth_impl_otp_invalid)) }
-        } else {
-            null
-        },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag(testTag),
-    )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        SurauOtpInput(
+            value = otp,
+            onValueChange = onOtpChange,
+            length = 6,
+            groupSize = 3,
+            fillWidth = true,
+            isError = showError,
+            keyboardType = KeyboardType.Number,
+            modifier = Modifier.testTag(testTag),
+        )
+        if (showError) {
+            Text(
+                text = stringResource(R.string.feature_auth_impl_otp_invalid),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 8.dp, start = 4.dp),
+            )
+        }
+    }
 }
 
 @Composable
