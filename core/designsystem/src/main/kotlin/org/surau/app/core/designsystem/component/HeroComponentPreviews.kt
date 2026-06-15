@@ -19,15 +19,21 @@ package org.surau.app.core.designsystem.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import org.surau.app.core.designsystem.theme.LocalSurauColors
 import org.surau.app.core.designsystem.theme.SurauTheme
 import java.time.LocalTime
 
@@ -196,6 +202,114 @@ fun SurauTimePickerFieldPreview() {
                     onClick = {},
                     modifier = Modifier.width(220.dp),
                 )
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauAlertPreview() {
+    SurauTheme {
+        SurauBackground {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SurauAlertVariant.entries.forEach { variant ->
+                    SurauAlert(
+                        title = variant.name,
+                        description = "Mesej amaran contoh",
+                        variant = variant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauCellPreview() {
+    SurauTheme {
+        SurauBackground {
+            SurauListGroup(modifier = Modifier.padding(16.dp)) {
+                SurauCell(title = "Profil", description = "Urus akaun anda", onClick = {})
+                SurauCell(title = "Notifikasi", onClick = {})
+                SurauCell(title = "Versi", trailing = { Text("1.0.0") })
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauSliderPreview() {
+    var value by remember { mutableFloatStateOf(40f) }
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauSlider(value = value, onValueChange = { value = it })
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauSelectPreview() {
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauSelect(
+                    value = "Bahasa Melayu",
+                    onValueChange = {},
+                    options = listOf("Bahasa Melayu", "English"),
+                    modifier = Modifier.width(240.dp),
+                )
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauPopoverContentPreview() {
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauOverlayCard(horizontalPadding = 16.dp, verticalPadding = 12.dp) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            "Tajuk popover",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            "Keterangan ringkas di dalam popover.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = LocalSurauColors.current.muted,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauDropdownMenuContentPreview() {
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauOverlayCard(horizontalPadding = 6.dp, verticalPadding = 12.dp) {
+                    Column(modifier = Modifier.width(IntrinsicSize.Max)) {
+                        SurauMenuItem(text = "Sunting", onClick = {})
+                        SurauMenuItem(text = "Kongsi", onClick = {})
+                        SurauMenuItem(text = "Padam", onClick = {}, danger = true)
+                    }
+                }
             }
         }
     }
