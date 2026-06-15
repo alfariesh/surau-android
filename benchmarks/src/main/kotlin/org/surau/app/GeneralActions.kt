@@ -57,6 +57,26 @@ fun MacrobenchmarkScope.startActivityAndAllowNotifications() {
 }
 
 /**
+ * The core reading journey used for baseline-profile generation and jank measurement:
+ * scroll the surah list on the home screen, open a surah, scroll the reader, then go back.
+ * Mirrors the most common real path so the captured profile precompiles it.
+ */
+fun MacrobenchmarkScope.quranReaderJourney() {
+    // Home: the surah list (data loads from cache/network on first run).
+    val surahList = device.waitAndFindObject(By.res("quranHome:surahList"), 10_000)
+    device.flingElementDownUp(surahList)
+
+    // Open Al-Fatihah and scroll the reader.
+    device.waitAndFindObject(By.res("quranHome:surah:1"), 10_000).click()
+    val ayahList = device.waitAndFindObject(By.res("reader:ayahList"), 10_000)
+    device.flingElementDownUp(ayahList)
+
+    // Back to the home list.
+    device.pressBack()
+    device.waitAndFindObject(By.res("quranHome:surahList"), 10_000)
+}
+
+/**
  * Waits for and returns the `niaTopAppBar`
  */
 fun MacrobenchmarkScope.getTopAppBar(): UiObject2 {
