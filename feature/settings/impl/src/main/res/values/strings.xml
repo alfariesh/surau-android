@@ -23,6 +23,7 @@
     <string name="feature_settings_impl_guest_hint">Masuk untuk menyimpan progres bacaan di semua perangkat.</string>
     <string name="feature_settings_impl_sign_in">Masuk</string>
     <string name="feature_settings_impl_signed_in_as">Masuk sebagai</string>
+    <string name="feature_settings_impl_manage_account">Kelola Akun</string>
     <string name="feature_settings_impl_logout">Keluar</string>
     <string name="feature_settings_impl_logout_confirm_title">Keluar dari akun?</string>
     <string name="feature_settings_impl_logout_confirm_body">Progres bacaan di perangkat ini tetap tersimpan.</string>

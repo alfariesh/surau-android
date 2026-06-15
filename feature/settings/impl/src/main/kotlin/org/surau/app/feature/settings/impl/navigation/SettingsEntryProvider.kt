@@ -25,12 +25,14 @@ import org.surau.app.feature.settings.impl.SettingsScreen
 fun EntryProviderScope<NavKey>.settingsEntry(
     navigator: Navigator,
     onSignInClick: () -> Unit,
+    onManageAccountClick: () -> Unit,
     appVersionName: String,
 ) {
     entry<SettingsNavKey> {
         SettingsScreen(
             onBackClick = navigator::goBack,
             onSignInClick = onSignInClick,
+            onManageAccountClick = onManageAccountClick,
             appVersionName = appVersionName,
         )
     }

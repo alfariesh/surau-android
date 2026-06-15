@@ -64,20 +64,38 @@ class AuthSessionDataSource @Inject constructor(
     }
 
     /**
-     * Persists a rotated token pair, keeping the stored identity.
+     * Persists a rotated token pair, keeping the stored identity. Pass [sessionId] when the whole
+     * session was rotated server-side (change-password / change-email), so the stored id stays in
+     * sync; the silent refresh path leaves it null to keep the existing id.
      */
     suspend fun updateTokens(
         accessToken: String,
         refreshToken: String,
         expiresAtEpochSeconds: Long,
+        sessionId: String? = null,
     ) {
         authSession.updateData {
             it.copy {
                 this.accessToken = accessToken
                 this.refreshToken = refreshToken
                 this.expiresAtEpochSeconds = expiresAtEpochSeconds
+                if (sessionId != null) this.sessionId = sessionId
             }
         }
+    }
+
+    /**
+     * Updates the stored email after a confirmed email change.
+     */
+    suspend fun updateEmail(email: String) {
+        authSession.updateData { it.copy { this.email = email } }
+    }
+
+    /**
+     * Updates the stored display name after a profile edit.
+     */
+    suspend fun updateDisplayName(displayName: String?) {
+        authSession.updateData { it.copy { this.displayName = displayName.orEmpty() } }
     }
 
     /**

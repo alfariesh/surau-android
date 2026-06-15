@@ -67,3 +67,31 @@ data class PreferencesPatchRequestDto(
     @SerialName("quran_translation_source_id") val quranTranslationSourceId: String? = null,
     @SerialName("quran_recitation_id") val quranRecitationId: String? = null,
 )
+
+/**
+ * `PATCH /user/profile` — partial. Only non-null fields are serialized (the network [Json] keeps
+ * `encodeDefaults = false`), so omitted fields are left untouched server-side.
+ */
+@Serializable
+data class ProfilePatchRequestDto(
+    @SerialName("display_name") val displayName: String? = null,
+    @SerialName("timezone") val timezone: String? = null,
+    @SerialName("country_code") val countryCode: String? = null,
+    @SerialName("personalization_enabled") val personalizationEnabled: Boolean? = null,
+)
+
+/**
+ * `GET/PATCH /user/email-preferences`. The backend only exposes the marketing toggle.
+ */
+@Serializable
+data class EmailPreferencesDto(
+    @SerialName("marketing_opt_in") val marketingOptIn: Boolean = false,
+    @SerialName("opted_in_at") val optedInAt: String? = null,
+    @SerialName("opted_out_at") val optedOutAt: String? = null,
+    @SerialName("source") val source: String? = null,
+)
+
+@Serializable
+data class EmailPreferencesPatchRequestDto(
+    @SerialName("marketing_opt_in") val marketingOptIn: Boolean,
+)

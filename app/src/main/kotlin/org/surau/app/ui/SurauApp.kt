@@ -47,9 +47,13 @@ import org.surau.app.R
 import org.surau.app.core.designsystem.component.SurauBackground
 import org.surau.app.core.navigation.Navigator
 import org.surau.app.core.navigation.toEntries
+import org.surau.app.feature.activity.api.navigation.navigateToActivity
+import org.surau.app.feature.activity.impl.navigation.activityEntry
 import org.surau.app.feature.auth.api.navigation.ResetPasswordNavKey
 import org.surau.app.feature.auth.api.navigation.WelcomeNavKey
 import org.surau.app.feature.auth.api.navigation.navigateToLogin
+import org.surau.app.feature.auth.api.navigation.navigateToManageAccount
+import org.surau.app.feature.auth.impl.navigation.accountEntries
 import org.surau.app.feature.auth.impl.navigation.authEntries
 import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import org.surau.app.feature.quran.impl.navigation.quranBookmarksEntry
@@ -135,18 +139,28 @@ fun SurauApp(
                     quranHomeEntry(
                         navigator = navigator,
                         onSettingsClick = navigator::navigateToSettings,
+                        onActivityClick = navigator::navigateToActivity,
                     )
                     surahReaderEntry(navigator)
                     surahFlowEntry(navigator)
                     quranSearchEntry(navigator)
                     quranBookmarksEntry(navigator)
+                    activityEntry(
+                        navigator = navigator,
+                        onLoginClick = navigator::navigateToLogin,
+                    )
                     authEntries(
                         navigator = navigator,
                         onAuthFlowDone = { navigator.navigate(QuranHomeNavKey) },
                     )
+                    accountEntries(
+                        navigator = navigator,
+                        onSignedOut = { navigator.navigate(WelcomeNavKey) },
+                    )
                     settingsEntry(
                         navigator = navigator,
                         onSignInClick = navigator::navigateToLogin,
+                        onManageAccountClick = navigator::navigateToManageAccount,
                         appVersionName = appVersionName,
                     )
                 }

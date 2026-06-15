@@ -17,18 +17,33 @@
 package org.surau.app.core.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import org.surau.app.core.data.util.TimeZoneMonitor
 import org.surau.app.core.datastore.AuthSessionDataSource
+import org.surau.app.core.model.data.auth.AccountSession
 import org.surau.app.core.model.data.auth.AuthState
+import org.surau.app.core.model.data.auth.EmailPreferences
 import org.surau.app.core.model.data.auth.UserSession
 import org.surau.app.core.network.model.apiCall
+import org.surau.app.core.network.model.auth.ChangeEmailRequestDto
+import org.surau.app.core.network.model.auth.ChangeEmailVerifyRequestDto
+import org.surau.app.core.network.model.auth.ChangePasswordRequestDto
+import org.surau.app.core.network.model.auth.DeleteAccountRequestDto
 import org.surau.app.core.network.model.auth.ForgotPasswordRequestDto
 import org.surau.app.core.network.model.auth.LoginRequestDto
 import org.surau.app.core.network.model.auth.LogoutRequestDto
 import org.surau.app.core.network.model.auth.RegisterRequestDto
 import org.surau.app.core.network.model.auth.ResendVerificationRequestDto
 import org.surau.app.core.network.model.auth.ResetPasswordRequestDto
+import org.surau.app.core.network.model.auth.SessionDto
+import org.surau.app.core.network.model.auth.TokenPairDto
 import org.surau.app.core.network.model.auth.VerifyEmailRequestDto
+import org.surau.app.core.network.model.user.EmailPreferencesDto
+import org.surau.app.core.network.model.user.EmailPreferencesPatchRequestDto
+import org.surau.app.core.network.model.user.ProfilePatchRequestDto
+import org.surau.app.core.network.retrofit.SurauAccountApi
 import org.surau.app.core.network.retrofit.SurauAuthApi
 import org.surau.app.core.network.retrofit.SurauUserApi
 import javax.inject.Inject
@@ -36,7 +51,9 @@ import javax.inject.Inject
 internal class DefaultAuthRepository @Inject constructor(
     private val authApi: SurauAuthApi,
     private val userApi: SurauUserApi,
+    private val accountApi: SurauAccountApi,
     private val authSessionDataSource: AuthSessionDataSource,
+    private val timeZoneMonitor: TimeZoneMonitor,
 ) : AuthRepository {
 
     override val authState: Flow<AuthState> = authSessionDataSource.authState
@@ -118,4 +135,98 @@ internal class DefaultAuthRepository @Inject constructor(
             authSessionDataSource.clear()
         }
     }
+
+    override suspend fun updateProfile(displayName: String?, countryCode: String?) {
+        val timezone = timeZoneMonitor.currentTimeZone.first().id
+        val account = apiCall {
+            userApi.updateProfile(
+                ProfilePatchRequestDto(
+                    displayName = displayName?.takeIf { it.isNotBlank() },
+                    timezone = timezone,
+                    countryCode = countryCode?.takeIf { it.isNotBlank() },
+                ),
+            )
+        }
+        authSessionDataSource.updateDisplayName(account.profile.displayName)
+    }
+
+    override suspend fun changePassword(currentPassword: String, newPassword: String) {
+        val pair = apiCall {
+            accountApi.changePassword(
+                ChangePasswordRequestDto(currentPassword = currentPassword, newPassword = newPassword),
+            )
+        }
+        persistRotatedSession(pair)
+    }
+
+    override suspend fun requestEmailChange(currentPassword: String, newEmail: String) {
+        apiCall {
+            accountApi.requestEmailChange(
+                ChangeEmailRequestDto(currentPassword = currentPassword, newEmail = newEmail),
+            )
+        }
+    }
+
+    override suspend fun verifyEmailChange(newEmail: String, otp: String) {
+        val pair = apiCall {
+            accountApi.verifyEmailChange(ChangeEmailVerifyRequestDto(otp = otp))
+        }
+        persistRotatedSession(pair)
+        authSessionDataSource.updateEmail(newEmail)
+    }
+
+    override suspend fun listSessions(): List<AccountSession> =
+        apiCall { accountApi.listSessions() }.items.map { it.toAccountSession() }
+
+    override suspend fun revokeSession(sessionId: String) {
+        apiCall { accountApi.revokeSession(sessionId) }
+    }
+
+    override suspend fun logoutAllDevices() {
+        // The current session is revoked too — only clear locally once the call succeeds.
+        apiCall { accountApi.logoutAll() }
+        authSessionDataSource.clear()
+    }
+
+    override suspend fun deleteAccount(currentPassword: String) {
+        // A wrong password is a 401 the caller can retry, so clear only on success.
+        apiCall { accountApi.deleteAccount(DeleteAccountRequestDto(currentPassword = currentPassword)) }
+        authSessionDataSource.clear()
+    }
+
+    override suspend fun emailPreferences(): EmailPreferences =
+        apiCall { userApi.emailPreferences() }.toEmailPreferences()
+
+    override suspend fun updateEmailPreferences(marketingOptIn: Boolean): EmailPreferences =
+        apiCall {
+            userApi.updateEmailPreferences(
+                EmailPreferencesPatchRequestDto(marketingOptIn = marketingOptIn),
+            )
+        }.toEmailPreferences()
+
+    /** Persists a token pair from a session-rotating endpoint, keeping the rotated session id. */
+    private suspend fun persistRotatedSession(pair: TokenPairDto) {
+        authSessionDataSource.updateTokens(
+            accessToken = pair.accessToken,
+            refreshToken = pair.refreshToken,
+            expiresAtEpochSeconds = Clock.System.now().epochSeconds + pair.expiresInSeconds,
+            sessionId = pair.sessionId.ifEmpty { null },
+        )
+    }
 }
+
+private fun SessionDto.toAccountSession(): AccountSession = AccountSession(
+    id = id,
+    userAgent = userAgent,
+    clientIp = clientIp,
+    createdAt = createdAt.toInstantOrNull(),
+    lastUsedAt = lastUsedAt.toInstantOrNull(),
+    expiresAt = expiresAt.toInstantOrNull(),
+    isCurrent = isCurrent,
+)
+
+private fun EmailPreferencesDto.toEmailPreferences(): EmailPreferences =
+    EmailPreferences(marketingOptIn = marketingOptIn)
+
+private fun String?.toInstantOrNull(): Instant? =
+    this?.let { runCatching { Instant.parse(it) }.getOrNull() }

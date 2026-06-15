@@ -19,7 +19,10 @@ package org.surau.app.core.data.repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
+import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.database.dao.BookmarkDao
 import org.surau.app.core.database.model.BookmarkEntity
 import org.surau.app.core.database.model.asExternalModel
@@ -40,6 +43,11 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
     private val meApi: SurauMeApi,
     private val authSessionDataSource: AuthSessionDataSource,
 ) : BookmarkRepository {
+
+    // Serialises the network sync sections so a background reconcile and a user-triggered push (or
+    // two pushes) can't run concurrently and double-POST. Local Room writes stay outside the lock so
+    // bookmarking always lands instantly, offline-first.
+    private val syncMutex = Mutex()
 
     override fun observeBookmarks(): Flow<List<Bookmark>> =
         bookmarkDao.observeBookmarks().map { rows -> rows.map(BookmarkEntity::asExternalModel) }
@@ -101,6 +109,10 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
 
     override suspend fun pushPending() {
         if (!isAuthenticated()) return
+        syncMutex.withLock { pushPendingLocked() }
+    }
+
+    private suspend fun pushPendingLocked() {
         pushPendingDeletes()
         pushPendingUpserts()
     }
@@ -145,7 +157,7 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
         when (val current = bookmarkDao.getByAyahKey(pending.ayahKey)) {
             null ->
                 // Removed mid-flight — honor the deletion by undoing the server create.
-                runCatching { apiCall { meApi.deleteSavedItem(dto.id) } }
+                runCatchingExceptCancellation { apiCall { meApi.deleteSavedItem(dto.id) } }
 
             else -> {
                 val unchanged = current.id == pending.id && current.updatedAt == pending.updatedAt
@@ -185,35 +197,36 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
 
     override suspend fun reconcile() {
         if (!isAuthenticated()) return
-
-        val remote = try {
-            pullAllSavedItems()
-        } catch (exception: SurauApiException) {
-            if (exception.httpStatus == 404) emptyList() else return
-        } catch (_: Exception) {
-            return
-        }
-
-        val remoteByKey = remote.mapNotNull { dto -> dto.ayahKey?.let { it to dto } }.toMap()
-        val local = bookmarkDao.all()
-        val localByKey = local.associateBy { it.ayahKey }
-
-        for ((key, dto) in remoteByKey) {
-            mergeRemote(key, dto, localByKey[key])
-        }
-
-        // A previously-synced local bookmark missing from the remote set was deleted elsewhere.
-        for (entity in local) {
-            if (entity.serverId != null &&
-                !entity.pendingDelete &&
-                !entity.pendingSync &&
-                entity.ayahKey !in remoteByKey
-            ) {
-                bookmarkDao.deleteByAyahKey(entity.ayahKey)
+        syncMutex.withLock {
+            val remote = try {
+                pullAllSavedItems()
+            } catch (exception: SurauApiException) {
+                if (exception.httpStatus == 404) emptyList() else return
+            } catch (_: Exception) {
+                return
             }
-        }
 
-        pushPending()
+            val remoteByKey = remote.mapNotNull { dto -> dto.ayahKey?.let { it to dto } }.toMap()
+            val local = bookmarkDao.all()
+            val localByKey = local.associateBy { it.ayahKey }
+
+            for ((key, dto) in remoteByKey) {
+                mergeRemote(key, dto, localByKey[key])
+            }
+
+            // A previously-synced local bookmark missing from the remote set was deleted elsewhere.
+            for (entity in local) {
+                if (entity.serverId != null &&
+                    !entity.pendingDelete &&
+                    !entity.pendingSync &&
+                    entity.ayahKey !in remoteByKey
+                ) {
+                    bookmarkDao.deleteByAyahKey(entity.ayahKey)
+                }
+            }
+
+            pushPendingLocked()
+        }
     }
 
     private suspend fun mergeRemote(key: String, dto: SavedItemDto, local: BookmarkEntity?) {

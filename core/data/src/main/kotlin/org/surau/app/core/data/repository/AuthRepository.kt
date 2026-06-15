@@ -17,7 +17,9 @@
 package org.surau.app.core.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import org.surau.app.core.model.data.auth.AccountSession
 import org.surau.app.core.model.data.auth.AuthState
+import org.surau.app.core.model.data.auth.EmailPreferences
 
 /**
  * Account/session operations against the Surau backend.
@@ -48,4 +50,48 @@ interface AuthRepository {
 
     /** Revokes the session server-side (best effort) and always clears it locally. */
     suspend fun logout()
+
+    // --- Account management (M5; all require an active session) ---
+
+    /**
+     * Updates the server profile (display name + country; timezone is filled automatically) and
+     * refreshes the locally stored display name.
+     */
+    suspend fun updateProfile(displayName: String?, countryCode: String?)
+
+    /**
+     * Changes the password. The backend rotates the whole session and revokes every other one;
+     * the returned token pair is persisted so this device stays signed in.
+     */
+    suspend fun changePassword(currentPassword: String, newPassword: String)
+
+    /** Step 1 of an email change: sends an OTP to [newEmail] after re-checking the password. */
+    suspend fun requestEmailChange(currentPassword: String, newEmail: String)
+
+    /**
+     * Step 2 of an email change: confirms [otp]; the rotated token pair is persisted and the stored
+     * email updated to [newEmail].
+     */
+    suspend fun verifyEmailChange(newEmail: String, otp: String)
+
+    /** Lists the account's active sessions/devices. */
+    suspend fun listSessions(): List<AccountSession>
+
+    /** Revokes a single other session by id. */
+    suspend fun revokeSession(sessionId: String)
+
+    /** Signs out of every device (this one included) and clears the local session. */
+    suspend fun logoutAllDevices()
+
+    /**
+     * Deletes (anonymizes) the account after re-checking the password, then clears the local
+     * session. Local reading data is kept — the user continues as a guest.
+     */
+    suspend fun deleteAccount(currentPassword: String)
+
+    /** Reads the email subscription preferences. */
+    suspend fun emailPreferences(): EmailPreferences
+
+    /** Updates the marketing opt-in and returns the new preferences. */
+    suspend fun updateEmailPreferences(marketingOptIn: Boolean): EmailPreferences
 }

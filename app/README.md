@@ -18,6 +18,11 @@ graph TB
       :feature:settings:api[api]:::android-library
       :feature:settings:impl[impl]:::android-library
     end
+    subgraph :feature:activity
+      direction TB
+      :feature:activity:api[api]:::android-library
+      :feature:activity:impl[impl]:::android-library
+    end
     subgraph :feature:auth
       direction TB
       :feature:auth:api[api]:::android-library
@@ -61,6 +66,8 @@ graph TB
   :app -.-> :core:model
   :app -.-> :core:navigation
   :app -.-> :core:ui
+  :app -.-> :feature:activity:api
+  :app -.-> :feature:activity:impl
   :app -.-> :feature:auth:api
   :app -.-> :feature:auth:impl
   :app -.-> :feature:quran:api
@@ -85,6 +92,12 @@ graph TB
   :core:ui --> :core:analytics
   :core:ui --> :core:designsystem
   :core:ui --> :core:model
+  :feature:activity:api --> :core:navigation
+  :feature:activity:impl -.-> :core:data
+  :feature:activity:impl -.-> :core:designsystem
+  :feature:activity:impl -.-> :core:model
+  :feature:activity:impl -.-> :core:ui
+  :feature:activity:impl --> :feature:activity:api
   :feature:auth:api --> :core:navigation
   :feature:auth:impl -.-> :core:data
   :feature:auth:impl -.-> :core:designsystem
