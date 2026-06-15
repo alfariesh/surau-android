@@ -44,6 +44,18 @@ data class AyahEntity(
     val juzNumber: Int?,
     @ColumnInfo(name = "hizb_number")
     val hizbNumber: Int?,
+    /**
+     * Simplified Imlaei Arabic text. Only populated by the full download path (`view=full`);
+     * the lazy reader path (`view=reader_minimal`) leaves it null. Indexed for offline search.
+     */
+    @ColumnInfo(name = "text_imlaei_simple")
+    val textImlaeiSimple: String? = null,
+    /**
+     * Server-normalised, diacritic-stripped Arabic search text. Preferred FTS index source when
+     * present; like [textImlaeiSimple] it is only filled by the full download path.
+     */
+    @ColumnInfo(name = "search_text")
+    val searchText: String? = null,
 )
 
 fun AyahEntity.asExternalModel() = Ayah(

@@ -141,6 +141,51 @@ class MigrationTest {
         db.close()
     }
 
+    @Test
+    fun migrate4To5_addsImlaeiColumns_andFtsTable_keepingExistingData() {
+        helper.createDatabase(TEST_DB, 4).apply {
+            execSQL(
+                "INSERT INTO ayahs " +
+                    "(surah_id, ayah_number, ayah_key, text_qpc_hafs, page_number, " +
+                    "juz_number, hizb_number) " +
+                    "VALUES (1, 1, '1:1', 'بِسْمِ', 1, 1, 1)",
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(
+            TEST_DB,
+            5,
+            true,
+            SurauDatabaseMigrations.MIGRATION_4_5,
+        )
+
+        // Existing v4 ayah survived; the new columns exist and default to NULL.
+        db.query("SELECT text_imlaei_simple, search_text FROM ayahs WHERE ayah_key = '1:1'")
+            .use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(true, cursor.isNull(0))
+                assertEquals(true, cursor.isNull(1))
+            }
+        // The new imlaei/search columns are writable.
+        db.execSQL(
+            "UPDATE ayahs SET text_imlaei_simple = 'بسم', search_text = 'bsm' " +
+                "WHERE ayah_key = '1:1'",
+        )
+        // The FTS table exists and MATCH works against the translation column.
+        db.execSQL(
+            "INSERT INTO ayahs_fts (ayah_key, source_id, arabic, translation) " +
+                "VALUES ('1:1', 'kemenag-id-translation', 'bsm', 'Dengan nama Allah')",
+        )
+        db.query(
+            "SELECT ayah_key FROM ayahs_fts WHERE ayahs_fts MATCH 'Allah'",
+        ).use { cursor ->
+            cursor.moveToFirst()
+            assertEquals("1:1", cursor.getString(0))
+        }
+        db.close()
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }
