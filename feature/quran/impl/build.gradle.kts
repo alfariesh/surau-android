@@ -30,6 +30,7 @@ dependencies {
     api(projects.feature.quran.api)
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.material3.adaptive.navigation3)
 
     implementation(projects.core.data)
     implementation(projects.core.domain)

@@ -30,6 +30,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration.Indefinite
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,6 +66,7 @@ import org.surau.app.feature.quran.impl.navigation.surahReaderEntry
 import org.surau.app.feature.settings.api.navigation.navigateToSettings
 import org.surau.app.feature.settings.impl.navigation.settingsEntry
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun SurauApp(
     appState: SurauAppState,
@@ -165,8 +168,13 @@ fun SurauApp(
                     )
                 }
 
+                // Two-pane list-detail (QuranHome | SurahReader) on expanded widths; the strategy
+                // collapses to a single pane on compact, and ignores entries without pane metadata,
+                // so every other screen keeps its current single-pane behaviour.
+                val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
                 NavDisplay(
                     entries = appState.navigationState.toEntries(entryProvider),
+                    sceneStrategies = listOf(sceneStrategy),
                     onBack = { navigator.goBack() },
                 )
             }

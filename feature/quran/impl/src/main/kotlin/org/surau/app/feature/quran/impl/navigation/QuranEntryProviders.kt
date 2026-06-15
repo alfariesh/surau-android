@@ -16,6 +16,8 @@
 
 package org.surau.app.feature.quran.impl.navigation
 
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import org.surau.app.core.navigation.Navigator
@@ -32,14 +34,20 @@ import org.surau.app.feature.quran.impl.QuranBookmarksScreen
 import org.surau.app.feature.quran.impl.QuranHomeScreen
 import org.surau.app.feature.quran.impl.QuranSearchScreen
 import org.surau.app.feature.quran.impl.SurahFlowScreen
+import org.surau.app.feature.quran.impl.SurahReaderPlaceholder
 import org.surau.app.feature.quran.impl.SurahReaderScreen
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 fun EntryProviderScope<NavKey>.quranHomeEntry(
     navigator: Navigator,
     onSettingsClick: () -> Unit,
     onActivityClick: () -> Unit,
 ) {
-    entry<QuranHomeNavKey> {
+    // On expanded widths this pairs with the SurahReader detail pane (two-pane list-detail). On
+    // compact widths the strategy collapses to a single pane, so phones are unaffected.
+    entry<QuranHomeNavKey>(
+        metadata = ListDetailSceneStrategy.listPane { SurahReaderPlaceholder() },
+    ) {
         QuranHomeScreen(
             onSurahClick = { surahId, ayahNumber ->
                 navigator.navigateToSurahReader(surahId, ayahNumber)
@@ -63,8 +71,9 @@ fun EntryProviderScope<NavKey>.quranBookmarksEntry(navigator: Navigator) {
     }
 }
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 fun EntryProviderScope<NavKey>.surahReaderEntry(navigator: Navigator) {
-    entry<SurahReaderNavKey> { navKey ->
+    entry<SurahReaderNavKey>(metadata = ListDetailSceneStrategy.detailPane()) { navKey ->
         SurahReaderScreen(
             navKey = navKey,
             onBackClick = navigator::goBack,
