@@ -60,6 +60,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -330,6 +331,7 @@ private fun ActivityHeatmap(
 ) {
     val columns = remember(today, countsByDate) { buildHeatmapColumns(today, countsByDate) }
     var selected by remember { mutableStateOf<HeatmapCell?>(null) }
+    val monthNames = stringArrayResource(R.array.feature_activity_impl_month_abbrev)
 
     Column {
         Row {
@@ -360,6 +362,7 @@ private fun ActivityHeatmap(
                                 cell = cell,
                                 selected = cell == selected,
                                 onClick = { selected = cell },
+                                monthNames = monthNames,
                             )
                         }
                     }
@@ -372,7 +375,7 @@ private fun ActivityHeatmap(
             Text(
                 text = stringResource(
                     R.string.feature_activity_impl_heatmap_day,
-                    chosen.date.formatShort(),
+                    chosen.date.formatShort(monthNames),
                     chosen.count,
                 ),
                 style = MaterialTheme.typography.bodySmall,
@@ -384,14 +387,19 @@ private fun ActivityHeatmap(
 }
 
 @Composable
-private fun HeatmapCellBox(cell: HeatmapCell, selected: Boolean, onClick: () -> Unit) {
+private fun HeatmapCellBox(
+    cell: HeatmapCell,
+    selected: Boolean,
+    onClick: () -> Unit,
+    monthNames: Array<String>,
+) {
     val color = if (cell.isFuture) Color.Transparent else heatmapLevelColor(cell.level)
     val description = if (cell.isFuture) {
         null
     } else {
         stringResource(
             R.string.feature_activity_impl_heatmap_cell_desc,
-            cell.date.formatShort(),
+            cell.date.formatShort(monthNames),
             cell.count,
         )
     }
@@ -615,7 +623,8 @@ private fun JuzCell(
     val label = stringResource(R.string.feature_activity_impl_juz_number, juz)
     Box(
         modifier = modifier
-            .height(44.dp)
+            // 48dp is the Material minimum touch target.
+            .height(48.dp)
             .clip(MaterialTheme.shapes.small)
             .background(container)
             // Real checkbox semantics so TalkBack announces the marked/unmarked state.
@@ -679,6 +688,7 @@ private fun StartKhatamDialog(
 
 @Composable
 private fun KhatamHistoryRow(cycle: KhatamCycle) {
+    val monthNames = stringArrayResource(R.array.feature_activity_impl_month_abbrev)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -694,8 +704,8 @@ private fun KhatamHistoryRow(cycle: KhatamCycle) {
         Text(
             text = stringResource(
                 R.string.feature_activity_impl_khatam_history_range,
-                cycle.startedAt.toDisplayDate(),
-                cycle.completedAt.toDisplayDate(),
+                cycle.startedAt.toDisplayDate(monthNames),
+                cycle.completedAt.toDisplayDate(monthNames),
             ),
             style = MaterialTheme.typography.bodyMedium,
         )
@@ -778,21 +788,16 @@ private fun CenteredBox(content: @Composable () -> Unit) {
 }
 
 /** Formats an [Instant] as a short local date (e.g. "12 Jun 2026"), or "—" when null. */
-private fun Instant?.toDisplayDate(): String {
+private fun Instant?.toDisplayDate(months: Array<String>): String {
     val date = this?.toLocalDateTime(TimeZone.currentSystemDefault())?.date ?: return "—"
-    return "${date.dayOfMonth} ${date.monthAbbrevId()} ${date.year}"
+    return "${date.dayOfMonth} ${date.monthAbbrev(months)} ${date.year}"
 }
 
 /** Short day+month for a [LocalDate] (e.g. "12 Jun"). */
-private fun LocalDate.formatShort(): String = "$dayOfMonth ${monthAbbrevId()}"
+private fun LocalDate.formatShort(months: Array<String>): String = "$dayOfMonth ${monthAbbrev(months)}"
 
-private fun LocalDate.monthAbbrevId(): String =
-    MONTHS_ID.getOrElse(monthNumber - 1) { monthNumber.toString() }
-
-private val MONTHS_ID = listOf(
-    "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
-    "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
-)
+private fun LocalDate.monthAbbrev(months: Array<String>): String =
+    months.getOrElse(monthNumber - 1) { monthNumber.toString() }
 
 private const val JUZ_COLUMNS = 5
 private val CELL_SIZE = 28.dp

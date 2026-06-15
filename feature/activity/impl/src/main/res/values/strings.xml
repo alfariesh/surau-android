@@ -40,6 +40,22 @@
     <string name="feature_activity_impl_weekday_wed">Rab</string>
     <string name="feature_activity_impl_weekday_fri">Jum</string>
 
+    <!-- Short month names (Jan..Dec) for the heatmap day readout and khatam history dates -->
+    <string-array name="feature_activity_impl_month_abbrev">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>Mei</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Agu</item>
+        <item>Sep</item>
+        <item>Okt</item>
+        <item>Nov</item>
+        <item>Des</item>
+    </string-array>
+
     <!-- Khatam -->
     <string name="feature_activity_impl_khatam_title">Khatam Al-Qur\'an</string>
     <string name="feature_activity_impl_khatam_progress">%1$d / %2$d juz</string>

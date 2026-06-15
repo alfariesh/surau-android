@@ -112,6 +112,24 @@ class ActivityViewModelTest {
     }
 
     @Test
+    fun unmarkJuz_rollsBackOnError_restoresOnlyThatJuz() = runTest {
+        authRepository.login("a@b.com", "password")
+        khatamRepository.setActiveCycle(activeCycle(setOf(1, 2, 3)))
+        khatamRepository.failNextMutation = true
+        val vm = viewModel()
+
+        vm.errors.test {
+            vm.unmarkJuz(2)
+            assertEquals(R.string.feature_activity_impl_error_generic, awaitItem())
+        }
+
+        // The optimistic unmark is reverted by re-adding only juz 2; the others are untouched.
+        val state = success(vm)
+        assertEquals(setOf(1, 2, 3), state.khatam?.completedJuz)
+        assertTrue(state.juzInFlight.isEmpty())
+    }
+
+    @Test
     fun completeKhatam_movesToHistory_whenAllJuzMarked() = runTest {
         authRepository.login("a@b.com", "password")
         khatamRepository.setActiveCycle(activeCycle((1..30).toSet()))

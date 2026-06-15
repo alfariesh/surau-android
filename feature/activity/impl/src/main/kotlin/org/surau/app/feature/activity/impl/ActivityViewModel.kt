@@ -37,6 +37,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.todayIn
+import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.data.repository.ActivityRepository
 import org.surau.app.core.data.repository.AuthRepository
 import org.surau.app.core.data.repository.KhatamRepository
@@ -98,7 +99,8 @@ class ActivityViewModel @Inject constructor(
                     val khatam = async { khatamRepository.getActiveCycle() }
                     // History is secondary — its failure must not take down the whole screen.
                     val history = async {
-                        runCatching { khatamRepository.history() }.getOrDefault(emptyList())
+                        runCatchingExceptCancellation { khatamRepository.history() }
+                            .getOrDefault(emptyList())
                     }
                     ActivityUiState.Success(
                         today = today,
@@ -123,18 +125,19 @@ class ActivityViewModel @Inject constructor(
 
     fun unmarkJuz(juz: Int) = toggleJuz(juz, mark = false)
 
-    /** Optimistically flips a juz, then reconciles to the server result (or rolls back on error). */
+    /**
+     * Optimistically flips a juz, then reconciles to the server result (or rolls back on error).
+     * Both the optimistic flip and the rollback apply a *delta* for this single juz to whatever the
+     * current state is — never a whole-cycle snapshot — so two juz toggled at once can't clobber each
+     * other (the failing one reverts only its own juz, leaving the other intact).
+     */
     private fun toggleJuz(juz: Int, mark: Boolean) {
-        val before = (_uiState.value as? ActivityUiState.Success)?.khatam ?: return
-        val optimistic = if (mark) before.completedJuz + juz else before.completedJuz - juz
-        updateSuccess {
-            it.copy(
-                khatam = before.copy(
-                    completedJuz = optimistic,
-                    juzCount = optimistic.size,
-                    percent = optimistic.size * 100.0 / KhatamCycle.TOTAL_JUZ,
-                ),
-                juzInFlight = it.juzInFlight + juz,
+        if ((_uiState.value as? ActivityUiState.Success)?.khatam == null) return
+        updateSuccess { state ->
+            val current = state.khatam ?: return@updateSuccess state
+            state.copy(
+                khatam = current.withJuz(if (mark) current.completedJuz + juz else current.completedJuz - juz),
+                juzInFlight = state.juzInFlight + juz,
             )
         }
         viewModelScope.launch {
@@ -144,7 +147,15 @@ class ActivityViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                updateSuccess { it.copy(khatam = before, juzInFlight = it.juzInFlight - juz) }
+                updateSuccess { state ->
+                    val current = state.khatam ?: return@updateSuccess state
+                    state.copy(
+                        khatam = current.withJuz(
+                            if (mark) current.completedJuz - juz else current.completedJuz + juz,
+                        ),
+                        juzInFlight = state.juzInFlight - juz,
+                    )
+                }
                 _errors.tryEmit(R.string.feature_activity_impl_error_generic)
             }
         }
@@ -183,7 +194,7 @@ class ActivityViewModel @Inject constructor(
             } catch (e: Exception) {
                 _errors.tryEmit(R.string.feature_activity_impl_error_generic)
                 // Resync to the server's truth so a stale 30/30 doesn't loop on a 409.
-                val fresh = runCatching { khatamRepository.getActiveCycle() }.getOrNull()
+                val fresh = runCatchingExceptCancellation { khatamRepository.getActiveCycle() }.getOrNull()
                 updateSuccess { it.copy(khatam = fresh ?: it.khatam, completing = false) }
             }
         }
@@ -192,6 +203,13 @@ class ActivityViewModel @Inject constructor(
     private inline fun updateSuccess(transform: (ActivityUiState.Success) -> ActivityUiState.Success) {
         _uiState.update { state -> if (state is ActivityUiState.Success) transform(state) else state }
     }
+
+    /** Returns this cycle with [completed] as its juz set, recomputing the derived count + percent. */
+    private fun KhatamCycle.withJuz(completed: Set<Int>): KhatamCycle = copy(
+        completedJuz = completed,
+        juzCount = completed.size,
+        percent = completed.size * 100.0 / KhatamCycle.TOTAL_JUZ,
+    )
 
     private companion object {
         // Fetch six weeks of activity; the heatmap displays the most recent five.
