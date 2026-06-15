@@ -62,12 +62,12 @@ class OverlayScreenshotTests {
                     SurauOverlayCard(horizontalPadding = 16.dp, verticalPadding = 12.dp) {
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                text = "Tajuk popover",
+                                text = "Judul popover",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = "Keterangan ringkas di dalam popover.",
+                                text = "Keterangan singkat di dalam popover.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = LocalSurauColors.current.muted,
                             )
@@ -85,9 +85,9 @@ class OverlayScreenshotTests {
                 Box(modifier = Modifier.padding(16.dp)) {
                     SurauOverlayCard(horizontalPadding = 6.dp, verticalPadding = 12.dp) {
                         Column(modifier = Modifier.width(IntrinsicSize.Max)) {
-                            SurauMenuItem(text = "Sunting", onClick = {})
-                            SurauMenuItem(text = "Kongsi", onClick = {})
-                            SurauMenuItem(text = "Padam", onClick = {}, danger = true)
+                            SurauMenuItem(text = "Edit", onClick = {})
+                            SurauMenuItem(text = "Bagikan", onClick = {})
+                            SurauMenuItem(text = "Hapus", onClick = {}, danger = true)
                         }
                     }
                 }

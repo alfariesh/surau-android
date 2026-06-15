@@ -56,7 +56,7 @@ class AlertScreenshotTests {
                     SurauAlertVariant.entries.forEach { variant ->
                         SurauAlert(
                             title = variant.name,
-                            description = "Mesej amaran contoh",
+                            description = "Pesan peringatan contoh",
                             variant = variant,
                         )
                     }

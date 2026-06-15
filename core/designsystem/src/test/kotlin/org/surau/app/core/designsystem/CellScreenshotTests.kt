@@ -49,7 +49,7 @@ class CellScreenshotTests {
         composeTestRule.captureMultiTheme("Cell") {
             Surface {
                 SurauListGroup(modifier = Modifier.padding(16.dp)) {
-                    SurauCell(title = "Profil", description = "Urus akaun anda", onClick = {})
+                    SurauCell(title = "Profil", description = "Kelola akun", onClick = {})
                     SurauCell(title = "Notifikasi", onClick = {})
                     SurauCell(title = "Versi", trailing = { Text("1.0.0") })
                 }

@@ -48,9 +48,9 @@ class SelectScreenshotTests {
         composeTestRule.captureMultiTheme("Select") {
             Surface {
                 SurauSelect(
-                    value = "Bahasa Melayu",
+                    value = "Bahasa Indonesia",
                     onValueChange = {},
-                    options = listOf("Bahasa Melayu", "English"),
+                    options = listOf("Bahasa Indonesia", "English"),
                     modifier = Modifier
                         .padding(16.dp)
                         .width(240.dp),

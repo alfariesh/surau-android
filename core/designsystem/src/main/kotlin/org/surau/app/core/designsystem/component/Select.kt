@@ -19,22 +19,22 @@ package org.surau.app.core.designsystem.component
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,18 +52,20 @@ import androidx.compose.ui.unit.sp
 import org.surau.app.core.designsystem.theme.LocalSurauColors
 
 /**
- * A select — HeroUI Native's `Select` (popover presentation). A `surface` trigger field (16dp
- * rounded, soft shadow, value + a chevron that flips on open) opens an anchored `overlay` list of
- * options; the selected option shows an `accent` check. Single-select; picking closes the popup.
+ * A select — HeroUI Native's `Select`, built on Material 3 [ExposedDropdownMenuBox] so it gets
+ * keyboard navigation, accessibility and collision-aware positioning for free. The trigger is a
+ * `surface` field (16dp rounded, soft shadow, value + a chevron that flips on open); the menu is an
+ * `overlay`-coloured list where the selected option shows an `accent` check. Picking closes it.
  *
  * @param value The selected value, or `null` to show [placeholder].
  * @param onValueChange Called with the chosen value.
  * @param options The selectable values.
- * @param modifier Modifier applied to the select (anchor).
+ * @param modifier Modifier applied to the box.
  * @param placeholder Trigger text when nothing is selected.
- * @param enabled When `false`, the trigger isn't clickable.
+ * @param enabled When `false`, the trigger isn't interactive.
  * @param label Maps a value to its display string.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> SurauSelect(
     value: T?,
@@ -83,14 +85,18 @@ fun <T> SurauSelect(
         label = "SurauSelectChevron",
     )
 
-    Box(modifier = modifier) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { if (enabled) expanded = it },
+        modifier = modifier,
+    ) {
         Row(
             modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled)
                 .fillMaxWidth()
                 .shadow(1.dp, shape)
                 .clip(shape)
                 .background(colors.surface)
-                .clickable(enabled = enabled) { expanded = true }
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -111,43 +117,43 @@ fun <T> SurauSelect(
                     .graphicsLayer { rotationZ = rotation },
             )
         }
-
-        SurauAnchoredPopup(expanded = expanded, onDismissRequest = { expanded = false }) {
-            SurauOverlayCard(horizontalPadding = 12.dp, verticalPadding = 12.dp) {
-                Column(modifier = Modifier.width(IntrinsicSize.Max)) {
-                    options.forEach { option ->
-                        val selected = option == value
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    onValueChange(option)
-                                    expanded = false
-                                }
-                                .padding(horizontal = 8.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                text = label(option),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                modifier = Modifier.weight(1f),
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = colors.overlay,
+        ) {
+            options.forEach { option ->
+                val selected = option == value
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = label(option),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                        )
+                    },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    },
+                    trailingIcon = if (selected) {
+                        {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = null,
+                                tint = colors.accent,
+                                modifier = Modifier.size(16.dp),
                             )
-                            if (selected) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Check,
-                                    contentDescription = null,
-                                    tint = colors.accent,
-                                    modifier = Modifier.size(16.dp),
-                                )
-                            }
                         }
-                    }
-                }
+                    } else {
+                        null
+                    },
+                    colors = MenuDefaults.itemColors(
+                        textColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                )
             }
         }
     }

@@ -120,7 +120,7 @@ fun SurauWidgetPreview() {
                 title = { Text("Bacaan minggu ini") },
                 description = { Text("5 hari berturut-turut") },
                 legend = { SurauWidgetLegendItem(label = "Selesai", color = Color(0xFF4F772D)) },
-                footer = { Text("Lihat butiran") },
+                footer = { Text("Lihat detail") },
             ) {
                 Text(text = "32 ayat", style = MaterialTheme.typography.headlineSmall)
             }
@@ -152,7 +152,7 @@ fun SurauToastPreview() {
                 SurauToastVariant.entries.forEach { variant ->
                     SurauToast(
                         message = variant.name,
-                        description = "Mesej toast contoh",
+                        description = "Pesan toast contoh",
                         variant = variant,
                         onClose = {},
                     )
@@ -219,7 +219,7 @@ fun SurauAlertPreview() {
                 SurauAlertVariant.entries.forEach { variant ->
                     SurauAlert(
                         title = variant.name,
-                        description = "Mesej amaran contoh",
+                        description = "Pesan peringatan contoh",
                         variant = variant,
                     )
                 }
@@ -234,7 +234,7 @@ fun SurauCellPreview() {
     SurauTheme {
         SurauBackground {
             SurauListGroup(modifier = Modifier.padding(16.dp)) {
-                SurauCell(title = "Profil", description = "Urus akaun anda", onClick = {})
+                SurauCell(title = "Profil", description = "Kelola akun", onClick = {})
                 SurauCell(title = "Notifikasi", onClick = {})
                 SurauCell(title = "Versi", trailing = { Text("1.0.0") })
             }
@@ -262,9 +262,9 @@ fun SurauSelectPreview() {
         SurauBackground {
             Box(modifier = Modifier.padding(16.dp)) {
                 SurauSelect(
-                    value = "Bahasa Melayu",
+                    value = "Bahasa Indonesia",
                     onValueChange = {},
-                    options = listOf("Bahasa Melayu", "English"),
+                    options = listOf("Bahasa Indonesia", "English"),
                     modifier = Modifier.width(240.dp),
                 )
             }
@@ -281,12 +281,12 @@ fun SurauPopoverContentPreview() {
                 SurauOverlayCard(horizontalPadding = 16.dp, verticalPadding = 12.dp) {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            "Tajuk popover",
+                            "Judul popover",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            "Keterangan ringkas di dalam popover.",
+                            "Keterangan singkat di dalam popover.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = LocalSurauColors.current.muted,
                         )
@@ -305,9 +305,9 @@ fun SurauDropdownMenuContentPreview() {
             Box(modifier = Modifier.padding(16.dp)) {
                 SurauOverlayCard(horizontalPadding = 6.dp, verticalPadding = 12.dp) {
                     Column(modifier = Modifier.width(IntrinsicSize.Max)) {
-                        SurauMenuItem(text = "Sunting", onClick = {})
-                        SurauMenuItem(text = "Kongsi", onClick = {})
-                        SurauMenuItem(text = "Padam", onClick = {}, danger = true)
+                        SurauMenuItem(text = "Edit", onClick = {})
+                        SurauMenuItem(text = "Bagikan", onClick = {})
+                        SurauMenuItem(text = "Hapus", onClick = {}, danger = true)
                     }
                 }
             }
