@@ -109,6 +109,7 @@ fun SurahFlowScreen(
     navKey: SurahFlowNavKey,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    embedded: Boolean = false,
     viewModel: SurahFlowViewModel =
         hiltViewModel<SurahFlowViewModel, SurahFlowViewModel.Factory>(
             key = navKey.toString(),
@@ -151,6 +152,7 @@ fun SurahFlowScreen(
         onSetSleepTimer = viewModel::onSetSleepTimer,
         onSetSpeed = viewModel::onSetSpeed,
         snackbarHostState = snackbarHostState,
+        embedded = embedded,
         modifier = modifier,
     )
 }
@@ -179,6 +181,7 @@ internal fun SurahFlowScreen(
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     initialChromeVisible: Boolean = true,
+    embedded: Boolean = false,
 ) {
     ReportDrawnWhen { uiState !is FlowUiState.Loading }
     TrackScreenViewEvent(screenName = "SurahFlow")
@@ -230,6 +233,7 @@ internal fun SurahFlowScreen(
             onSetSpeed = onSetSpeed,
             snackbarHostState = snackbarHostState,
             initialChromeVisible = initialChromeVisible,
+            embedded = embedded,
             modifier = modifier,
         )
     }
@@ -258,6 +262,7 @@ private fun FlowSuccess(
     onSetSpeed: (Float) -> Unit,
     snackbarHostState: SnackbarHostState,
     initialChromeVisible: Boolean,
+    embedded: Boolean,
     modifier: Modifier,
 ) {
     val surface = MaterialTheme.colorScheme.surface
@@ -277,10 +282,14 @@ private fun FlowSuccess(
     }
 
     // Immersive: hide the system bars while the chrome is hidden; always restore them on leave.
+    // Skipped when embedded — the player is an expandable sheet that can be collapsed, so it must
+    // never take over the whole window's system bars.
     val view = LocalView.current
-    DisposableEffect(chromeVisible) {
-        val controller = view.context.findActivity()?.window?.let {
-            WindowInsetsControllerCompat(it, view)
+    DisposableEffect(chromeVisible, embedded) {
+        val controller = if (!embedded) {
+            view.context.findActivity()?.window?.let { WindowInsetsControllerCompat(it, view) }
+        } else {
+            null
         }
         if (chromeVisible) {
             controller?.show(WindowInsetsCompat.Type.systemBars())
@@ -364,6 +373,7 @@ private fun FlowSuccess(
                 surahName = success.surahName,
                 sleepTimerRemainingMs = playerState.sleepTimerRemainingMs,
                 stopAtSurahEnd = playerState.stopAtSurahEnd,
+                embedded = embedded,
                 onBackClick = onBackClick,
                 onSettingsClick = {
                     showSettings = true
@@ -479,6 +489,7 @@ private fun FlowTopBar(
     surahName: String,
     sleepTimerRemainingMs: Long?,
     stopAtSurahEnd: Boolean,
+    embedded: Boolean,
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
@@ -492,7 +503,7 @@ private fun FlowTopBar(
         ) {
             IconButton(onClick = onBackClick, modifier = Modifier.testTag("flow:back")) {
                 Icon(
-                    imageVector = SurauIcons.ArrowBack,
+                    imageVector = if (embedded) SurauIcons.ChevronDown else SurauIcons.ArrowBack,
                     contentDescription = stringResource(R.string.feature_quran_impl_back),
                 )
             }

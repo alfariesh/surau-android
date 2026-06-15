@@ -22,6 +22,7 @@ import androidx.media3.common.MediaMetadata
 import org.surau.app.core.model.data.quran.SurahAudioManifest
 
 internal const val KEY_SURAH_ID = "org.surau.app.media.SURAH_ID"
+internal const val KEY_SURAH_NAME = "org.surau.app.media.SURAH_NAME"
 internal const val KEY_AYAH_NUMBER = "org.surau.app.media.AYAH_NUMBER"
 
 /** Ascending per-ayah start times (ms) on a surah-mode item, so the player can skip by ayah. */
@@ -40,6 +41,7 @@ internal fun SurahAudioManifest.toMediaItems(surahName: String): List<MediaItem>
             val ayahNumber = requireNotNull(track.ayahNumber)
             val extras = Bundle().apply {
                 putInt(KEY_SURAH_ID, surahId)
+                putString(KEY_SURAH_NAME, surahName)
                 putInt(KEY_AYAH_NUMBER, ayahNumber)
             }
             val metadata = MediaMetadata.Builder()
@@ -66,6 +68,7 @@ internal fun SurahAudioManifest.toSurahModeMediaItem(
     val track = tracks.firstOrNull { it.url.isNotBlank() } ?: return null
     val extras = Bundle().apply {
         putInt(KEY_SURAH_ID, surahId)
+        putString(KEY_SURAH_NAME, surahName)
         putLongArray(KEY_AYAH_STARTS, ayahStartsMs)
     }
     val metadata = MediaMetadata.Builder()

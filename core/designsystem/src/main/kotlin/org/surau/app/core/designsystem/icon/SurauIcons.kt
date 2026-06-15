@@ -17,12 +17,22 @@
 package org.surau.app.core.designsystem.icon
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.Bookmarks
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Upcoming
+import androidx.compose.material.icons.rounded.AutoStories
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Bookmark
@@ -63,12 +73,15 @@ object SurauIcons {
     val Activity = Icons.Rounded.CalendarMonth
     val Add = Icons.Rounded.Add
     val ArrowBack = Icons.AutoMirrored.Rounded.ArrowBack
+    val AutoStories = Icons.Rounded.AutoStories
+    val AutoStoriesBorder = Icons.Outlined.AutoStories
     val Bedtime = Icons.Rounded.Bedtime
     val Bookmark = Icons.Rounded.Bookmark
     val BookmarkBorder = Icons.Rounded.BookmarkBorder
     val Bookmarks = Icons.Rounded.Bookmarks
     val BookmarksBorder = Icons.Outlined.Bookmarks
     val Check = Icons.Rounded.Check
+    val ChevronDown = Icons.Rounded.KeyboardArrowDown
     val ChevronRight = Icons.AutoMirrored.Rounded.KeyboardArrowRight
     val Close = Icons.Rounded.Close
     val CloudOff = Icons.Rounded.CloudOff
@@ -77,13 +90,20 @@ object SurauIcons {
     val Download = Icons.Rounded.Download
     val DownloadDone = Icons.Rounded.DownloadDone
     val Grid3x3 = Icons.Rounded.Grid3x3
+    val Home = Icons.Rounded.Home
+    val HomeBorder = Icons.Outlined.Home
     val Language = Icons.Rounded.Language
+    val LibraryBooks = Icons.AutoMirrored.Rounded.LibraryBooks
+    val LibraryBooksBorder = Icons.AutoMirrored.Outlined.LibraryBooks
+    val MenuBook = Icons.AutoMirrored.Rounded.MenuBook
+    val MenuBookBorder = Icons.AutoMirrored.Outlined.MenuBook
     val MoreVert = Icons.Default.MoreVert
     val Flow = Icons.Rounded.GraphicEq
     val FollowReading = Icons.Rounded.MyLocation
     val FollowReadingOff = Icons.Rounded.LocationSearching
     val Pause = Icons.Rounded.Pause
     val Person = Icons.Rounded.Person
+    val PersonBorder = Icons.Outlined.Person
     val PlayArrow = Icons.Rounded.PlayArrow
     val Repeat = Icons.Rounded.Repeat
     val RepeatOne = Icons.Rounded.RepeatOne

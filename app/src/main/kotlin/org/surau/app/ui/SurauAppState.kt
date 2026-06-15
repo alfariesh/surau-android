@@ -30,7 +30,7 @@ import org.surau.app.core.data.util.TimeZoneMonitor
 import org.surau.app.core.navigation.NavigationState
 import org.surau.app.core.navigation.rememberNavigationState
 import org.surau.app.core.ui.TrackDisposableJank
-import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
+import org.surau.app.navigation.HomeNavKey
 import org.surau.app.navigation.TOP_LEVEL_NAV_ITEMS
 
 @Composable
@@ -39,7 +39,7 @@ fun rememberSurauAppState(
     timeZoneMonitor: TimeZoneMonitor,
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
 ): SurauAppState {
-    val navigationState = rememberNavigationState(QuranHomeNavKey, TOP_LEVEL_NAV_ITEMS.keys)
+    val navigationState = rememberNavigationState(HomeNavKey, TOP_LEVEL_NAV_ITEMS.keys)
 
     NavigationTrackingSideEffect(navigationState)
 

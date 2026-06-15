@@ -24,16 +24,13 @@ import org.surau.app.core.navigation.Navigator
 import org.surau.app.feature.quran.api.navigation.QuranBookmarksNavKey
 import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import org.surau.app.feature.quran.api.navigation.QuranSearchNavKey
-import org.surau.app.feature.quran.api.navigation.SurahFlowNavKey
 import org.surau.app.feature.quran.api.navigation.SurahReaderNavKey
 import org.surau.app.feature.quran.api.navigation.navigateToQuranBookmarks
 import org.surau.app.feature.quran.api.navigation.navigateToQuranSearch
-import org.surau.app.feature.quran.api.navigation.navigateToSurahFlow
 import org.surau.app.feature.quran.api.navigation.navigateToSurahReader
 import org.surau.app.feature.quran.impl.QuranBookmarksScreen
 import org.surau.app.feature.quran.impl.QuranHomeScreen
 import org.surau.app.feature.quran.impl.QuranSearchScreen
-import org.surau.app.feature.quran.impl.SurahFlowScreen
 import org.surau.app.feature.quran.impl.SurahReaderPlaceholder
 import org.surau.app.feature.quran.impl.SurahReaderScreen
 
@@ -72,23 +69,15 @@ fun EntryProviderScope<NavKey>.quranBookmarksEntry(navigator: Navigator) {
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
-fun EntryProviderScope<NavKey>.surahReaderEntry(navigator: Navigator) {
+fun EntryProviderScope<NavKey>.surahReaderEntry(
+    navigator: Navigator,
+    onFlowClick: (surahId: Int, ayahNumber: Int?) -> Unit,
+) {
     entry<SurahReaderNavKey>(metadata = ListDetailSceneStrategy.detailPane()) { navKey ->
         SurahReaderScreen(
             navKey = navKey,
             onBackClick = navigator::goBack,
-            onFlowClick = { ayahNumber ->
-                navigator.navigateToSurahFlow(navKey.surahId, ayahNumber)
-            },
-        )
-    }
-}
-
-fun EntryProviderScope<NavKey>.surahFlowEntry(navigator: Navigator) {
-    entry<SurahFlowNavKey> { navKey ->
-        SurahFlowScreen(
-            navKey = navKey,
-            onBackClick = navigator::goBack,
+            onFlowClick = { ayahNumber -> onFlowClick(navKey.surahId, ayahNumber) },
         )
     }
 }

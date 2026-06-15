@@ -40,12 +40,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -61,7 +59,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -76,12 +73,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
 import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButtonGroup
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
@@ -231,8 +226,9 @@ internal fun SurahReaderScreen(
             val content = uiState.content
             val surah = content.surah
             val listState = rememberLazyListState()
-            val scope = rememberCoroutineScope()
-            var followRecitation by rememberSaveable { mutableStateOf(true) }
+            // Auto-scroll the reader to the actively reciting ayah (the global player now owns the
+            // transport controls that used to live in an inline bar here).
+            val followRecitation = true
 
             // Resume/scroll-to-ayah once per surah load.
             LaunchedEffect(surah?.surahId, uiState.initialAyahNumber) {
@@ -329,27 +325,6 @@ internal fun SurahReaderScreen(
                         }
                     }
 
-                    if (surah != null && playerState.surahId == surah.surahId) {
-                        MiniPlayerBar(
-                            surahName = surah.nameLatin,
-                            playerState = playerState,
-                            followRecitation = followRecitation,
-                            onPlayPause = onPlayPause,
-                            onPrevious = onPrevious,
-                            onNext = onNext,
-                            onToggleFollow = { followRecitation = it },
-                            onBarClick = {
-                                val target = playerState.currentAyahNumber
-                                if (target != null) {
-                                    val index =
-                                        content.ayahs.indexOfFirst { it.ayah.ayahNumber == target }
-                                    if (index >= 0) {
-                                        scope.launch { listState.animateScrollToItem(index) }
-                                    }
-                                }
-                            },
-                        )
-                    }
                 }
 
                 SnackbarHost(
@@ -715,108 +690,6 @@ private fun AyahNumberBadge(ayahNumber: Int) {
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
             )
-        }
-    }
-}
-
-@Composable
-private fun MiniPlayerBar(
-    surahName: String,
-    playerState: PlayerUiState,
-    followRecitation: Boolean,
-    onPlayPause: () -> Unit,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    onToggleFollow: (Boolean) -> Unit,
-    onBarClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 3.dp,
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("reader:miniPlayer"),
-    ) {
-        Column {
-            val progress = if (playerState.durationMs > 0L) {
-                (playerState.positionMs.toFloat() / playerState.durationMs).coerceIn(0f, 1f)
-            } else {
-                0f
-            }
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(
-                        R.string.feature_quran_impl_now_playing,
-                        surahName,
-                        playerState.currentAyahNumber ?: 0,
-                    ),
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable(onClick = onBarClick)
-                        .padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
-                )
-                IconToggleButton(checked = followRecitation, onCheckedChange = onToggleFollow) {
-                    Icon(
-                        imageVector = if (followRecitation) {
-                            SurauIcons.FollowReading
-                        } else {
-                            SurauIcons.FollowReadingOff
-                        },
-                        contentDescription = stringResource(
-                            R.string.feature_quran_impl_follow_recitation,
-                        ),
-                        tint = if (followRecitation) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                    )
-                }
-                IconButton(onClick = onPrevious) {
-                    Icon(
-                        imageVector = SurauIcons.SkipPrevious,
-                        contentDescription = stringResource(
-                            R.string.feature_quran_impl_previous_ayah,
-                        ),
-                    )
-                }
-                FilledTonalIconButton(
-                    onClick = onPlayPause,
-                    modifier = Modifier.testTag("reader:miniPlayer:playPause"),
-                ) {
-                    Icon(
-                        imageVector = if (playerState.isPlaying) {
-                            SurauIcons.Pause
-                        } else {
-                            SurauIcons.PlayArrow
-                        },
-                        contentDescription = stringResource(
-                            if (playerState.isPlaying) {
-                                R.string.feature_quran_impl_pause
-                            } else {
-                                R.string.feature_quran_impl_play
-                            },
-                        ),
-                    )
-                }
-                IconButton(onClick = onNext, modifier = Modifier.padding(end = 4.dp)) {
-                    Icon(
-                        imageVector = SurauIcons.SkipNext,
-                        contentDescription = stringResource(R.string.feature_quran_impl_next_ayah),
-                    )
-                }
-            }
         }
     }
 }

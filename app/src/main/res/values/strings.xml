@@ -17,4 +17,49 @@
 <resources>
     <string name="app_name">Surau</string>
     <string name="not_connected">⚠️ Anda tidak terhubung ke internet</string>
+
+    <!-- Bottom navigation tabs -->
+    <string name="tab_home">Beranda</string>
+    <string name="tab_quran">Qur\'an</string>
+    <string name="tab_hadith">Hadis</string>
+    <string name="tab_kitabs">Kitab</string>
+    <string name="tab_profile">Profil</string>
+
+    <!-- Placeholder for not-yet-built sections -->
+    <string name="coming_soon">Segera hadir</string>
+    <string name="coming_soon_body">Fitur ini sedang dalam pengembangan. Nantikan ya!</string>
+
+    <!-- Home dashboard -->
+    <string name="home_greeting">Assalamu\'alaikum</string>
+    <string name="home_subtitle">Semoga harimu penuh berkah</string>
+    <string name="home_continue_title">Lanjutkan membaca</string>
+    <string name="home_continue_verse">Ayat %1$d</string>
+    <string name="home_continue_action">Lanjutkan</string>
+    <string name="home_streak_title">Runtutan baca</string>
+    <string name="home_streak_days">%1$d hari</string>
+    <string name="home_streak_longest">Terpanjang: %1$d hari</string>
+    <string name="home_khatam_title">Khatam</string>
+    <string name="home_khatam_progress">%1$d dari 30 juz</string>
+    <string name="home_see_activity">Lihat aktivitas</string>
+    <string name="home_signin_title">Masuk untuk melacak progres</string>
+    <string name="home_signin_body">Simpan runtutan baca dan khatam Anda di semua perangkat.</string>
+    <string name="home_signin_action">Masuk</string>
+
+    <!-- Profile hub -->
+    <string name="profile_guest">Tamu</string>
+    <string name="profile_guest_body">Masuk untuk menyimpan progres Anda</string>
+    <string name="profile_manage_account">Kelola akun</string>
+    <string name="profile_settings">Pengaturan</string>
+    <string name="profile_activity">Aktivitas &amp; khatam</string>
+    <string name="profile_sign_in">Masuk</string>
+    <string name="profile_version">Versi %1$s</string>
+
+    <!-- Global mini / expandable player -->
+    <string name="player_play">Putar</string>
+    <string name="player_pause">Jeda</string>
+    <string name="player_previous">Ayat sebelumnya</string>
+    <string name="player_next">Ayat berikutnya</string>
+    <string name="player_expand">Buka pemutar</string>
+    <string name="player_collapse">Tutup pemutar</string>
+    <string name="player_ayah">Ayat %1$d</string>
 </resources>

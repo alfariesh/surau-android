@@ -42,12 +42,48 @@ data class TopLevelNavItem(
 )
 
 val HOME = TopLevelNavItem(
-    selectedIcon = SurauIcons.Upcoming,
-    unselectedIcon = SurauIcons.UpcomingBorder,
-    iconTextId = R.string.app_name,
-    titleTextId = R.string.app_name,
+    selectedIcon = SurauIcons.Home,
+    unselectedIcon = SurauIcons.HomeBorder,
+    iconTextId = R.string.tab_home,
+    titleTextId = R.string.tab_home,
 )
 
-val TOP_LEVEL_NAV_ITEMS = mapOf<NavKey, TopLevelNavItem>(
-    QuranHomeNavKey to HOME,
+val QURAN = TopLevelNavItem(
+    selectedIcon = SurauIcons.MenuBook,
+    unselectedIcon = SurauIcons.MenuBookBorder,
+    iconTextId = R.string.tab_quran,
+    titleTextId = R.string.tab_quran,
+)
+
+val HADITH = TopLevelNavItem(
+    selectedIcon = SurauIcons.AutoStories,
+    unselectedIcon = SurauIcons.AutoStoriesBorder,
+    iconTextId = R.string.tab_hadith,
+    titleTextId = R.string.tab_hadith,
+)
+
+val KITABS = TopLevelNavItem(
+    selectedIcon = SurauIcons.LibraryBooks,
+    unselectedIcon = SurauIcons.LibraryBooksBorder,
+    iconTextId = R.string.tab_kitabs,
+    titleTextId = R.string.tab_kitabs,
+)
+
+val PROFILE = TopLevelNavItem(
+    selectedIcon = SurauIcons.Person,
+    unselectedIcon = SurauIcons.PersonBorder,
+    iconTextId = R.string.tab_profile,
+    titleTextId = R.string.tab_profile,
+)
+
+/**
+ * The bottom navigation tabs, in display order. Insertion order is preserved by [LinkedHashMap], so
+ * iterating this map renders the tabs left-to-right as declared here.
+ */
+val TOP_LEVEL_NAV_ITEMS: Map<NavKey, TopLevelNavItem> = linkedMapOf(
+    HomeNavKey to HOME,
+    QuranHomeNavKey to QURAN,
+    HadithNavKey to HADITH,
+    KitabsNavKey to KITABS,
+    ProfileNavKey to PROFILE,
 )
