@@ -22,11 +22,13 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import org.surau.app.core.datastore.crypto.AuthCrypto
 import org.surau.app.core.datastore.test.InMemoryDataStore
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.auth.UserSession
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class AuthSessionDataSourceTest {
 
@@ -102,4 +104,61 @@ class AuthSessionDataSourceTest {
         assertEquals(AuthState.Guest, subject.authState.first())
         assertNull(subject.currentAccessToken())
     }
+
+    @Test
+    fun tokensAreEncryptedAtRest_andDecryptedOnRead() = testScope.runTest {
+        val store = InMemoryDataStore(AuthSession.getDefaultInstance())
+        val encrypted = AuthSessionDataSource(store, ReversibleCrypto())
+
+        encrypted.setSession(
+            session = session,
+            accessToken = "access-1",
+            refreshToken = "refresh-1",
+            expiresAtEpochSeconds = 1_000,
+        )
+
+        // Stored bytes carry the cipher prefix and are not the plaintext…
+        val raw = store.data.first()
+        assertTrue(raw.accessToken.startsWith(AuthCrypto.CIPHER_PREFIX))
+        assertTrue(raw.refreshToken.startsWith(AuthCrypto.CIPHER_PREFIX))
+        // …while reads transparently decrypt, and identity stays usable.
+        assertEquals("access-1", encrypted.currentAccessToken())
+        assertEquals("refresh-1", encrypted.currentRefreshToken())
+        assertEquals(AuthState.Authenticated(session), encrypted.authState.first())
+    }
+
+    @Test
+    fun legacyPlaintextTokens_readBackUnchanged() = testScope.runTest {
+        // Simulate an install written before encryption: plaintext tokens, no cipher prefix.
+        val store = InMemoryDataStore(
+            AuthSession.getDefaultInstance().toBuilder()
+                .setAccessToken("legacy-access")
+                .setRefreshToken("legacy-refresh")
+                .setUserId(session.userId)
+                .setEmail(session.email)
+                .build(),
+        )
+        val encrypted = AuthSessionDataSource(store, ReversibleCrypto())
+
+        assertEquals("legacy-access", encrypted.currentAccessToken())
+        assertEquals("legacy-refresh", encrypted.currentRefreshToken())
+
+        // The next rotation rewrites them encrypted (lazy migration, no forced logout).
+        encrypted.updateTokens("access-2", "refresh-2", expiresAtEpochSeconds = 2_000)
+        assertTrue(store.data.first().accessToken.startsWith(AuthCrypto.CIPHER_PREFIX))
+        assertEquals("access-2", encrypted.currentAccessToken())
+    }
+}
+
+/** Reversible stand-in for the Keystore AEAD: prefix + reversed string, no Android dependency. */
+private class ReversibleCrypto : AuthCrypto {
+    override fun encrypt(plaintext: String): String =
+        AuthCrypto.CIPHER_PREFIX + plaintext.reversed()
+
+    override fun decrypt(stored: String): String? =
+        if (stored.startsWith(AuthCrypto.CIPHER_PREFIX)) {
+            stored.removePrefix(AuthCrypto.CIPHER_PREFIX).reversed()
+        } else {
+            stored
+        }
 }

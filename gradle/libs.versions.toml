@@ -55,6 +55,7 @@ robolectric = "4.16"
 roborazzi = "1.56.0"
 room = "2.8.3"
 spotless = "8.3.0"
+tink = "1.16.0"
 truth = "1.4.4"
 turbine = "1.2.0"
 uiTestJunit4 = "1.9.0-rc01"
@@ -153,6 +154,7 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 

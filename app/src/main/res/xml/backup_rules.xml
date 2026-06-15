@@ -18,4 +18,8 @@
     <exclude
         domain="file"
         path="datastore/auth_session.pb" />
+    <!-- Tink keyset that wraps the auth tokens; useless off-device, so never back it up. -->
+    <exclude
+        domain="sharedpref"
+        path="surau_auth_keyset.xml" />
 </full-backup-content>

@@ -33,6 +33,7 @@ dependencies {
     api(projects.core.model)
 
     implementation(projects.core.common)
+    implementation(libs.tink.android)
 
     testImplementation(projects.core.datastoreTest)
     testImplementation(libs.kotlinx.coroutines.test)
