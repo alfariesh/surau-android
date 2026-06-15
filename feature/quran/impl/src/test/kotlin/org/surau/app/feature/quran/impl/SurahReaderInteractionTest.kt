@@ -71,13 +71,16 @@ class SurahReaderInteractionTest {
         composeTestRule.onNodeWithTag("reader:ayah:1").performTouchInput { longClick() }
         composeTestRule.onNodeWithTag("reader:ayahActions:note").performClick()
 
-        // Pick a preset collection, then save.
-        composeTestRule.onNodeWithText("Hafalan").performClick()
+        // Pick a preset collection (resolved from resources so it works in any locale), then save.
+        val preset = composeTestRule.activity.resources
+            .getStringArray(R.array.feature_quran_impl_bookmark_collections)
+            .first()
+        composeTestRule.onNodeWithText(preset).performClick()
         composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
 
         assertEquals(1, saved?.first)
         assertEquals(null, saved?.second)
-        assertEquals(listOf("Hafalan"), saved?.third)
+        assertEquals(listOf(preset), saved?.third)
     }
 
     @Composable
