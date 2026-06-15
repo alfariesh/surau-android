@@ -119,6 +119,7 @@ dependencies {
     implementation(projects.sync.work)
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.compose.material3.adaptive)

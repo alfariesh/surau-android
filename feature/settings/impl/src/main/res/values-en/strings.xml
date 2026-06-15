@@ -36,6 +36,10 @@
     <string name="feature_settings_impl_dynamic_color_preference">Dynamic color</string>
     <string name="feature_settings_impl_dynamic_color_yes">On</string>
     <string name="feature_settings_impl_dynamic_color_no">Off</string>
+    <string name="feature_settings_impl_section_language">Language</string>
+    <string name="feature_settings_impl_language_system">Follow system</string>
+    <string name="feature_settings_impl_language_id">Bahasa Indonesia</string>
+    <string name="feature_settings_impl_language_en">English</string>
     <string name="feature_settings_impl_section_reader">Reading</string>
     <string name="feature_settings_impl_reader_mode">Display mode</string>
     <string name="feature_settings_impl_reader_mode_arabic_translation">Arabic &amp; translation</string>

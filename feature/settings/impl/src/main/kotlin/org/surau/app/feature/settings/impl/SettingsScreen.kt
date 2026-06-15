@@ -78,12 +78,16 @@ fun SettingsScreen(
     onManageAccountClick: () -> Unit,
     appVersionName: String,
     modifier: Modifier = Modifier,
+    currentLanguageTag: String = "",
+    onChangeLanguage: (String) -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.settingsUiState.collectAsStateWithLifecycle()
     SettingsScreen(
         uiState = uiState,
         appVersionName = appVersionName,
+        currentLanguageTag = currentLanguageTag,
+        onChangeLanguage = onChangeLanguage,
         onBackClick = onBackClick,
         onSignInClick = onSignInClick,
         onManageAccountClick = onManageAccountClick,
@@ -127,6 +131,8 @@ internal fun SettingsScreen(
     onChangeKeepScreenOn: (Boolean) -> Unit = {},
     onStartQuranDownload: () -> Unit = {},
     onCancelQuranDownload: () -> Unit = {},
+    currentLanguageTag: String = "",
+    onChangeLanguage: (String) -> Unit = {},
     supportDynamicColor: Boolean = supportsDynamicTheming(),
 ) {
     TrackScreenViewEvent(screenName = "Settings")
@@ -183,6 +189,12 @@ internal fun SettingsScreen(
                         onChangeDynamicColorPreference = onChangeDynamicColorPreference,
                     )
                 }
+
+                SectionTitle(stringResource(R.string.feature_settings_impl_section_language))
+                LanguageChooser(
+                    currentLanguageTag = currentLanguageTag,
+                    onChangeLanguage = onChangeLanguage,
+                )
 
                 SectionTitle(stringResource(R.string.feature_settings_impl_section_reader))
                 ReaderModeChooser(
@@ -561,6 +573,29 @@ private fun RecitationChooser(
                     role = Role.RadioButton,
                     onClick = { onChangeRecitation(recitation.id) },
                 ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun LanguageChooser(
+    currentLanguageTag: String,
+    onChangeLanguage: (String) -> Unit,
+) {
+    // Endonyms (Bahasa Indonesia / English) stay in their own language so users can always find
+    // their language; only the "follow system" label is localised.
+    val options = listOf(
+        "" to stringResource(R.string.feature_settings_impl_language_system),
+        "id" to stringResource(R.string.feature_settings_impl_language_id),
+        "en" to stringResource(R.string.feature_settings_impl_language_en),
+    )
+    Column(Modifier.selectableGroup()) {
+        options.forEach { (tag, label) ->
+            SettingsChooserRow(
+                text = label,
+                selected = currentLanguageTag.substringBefore('-') == tag,
+                onClick = { onChangeLanguage(tag) },
             )
         }
     }

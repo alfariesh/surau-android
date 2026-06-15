@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -65,6 +66,7 @@ import org.surau.app.feature.quran.impl.navigation.surahFlowEntry
 import org.surau.app.feature.quran.impl.navigation.surahReaderEntry
 import org.surau.app.feature.settings.api.navigation.navigateToSettings
 import org.surau.app.feature.settings.impl.navigation.settingsEntry
+import org.surau.app.util.AppLanguage
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -138,6 +140,7 @@ fun SurauApp(
                     .consumeWindowInsets(padding)
                     .windowInsetsPadding(WindowInsets.safeDrawing),
             ) {
+                val context = LocalContext.current
                 val entryProvider = entryProvider<NavKey> {
                     quranHomeEntry(
                         navigator = navigator,
@@ -165,6 +168,8 @@ fun SurauApp(
                         onSignInClick = navigator::navigateToLogin,
                         onManageAccountClick = navigator::navigateToManageAccount,
                         appVersionName = appVersionName,
+                        currentLanguageTag = AppLanguage.current(context),
+                        onChangeLanguage = { tag -> AppLanguage.apply(context, tag) },
                     )
                 }
 

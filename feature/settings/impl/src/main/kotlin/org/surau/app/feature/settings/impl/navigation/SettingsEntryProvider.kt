@@ -27,6 +27,8 @@ fun EntryProviderScope<NavKey>.settingsEntry(
     onSignInClick: () -> Unit,
     onManageAccountClick: () -> Unit,
     appVersionName: String,
+    currentLanguageTag: String = "",
+    onChangeLanguage: (String) -> Unit = {},
 ) {
     entry<SettingsNavKey> {
         SettingsScreen(
@@ -34,6 +36,8 @@ fun EntryProviderScope<NavKey>.settingsEntry(
             onSignInClick = onSignInClick,
             onManageAccountClick = onManageAccountClick,
             appVersionName = appVersionName,
+            currentLanguageTag = currentLanguageTag,
+            onChangeLanguage = onChangeLanguage,
         )
     }
 }

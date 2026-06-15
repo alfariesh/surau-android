@@ -16,6 +16,7 @@
 
 package org.surau.app
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -49,11 +50,17 @@ import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.ui.LocalTimeZone
 import org.surau.app.ui.SurauApp
 import org.surau.app.ui.rememberSurauAppState
+import org.surau.app.util.AppLanguage
 import org.surau.app.util.isSystemInDarkTheme
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        // Applies the persisted per-app language on API < 33 (no-op on 33+).
+        super.attachBaseContext(AppLanguage.wrap(newBase))
+    }
 
     /**
      * Lazily inject [JankStats], which is used to track jank throughout the app.
