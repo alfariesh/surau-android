@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.common.result.Result
 import org.surau.app.core.common.result.asResult
 import org.surau.app.core.data.repository.ActivityRepository
@@ -64,7 +65,7 @@ class QuranHomeViewModel @Inject constructor(
                 flow {
                     emit(null)
                     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-                    emit(runCatching { activityRepository.getStreak(today) }.getOrNull())
+                    emit(runCatchingExceptCancellation { activityRepository.getStreak(today) }.getOrNull())
                 }
             } else {
                 flowOf(null)

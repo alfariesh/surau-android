@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.LocalDate
+import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.datastore.AuthSessionDataSource
 import org.surau.app.core.model.data.activity.ReadingActivity
 import org.surau.app.core.model.data.activity.ReadingActivityDay
@@ -49,7 +50,7 @@ internal class DefaultActivityRepository @Inject constructor(
     override fun observeSurahProgress(): Flow<Map<Int, Float>> = flow {
         emit(emptyMap())
         if (authSessionDataSource.authState.first() !is AuthState.Authenticated) return@flow
-        val map = runCatching { apiCall { meApi.surahProgress() } }
+        val map = runCatchingExceptCancellation { apiCall { meApi.surahProgress() } }
             .getOrNull()
             ?.items
             ?.associate { it.surahId to ((it.positionPercent ?: 0.0) / 100.0).toFloat() }
