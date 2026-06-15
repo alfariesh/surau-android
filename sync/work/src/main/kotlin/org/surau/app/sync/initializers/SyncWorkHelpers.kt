@@ -29,6 +29,7 @@ import org.surau.app.sync.R
 
 const val SYNC_TOPIC = "sync"
 private const val SYNC_NOTIFICATION_ID = 0
+private const val DOWNLOAD_NOTIFICATION_ID = 1
 private const val SYNC_NOTIFICATION_CHANNEL_ID = "SyncNotificationChannel"
 
 // All sync work needs an internet connectionS
@@ -47,24 +48,30 @@ fun Context.syncForegroundInfo() = ForegroundInfo(
 )
 
 /**
+ * Foreground information for the offline Qur'an download, with a determinate progress bar.
+ */
+fun Context.downloadForegroundInfo(progress: Int) = ForegroundInfo(
+    DOWNLOAD_NOTIFICATION_ID,
+    downloadWorkNotification(progress),
+)
+
+private fun Context.downloadWorkNotification(progress: Int): Notification {
+    ensureSyncChannel()
+    return NotificationCompat.Builder(this, SYNC_NOTIFICATION_CHANNEL_ID)
+        .setSmallIcon(R.drawable.sync_work_notification_icon)
+        .setContentTitle(getString(R.string.sync_work_download_notification_title))
+        .setPriority(NotificationCompat.PRIORITY_LOW)
+        .setOngoing(true)
+        .setProgress(100, progress.coerceIn(0, 100), false)
+        .build()
+}
+
+/**
  * Notification displayed on lower API levels when sync workers are being
  * run with a foreground service
  */
 private fun Context.syncWorkNotification(): Notification {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val channel = NotificationChannel(
-            SYNC_NOTIFICATION_CHANNEL_ID,
-            getString(R.string.sync_work_notification_channel_name),
-            NotificationManager.IMPORTANCE_DEFAULT,
-        ).apply {
-            description = getString(R.string.sync_work_notification_channel_description)
-        }
-        // Register the channel with the system
-        val notificationManager: NotificationManager? =
-            getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-
-        notificationManager?.createNotificationChannel(channel)
-    }
+    ensureSyncChannel()
 
     return NotificationCompat.Builder(
         this,
@@ -74,4 +81,21 @@ private fun Context.syncWorkNotification(): Notification {
         .setContentTitle(getString(R.string.sync_work_notification_title))
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .build()
+}
+
+/** Registers the shared sync/download notification channel (idempotent). */
+private fun Context.ensureSyncChannel() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+            SYNC_NOTIFICATION_CHANNEL_ID,
+            getString(R.string.sync_work_notification_channel_name),
+            NotificationManager.IMPORTANCE_DEFAULT,
+        ).apply {
+            description = getString(R.string.sync_work_notification_channel_description)
+        }
+        val notificationManager: NotificationManager? =
+            getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+
+        notificationManager?.createNotificationChannel(channel)
+    }
 }

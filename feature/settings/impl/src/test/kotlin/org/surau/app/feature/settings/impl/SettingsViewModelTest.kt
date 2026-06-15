@@ -27,9 +27,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.surau.app.core.data.test.repository.FakeAuthRepository
 import org.surau.app.core.data.test.repository.FakeQuranAudioRepository
+import org.surau.app.core.data.test.repository.FakeQuranDownloadManager
 import org.surau.app.core.data.test.repository.FakeQuranRepository
 import org.surau.app.core.data.test.repository.FakeUserDataRepository
 import org.surau.app.core.data.test.repository.FakeUserRepository
+import org.surau.app.core.data.util.QuranDownloadState
 import org.surau.app.core.datastore.SurauPreferencesDataSource
 import org.surau.app.core.datastore.UserPreferences
 import org.surau.app.core.datastore.test.InMemoryDataStore
@@ -50,6 +52,7 @@ class SettingsViewModelTest {
     )
     private val authRepository = FakeAuthRepository()
     private val quranRepository = FakeQuranRepository()
+    private val downloadManager = FakeQuranDownloadManager()
 
     private lateinit var viewModel: SettingsViewModel
 
@@ -59,6 +62,7 @@ class SettingsViewModelTest {
             userDataRepository = userDataRepository,
             authRepository = authRepository,
             userRepository = FakeUserRepository(),
+            quranDownloadManager = downloadManager,
             quranRepository = quranRepository,
             quranAudioRepository = FakeQuranAudioRepository(),
         )
@@ -88,6 +92,24 @@ class SettingsViewModelTest {
         runCurrent()
 
         assertEquals("mishari-al-afasy", userDataRepository.userData.first().recitationId)
+    }
+
+    @Test
+    fun quranDownloadState_reflectedInUiState() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher()) { viewModel.settingsUiState.collect() }
+        downloadManager.emit(QuranDownloadState.Running(percent = 42))
+
+        val state = assertIs<SettingsUiState.Success>(viewModel.settingsUiState.value)
+        assertEquals(QuranDownloadState.Running(percent = 42), state.quranDownloadState)
+    }
+
+    @Test
+    fun startAndCancelQuranDownload_delegateToManager() = runTest {
+        viewModel.startQuranDownload()
+        viewModel.cancelQuranDownload()
+
+        assertEquals(1, downloadManager.startCount)
+        assertEquals(1, downloadManager.cancelCount)
     }
 
     @Test

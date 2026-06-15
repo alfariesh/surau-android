@@ -49,6 +49,15 @@
     <string name="feature_settings_impl_reader_transliteration">Transliterasi Latin</string>
     <string name="feature_settings_impl_reader_show_translation">Tampilkan terjemahan</string>
     <string name="feature_settings_impl_reader_keep_screen_on">Layar tetap nyala</string>
+    <string name="feature_settings_impl_section_offline">Offline</string>
+    <string name="feature_settings_impl_download_quran_desc">Simpan seluruh Al-Qur\'an agar bisa dibaca dan dicari tanpa internet.</string>
+    <string name="feature_settings_impl_download_quran">Unduh seluruh Al-Qur\'an</string>
+    <string name="feature_settings_impl_download_progress">Mengunduh… %1$d%%</string>
+    <string name="feature_settings_impl_download_cancel">Batal</string>
+    <string name="feature_settings_impl_download_done">Tersimpan untuk offline</string>
+    <string name="feature_settings_impl_download_redownload">Unduh ulang</string>
+    <string name="feature_settings_impl_download_failed">Gagal mengunduh. Periksa koneksi lalu coba lagi.</string>
+    <string name="feature_settings_impl_download_retry">Coba lagi</string>
     <string name="feature_settings_impl_section_about">Tentang</string>
     <string name="feature_settings_impl_version">Versi %1$s</string>
 </resources>

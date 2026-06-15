@@ -29,6 +29,8 @@ import org.surau.app.core.data.repository.QuranAudioRepository
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.data.repository.UserRepository
+import org.surau.app.core.data.util.QuranDownloadManager
+import org.surau.app.core.data.util.QuranDownloadState
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.ReaderMode
@@ -44,6 +46,7 @@ class SettingsViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository,
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
+    private val quranDownloadManager: QuranDownloadManager,
     quranRepository: QuranRepository,
     quranAudioRepository: QuranAudioRepository,
 ) : ViewModel() {
@@ -54,7 +57,8 @@ class SettingsViewModel @Inject constructor(
             authRepository.authState,
             quranRepository.observeTranslationSources(),
             quranAudioRepository.observeRecitations(),
-        ) { userData, authState, translationSources, recitations ->
+            quranDownloadManager.downloadState,
+        ) { userData, authState, translationSources, recitations, downloadState ->
             Success(
                 settings = UserEditableSettings(
                     useDynamicColor = userData.useDynamicColor,
@@ -72,6 +76,7 @@ class SettingsViewModel @Inject constructor(
                 authState = authState,
                 translationSources = translationSources,
                 recitations = recitations,
+                quranDownloadState = downloadState,
             )
         }
             .stateIn(
@@ -139,6 +144,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { userDataRepository.setReaderKeepScreenOn(enabled) }
     }
 
+    fun startQuranDownload() = quranDownloadManager.startDownload()
+
+    fun cancelQuranDownload() = quranDownloadManager.cancelDownload()
+
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()
@@ -171,5 +180,6 @@ sealed interface SettingsUiState {
         val authState: AuthState,
         val translationSources: List<TranslationSource>,
         val recitations: List<Recitation> = emptyList(),
+        val quranDownloadState: QuranDownloadState = QuranDownloadState.Idle,
     ) : SettingsUiState
 }

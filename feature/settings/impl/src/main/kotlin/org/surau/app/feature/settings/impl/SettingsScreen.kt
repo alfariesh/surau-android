@@ -33,6 +33,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -51,6 +52,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.surau.app.core.data.util.QuranDownloadState
 import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauButtonGroup
@@ -97,6 +99,8 @@ fun SettingsScreen(
         onChangeArabicLineSpacing = viewModel::updateArabicLineSpacing,
         onChangeTranslationScale = viewModel::updateTranslationScale,
         onChangeKeepScreenOn = viewModel::updateKeepScreenOn,
+        onStartQuranDownload = viewModel::startQuranDownload,
+        onCancelQuranDownload = viewModel::cancelQuranDownload,
         modifier = modifier,
     )
 }
@@ -121,6 +125,8 @@ internal fun SettingsScreen(
     onChangeArabicLineSpacing: (Float) -> Unit = {},
     onChangeTranslationScale: (Float) -> Unit = {},
     onChangeKeepScreenOn: (Boolean) -> Unit = {},
+    onStartQuranDownload: () -> Unit = {},
+    onCancelQuranDownload: () -> Unit = {},
     supportDynamicColor: Boolean = supportsDynamicTheming(),
 ) {
     TrackScreenViewEvent(screenName = "Settings")
@@ -209,6 +215,13 @@ internal fun SettingsScreen(
                         onChangeRecitation = onChangeRecitation,
                     )
                 }
+
+                SectionTitle(stringResource(R.string.feature_settings_impl_section_offline))
+                QuranDownloadSection(
+                    state = uiState.quranDownloadState,
+                    onStartDownload = onStartQuranDownload,
+                    onCancelDownload = onCancelQuranDownload,
+                )
 
                 SectionTitle(stringResource(R.string.feature_settings_impl_section_about))
                 Text(
@@ -549,6 +562,92 @@ private fun RecitationChooser(
                     onClick = { onChangeRecitation(recitation.id) },
                 ),
             )
+        }
+    }
+}
+
+@Composable
+private fun QuranDownloadSection(
+    state: QuranDownloadState,
+    onStartDownload: () -> Unit,
+    onCancelDownload: () -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.feature_settings_impl_download_quran_desc),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(modifier = Modifier.size(12.dp))
+    when (state) {
+        is QuranDownloadState.Running -> {
+            LinearProgressIndicator(
+                progress = { state.percent / 100f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("settings:downloadProgress"),
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(
+                        R.string.feature_settings_impl_download_progress,
+                        state.percent,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                SurauOutlinedButton(
+                    onClick = onCancelDownload,
+                    modifier = Modifier.testTag("settings:downloadCancel"),
+                ) {
+                    Text(stringResource(R.string.feature_settings_impl_download_cancel))
+                }
+            }
+        }
+
+        QuranDownloadState.Completed -> {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = SurauIcons.DownloadDone,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.feature_settings_impl_download_done),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                SurauTextButton(onClick = onStartDownload) {
+                    Text(stringResource(R.string.feature_settings_impl_download_redownload))
+                }
+            }
+        }
+
+        QuranDownloadState.Failed -> {
+            Text(
+                text = stringResource(R.string.feature_settings_impl_download_failed),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            SurauButton(
+                onClick = onStartDownload,
+                modifier = Modifier.testTag("settings:downloadRetry"),
+            ) {
+                Text(stringResource(R.string.feature_settings_impl_download_retry))
+            }
+        }
+
+        QuranDownloadState.Idle -> {
+            SurauButton(
+                onClick = onStartDownload,
+                modifier = Modifier.testTag("settings:downloadQuran"),
+            ) {
+                Icon(imageVector = SurauIcons.Download, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.feature_settings_impl_download_quran))
+            }
         }
     }
 }

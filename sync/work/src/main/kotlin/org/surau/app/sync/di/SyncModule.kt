@@ -20,9 +20,11 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import org.surau.app.core.data.util.QuranDownloadManager
 import org.surau.app.core.data.util.SyncManager
 import org.surau.app.sync.status.StubSyncSubscriber
 import org.surau.app.sync.status.SyncSubscriber
+import org.surau.app.sync.status.WorkManagerQuranDownloadManager
 import org.surau.app.sync.status.WorkManagerSyncManager
 
 @Module
@@ -32,6 +34,11 @@ abstract class SyncModule {
     internal abstract fun bindsSyncStatusMonitor(
         syncStatusMonitor: WorkManagerSyncManager,
     ): SyncManager
+
+    @Binds
+    internal abstract fun bindsQuranDownloadManager(
+        downloadManager: WorkManagerQuranDownloadManager,
+    ): QuranDownloadManager
 
     @Binds
     internal abstract fun bindsSyncSubscriber(
