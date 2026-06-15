@@ -34,6 +34,7 @@
     <string name="feature_quran_impl_search_hint">Cari di Al-Qur\'an…</string>
     <string name="feature_quran_impl_search_empty">Tidak ada hasil untuk \"%1$s\"</string>
     <string name="feature_quran_impl_search_min_chars">Ketik minimal 3 huruf untuk mencari.</string>
+    <string name="feature_quran_impl_search_offline">Hasil pencarian luring (dari surah yang sudah diunduh)</string>
     <string name="feature_quran_impl_settings">Pengaturan</string>
     <string name="feature_quran_impl_bookmarks">Bookmark</string>
     <string name="feature_quran_impl_activity">Aktivitas</string>

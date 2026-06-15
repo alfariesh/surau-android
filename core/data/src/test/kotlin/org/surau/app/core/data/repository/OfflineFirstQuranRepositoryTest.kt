@@ -31,6 +31,7 @@ import org.surau.app.core.database.SurauDatabase
 import org.surau.app.core.database.model.AyahFetchMetadataEntity
 import org.surau.app.core.network.model.PagedResponseDto
 import org.surau.app.core.network.model.quran.AyahDto
+import org.surau.app.core.network.model.quran.AyahTranslationDto
 import org.surau.app.core.network.model.quran.JuzDto
 import org.surau.app.core.network.model.quran.QuranSearchResultDto
 import org.surau.app.core.network.model.quran.RecitationDto
@@ -109,11 +110,57 @@ class OfflineFirstQuranRepositoryTest {
         }
     }
 
-    private fun ayah(number: Int) = AyahDto(
+    @Test
+    fun search_offline_fallsBackToLocalFtsOverDownloadedSurahs() = runTest {
+        // Download (full view) populates the FTS index with translation text.
+        quranApi.ayahsResponse = PagedResponseDto(
+            listOf(
+                ayah(1, translation = "Dengan nama Allah Yang Maha Pengasih"),
+                ayah(2, translation = "Segala puji bagi Allah"),
+            ),
+        )
+        subject.ensureSurahCached(surahId = 1, translationSourceId = sourceId)
+
+        // Server is unreachable, so search must fall back to the local index.
+        quranApi.searchError = IOException("offline")
+        val results = subject.search(query = "puji", translationSourceId = sourceId)
+
+        assertEquals(1, results.size)
+        assertEquals("1:2", results.first().ayah.ayah.ayahKey.value)
+        assertEquals(true, results.first().isOffline)
+    }
+
+    @Test
+    fun search_offline_emptyWhenNothingDownloaded() = runTest {
+        quranApi.searchError = IOException("offline")
+
+        val results = subject.search(query = "puji", translationSourceId = sourceId)
+
+        assertEquals(emptyList(), results)
+    }
+
+    @Test
+    fun search_serverSuccess_returnsServerResultsNotFlaggedOffline() = runTest {
+        quranApi.searchResponse = PagedResponseDto(
+            listOf(
+                QuranSearchResultDto(ayah = ayah(2, translation = "Segala puji"), score = 0.9),
+            ),
+        )
+
+        val results = subject.search(query = "puji", translationSourceId = sourceId)
+
+        assertEquals(1, results.size)
+        assertEquals(false, results.first().isOffline)
+    }
+
+    private fun ayah(number: Int, translation: String? = null) = AyahDto(
         surahId = 1,
         ayahNumber = number,
         ayahKey = "1:$number",
         textQpcHafs = "آية $number",
+        textImlaeiSimple = "اية $number",
+        searchText = "ayah $number",
+        translation = translation?.let { AyahTranslationDto(sourceId = sourceId, lang = "id", text = it) },
     )
 }
 
@@ -121,6 +168,8 @@ private class FakeSurauQuranApi : SurauQuranApi {
     var ayahsResponse: PagedResponseDto<AyahDto> = PagedResponseDto(emptyList())
     var ayahsError: Exception? = null
     var ayahsCallCount = 0
+    var searchResponse: PagedResponseDto<QuranSearchResultDto> = PagedResponseDto(emptyList())
+    var searchError: Exception? = null
 
     override suspend fun ayahs(
         surahId: Int,
@@ -155,5 +204,8 @@ private class FakeSurauQuranApi : SurauQuranApi {
         translationSource: String?,
         limit: Int,
         offset: Int,
-    ): PagedResponseDto<QuranSearchResultDto> = throw NotImplementedError()
+    ): PagedResponseDto<QuranSearchResultDto> {
+        searchError?.let { throw it }
+        return searchResponse
+    }
 }

@@ -141,6 +141,11 @@ internal fun QuranSearchScreen(
                     }
                 } else {
                     LazyColumn(modifier = Modifier.testTag("quranSearch:results")) {
+                        if (uiState.isOffline) {
+                            item(key = "offlineBanner") {
+                                OfflineResultsBanner()
+                            }
+                        }
                         items(
                             uiState.results,
                             key = { it.ayah.ayah.ayahKey.value },
@@ -151,6 +156,28 @@ internal fun QuranSearchScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun OfflineResultsBanner() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = SurauIcons.CloudOff,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = 8.dp),
+        )
+        Text(
+            text = stringResource(R.string.feature_quran_impl_search_offline),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

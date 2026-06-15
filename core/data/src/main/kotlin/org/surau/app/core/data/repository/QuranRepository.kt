@@ -58,14 +58,23 @@ interface QuranRepository {
      */
     suspend fun resolveTranslationSourceId(preferredId: String?): String
 
-    /** Server-side full-text search (no local cache). */
-    suspend fun search(query: String): List<QuranSearchResult>
+    /**
+     * Full-text search. Tries the server first; when offline, falls back to a local FTS index over
+     * downloaded surahs scoped to [translationSourceId] (the user's effective source — null lets the
+     * repository resolve the default). Offline hits are flagged via [QuranSearchResult.isOffline].
+     */
+    suspend fun search(
+        query: String,
+        translationSourceId: String? = null,
+    ): List<QuranSearchResult>
 }
 
 /**
- * One search hit: the matching ayah with its translation.
+ * One search hit: the matching ayah with its translation. [isOffline] is true when the result came
+ * from the local index because the server was unreachable.
  */
 data class QuranSearchResult(
     val ayah: PopulatedAyah,
     val score: Double,
+    val isOffline: Boolean = false,
 )

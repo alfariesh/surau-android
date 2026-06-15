@@ -31,10 +31,14 @@ import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Grid3x3
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.LocationSearching
 import androidx.compose.material.icons.rounded.MyLocation
@@ -67,9 +71,13 @@ object SurauIcons {
     val Check = Icons.Rounded.Check
     val ChevronRight = Icons.AutoMirrored.Rounded.KeyboardArrowRight
     val Close = Icons.Rounded.Close
+    val CloudOff = Icons.Rounded.CloudOff
     val ContentCopy = Icons.Rounded.ContentCopy
     val Delete = Icons.Rounded.Delete
+    val Download = Icons.Rounded.Download
+    val DownloadDone = Icons.Rounded.DownloadDone
     val Grid3x3 = Icons.Rounded.Grid3x3
+    val Language = Icons.Rounded.Language
     val MoreVert = Icons.Default.MoreVert
     val Flow = Icons.Rounded.GraphicEq
     val FollowReading = Icons.Rounded.MyLocation

@@ -56,7 +56,10 @@ class FakeQuranRepository @Inject constructor() : QuranRepository {
     override suspend fun resolveTranslationSourceId(preferredId: String?): String =
         preferredId ?: QuranTestData.translationSources.first().id
 
-    override suspend fun search(query: String): List<QuranSearchResult> =
+    override suspend fun search(
+        query: String,
+        translationSourceId: String?,
+    ): List<QuranSearchResult> =
         QuranTestData.ayahsBySurah.values.flatten()
             .filter { it.translation?.text?.contains(query, ignoreCase = true) == true }
             .map { QuranSearchResult(ayah = it, score = 1.0) }
