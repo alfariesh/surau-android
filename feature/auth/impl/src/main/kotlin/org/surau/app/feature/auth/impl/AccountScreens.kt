@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,16 +31,20 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -73,55 +78,68 @@ fun AccountScreen(
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val signedOut by viewModel.signedOut.collectAsStateWithLifecycle()
     var showLogoutAllConfirm by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val resources = LocalResources.current
 
     LaunchedEffectSignedOut(signedOut, onSignedOut)
+    LaunchedEffect(Unit) {
+        viewModel.errors.collect { resId -> snackbarHostState.showSnackbar(resources.getString(resId)) }
+    }
 
     val session = (authState as? AuthState.Authenticated)?.session
 
-    AuthScreenScaffold(
-        title = stringResource(R.string.feature_auth_impl_account_title),
-        onBackClick = onBackClick,
-        subtitle = session?.let { it.displayName ?: it.email },
-        modifier = modifier,
-    ) {
-        AccountRow(
-            label = stringResource(R.string.feature_auth_impl_account_profile),
-            onClick = onEditProfile,
-            modifier = Modifier.testTag("account:profile"),
-        )
-        AccountRow(
-            label = stringResource(R.string.feature_auth_impl_account_change_password),
-            onClick = onChangePassword,
-            modifier = Modifier.testTag("account:password"),
-        )
-        AccountRow(
-            label = stringResource(R.string.feature_auth_impl_account_change_email),
-            onClick = onChangeEmail,
-            modifier = Modifier.testTag("account:email"),
-        )
-        AccountRow(
-            label = stringResource(R.string.feature_auth_impl_account_sessions),
-            onClick = onSessions,
-            modifier = Modifier.testTag("account:sessions"),
-        )
-        AccountRow(
-            label = stringResource(R.string.feature_auth_impl_account_email_prefs),
-            onClick = onEmailPreferences,
-            modifier = Modifier.testTag("account:emailPrefs"),
-        )
+    Box(modifier = modifier.fillMaxSize()) {
+        AuthScreenScaffold(
+            title = stringResource(R.string.feature_auth_impl_account_title),
+            onBackClick = onBackClick,
+            subtitle = session?.let { it.displayName ?: it.email },
+        ) {
+            AccountRow(
+                label = stringResource(R.string.feature_auth_impl_account_profile),
+                onClick = onEditProfile,
+                modifier = Modifier.testTag("account:profile"),
+            )
+            AccountRow(
+                label = stringResource(R.string.feature_auth_impl_account_change_password),
+                onClick = onChangePassword,
+                modifier = Modifier.testTag("account:password"),
+            )
+            AccountRow(
+                label = stringResource(R.string.feature_auth_impl_account_change_email),
+                onClick = onChangeEmail,
+                modifier = Modifier.testTag("account:email"),
+            )
+            AccountRow(
+                label = stringResource(R.string.feature_auth_impl_account_sessions),
+                onClick = onSessions,
+                modifier = Modifier.testTag("account:sessions"),
+            )
+            AccountRow(
+                label = stringResource(R.string.feature_auth_impl_account_email_prefs),
+                onClick = onEmailPreferences,
+                modifier = Modifier.testTag("account:emailPrefs"),
+            )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-        AccountRow(
-            label = stringResource(R.string.feature_auth_impl_account_logout_all),
-            onClick = { showLogoutAllConfirm = true },
-            modifier = Modifier.testTag("account:logoutAll"),
-        )
-        AccountRow(
-            label = stringResource(R.string.feature_auth_impl_account_delete),
-            onClick = onDeleteAccount,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.testTag("account:delete"),
+            AccountRow(
+                label = stringResource(R.string.feature_auth_impl_account_logout_all),
+                onClick = { showLogoutAllConfirm = true },
+                modifier = Modifier.testTag("account:logoutAll"),
+            )
+            AccountRow(
+                label = stringResource(R.string.feature_auth_impl_account_delete),
+                onClick = onDeleteAccount,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.testTag("account:delete"),
+            )
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp),
         )
     }
 
@@ -401,36 +419,50 @@ fun SessionsScreen(
 ) {
     TrackScreenViewEvent(screenName = "Sessions")
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val resources = LocalResources.current
 
-    AuthScreenScaffold(
-        title = stringResource(R.string.feature_auth_impl_account_sessions_title),
-        onBackClick = onBackClick,
-        subtitle = stringResource(R.string.feature_auth_impl_account_sessions_subtitle),
-        modifier = modifier,
-    ) {
-        when (val state = uiState) {
-            SessionsUiState.Loading -> Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                SurauLoadingWheel(
-                    contentDesc = stringResource(R.string.feature_auth_impl_account_sessions_title),
+    LaunchedEffect(Unit) {
+        viewModel.errors.collect { resId -> snackbarHostState.showSnackbar(resources.getString(resId)) }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        AuthScreenScaffold(
+            title = stringResource(R.string.feature_auth_impl_account_sessions_title),
+            onBackClick = onBackClick,
+            subtitle = stringResource(R.string.feature_auth_impl_account_sessions_subtitle),
+        ) {
+            when (val state = uiState) {
+                SessionsUiState.Loading -> Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 32.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    SurauLoadingWheel(
+                        contentDesc = stringResource(R.string.feature_auth_impl_account_sessions_title),
+                    )
+                }
+
+                SessionsUiState.Error -> RetryableError(
+                    message = stringResource(R.string.feature_auth_impl_account_sessions_error),
+                    onRetry = viewModel::load,
+                    retryTestTag = "sessions:retry",
                 )
-            }
 
-            SessionsUiState.Error -> Text(
-                text = stringResource(R.string.feature_auth_impl_account_sessions_error),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-            )
-
-            is SessionsUiState.Success -> state.sessions.forEachIndexed { index, session ->
-                if (index > 0) HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                SessionRow(session = session, onRevoke = { viewModel.revoke(session.id) })
+                is SessionsUiState.Success -> state.sessions.forEachIndexed { index, session ->
+                    if (index > 0) HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    SessionRow(session = session, onRevoke = { viewModel.revoke(session.id) })
+                }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp),
+        )
     }
 }
 
@@ -461,10 +493,10 @@ fun EmailPreferencesScreen(
                 )
             }
 
-            EmailPrefsUiState.Error -> Text(
-                text = stringResource(R.string.feature_auth_impl_account_email_prefs_error),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
+            EmailPrefsUiState.Error -> RetryableError(
+                message = stringResource(R.string.feature_auth_impl_account_email_prefs_error),
+                onRetry = viewModel::load,
+                retryTestTag = "emailPrefs:retry",
             )
 
             is EmailPrefsUiState.Success -> Row(
@@ -577,6 +609,28 @@ private fun SuccessScreen(
                 .testTag(doneTestTag),
         ) {
             Text(stringResource(R.string.feature_auth_impl_account_done))
+        }
+    }
+}
+
+@Composable
+private fun RetryableError(
+    message: String,
+    onRetry: () -> Unit,
+    retryTestTag: String,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+        )
+        Spacer(modifier = Modifier.size(12.dp))
+        SurauOutlinedButton(
+            onClick = onRetry,
+            modifier = Modifier.testTag(retryTestTag),
+        ) {
+            Text(stringResource(R.string.feature_auth_impl_account_retry))
         }
     }
 }

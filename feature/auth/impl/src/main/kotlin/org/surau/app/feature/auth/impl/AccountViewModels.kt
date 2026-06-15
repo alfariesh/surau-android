@@ -19,10 +19,14 @@ package org.surau.app.feature.auth.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -30,6 +34,7 @@ import org.surau.app.core.data.repository.AuthRepository
 import org.surau.app.core.model.data.auth.AccountSession
 import org.surau.app.core.model.data.auth.AuthState
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 private const val SUBSCRIBE_TIMEOUT_MS = 5_000L
 
@@ -94,13 +99,20 @@ class AccountViewModel @Inject constructor(
     private val _signedOut = MutableStateFlow(false)
     val signedOut: StateFlow<Boolean> = _signedOut
 
+    /** One-shot error messages (string resource ids) for a transient snackbar. */
+    private val _errors = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    val errors: SharedFlow<Int> = _errors.asSharedFlow()
+
     fun logoutAllDevices() {
         viewModelScope.launch {
             try {
                 authRepository.logoutAllDevices()
                 _signedOut.value = true
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
-                // Best effort — staying on the hub is acceptable if the call fails.
+                // Stay on the hub, but tell the user it didn't work so they can retry.
+                _errors.tryEmit(R.string.feature_auth_impl_account_logout_all_error)
             }
         }
     }
@@ -180,6 +192,10 @@ class SessionsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<SessionsUiState>(SessionsUiState.Loading)
     val uiState: StateFlow<SessionsUiState> = _uiState
 
+    /** One-shot error messages (string resource ids) for a transient snackbar. */
+    private val _errors = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    val errors: SharedFlow<Int> = _errors.asSharedFlow()
+
     init {
         load()
     }
@@ -189,6 +205,8 @@ class SessionsViewModel @Inject constructor(
             _uiState.value = SessionsUiState.Loading
             _uiState.value = try {
                 SessionsUiState.Success(authRepository.listSessions())
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
                 SessionsUiState.Error
             }
@@ -200,8 +218,11 @@ class SessionsViewModel @Inject constructor(
             try {
                 authRepository.revokeSession(sessionId)
                 load()
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
-                // Keep the current list; the row stays until a successful refresh.
+                // Keep the current list, but surface the failure so the user can retry.
+                _errors.tryEmit(R.string.feature_auth_impl_account_session_revoke_error)
             }
         }
     }
@@ -221,6 +242,10 @@ class EmailPreferencesViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<EmailPrefsUiState>(EmailPrefsUiState.Loading)
     val uiState: StateFlow<EmailPrefsUiState> = _uiState
 
+    /** The last server-confirmed value — the rollback target, so racing toggles never revert wrong. */
+    private var confirmedOptIn: Boolean? = null
+    private var updateJob: Job? = null
+
     init {
         load()
     }
@@ -229,7 +254,11 @@ class EmailPreferencesViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = EmailPrefsUiState.Loading
             _uiState.value = try {
-                EmailPrefsUiState.Success(authRepository.emailPreferences().marketingOptIn)
+                val optIn = authRepository.emailPreferences().marketingOptIn
+                confirmedOptIn = optIn
+                EmailPrefsUiState.Success(optIn)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
                 EmailPrefsUiState.Error
             }
@@ -237,13 +266,21 @@ class EmailPreferencesViewModel @Inject constructor(
     }
 
     fun setMarketingOptIn(optIn: Boolean) {
-        val previous = (_uiState.value as? EmailPrefsUiState.Success)?.marketingOptIn
+        // Roll back to the server-confirmed value, not the (possibly optimistic) current UI value.
+        val baseline = confirmedOptIn ?: return
         _uiState.value = EmailPrefsUiState.Success(optIn) // optimistic
-        viewModelScope.launch {
+        // Supersede any in-flight toggle so the latest tap wins.
+        updateJob?.cancel()
+        updateJob = viewModelScope.launch {
             try {
-                authRepository.updateEmailPreferences(optIn)
+                val result = authRepository.updateEmailPreferences(optIn).marketingOptIn
+                confirmedOptIn = result
+                _uiState.value = EmailPrefsUiState.Success(result)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
-                if (previous != null) _uiState.value = EmailPrefsUiState.Success(previous)
+                confirmedOptIn = baseline
+                _uiState.value = EmailPrefsUiState.Success(baseline)
             }
         }
     }

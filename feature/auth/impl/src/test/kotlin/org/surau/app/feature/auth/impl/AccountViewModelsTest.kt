@@ -16,6 +16,7 @@
 
 package org.surau.app.feature.auth.impl
 
+import app.cash.turbine.test
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -25,6 +26,7 @@ import org.surau.app.core.model.data.auth.AccountSession
 import org.surau.app.core.network.model.SurauApiException
 import org.surau.app.core.testing.util.MainDispatcherRule
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -210,6 +212,23 @@ class SessionsViewModelTest {
         runCurrent()
         assertEquals(listOf("s2"), authRepository.revokedSessionIds)
     }
+
+    @Test
+    fun revoke_failure_emitsError_andKeepsList() = runTest {
+        authRepository.sessions = sampleSessions
+        val viewModel = SessionsViewModel(authRepository)
+        runCurrent() // initial load succeeds
+        authRepository.error = SurauApiException(httpStatus = 500, code = null, message = "boom")
+
+        viewModel.errors.test {
+            viewModel.revoke("s2")
+            assertEquals(R.string.feature_auth_impl_account_session_revoke_error, awaitItem())
+        }
+
+        // The list survives a failed revoke and nothing was recorded as revoked.
+        assertEquals(sampleSessions, assertIs<SessionsUiState.Success>(viewModel.uiState.value).sessions)
+        assertTrue(authRepository.revokedSessionIds.isEmpty())
+    }
 }
 
 class EmailPreferencesViewModelTest {
@@ -234,6 +253,20 @@ class EmailPreferencesViewModelTest {
         assertTrue(assertIs<EmailPrefsUiState.Success>(viewModel.uiState.value).marketingOptIn)
         assertTrue(authRepository.marketingOptIn)
     }
+
+    @Test
+    fun toggle_failure_revertsToConfirmedValue() = runTest {
+        authRepository.marketingOptIn = false
+        val viewModel = EmailPreferencesViewModel(authRepository)
+        runCurrent() // load -> confirmed = false
+        authRepository.error = SurauApiException(httpStatus = 500, code = null, message = "boom")
+
+        viewModel.setMarketingOptIn(true)
+        runCurrent()
+
+        // Optimistic true rolls back to the server-confirmed false, not the optimistic value.
+        assertFalse(assertIs<EmailPrefsUiState.Success>(viewModel.uiState.value).marketingOptIn)
+    }
 }
 
 class AccountViewModelTest {
@@ -248,6 +281,19 @@ class AccountViewModelTest {
         runCurrent()
         assertTrue(viewModel.signedOut.value)
         assertEquals(1, authRepository.logoutAllCalls)
+    }
+
+    @Test
+    fun logoutAllDevices_failure_emitsError_andStaysSignedIn() = runTest {
+        authRepository.error = SurauApiException(httpStatus = 500, code = null, message = "boom")
+        val viewModel = AccountViewModel(authRepository)
+
+        viewModel.errors.test {
+            viewModel.logoutAllDevices()
+            assertEquals(R.string.feature_auth_impl_account_logout_all_error, awaitItem())
+        }
+
+        assertFalse(viewModel.signedOut.value)
     }
 }
 

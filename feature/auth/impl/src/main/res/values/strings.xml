@@ -98,6 +98,11 @@
     <string name="feature_auth_impl_account_session_unknown">Perangkat tidak dikenal</string>
     <string name="feature_auth_impl_account_session_current">Perangkat ini</string>
     <string name="feature_auth_impl_account_session_revoke">Cabut</string>
+    <string name="feature_auth_impl_account_session_revoke_error">Gagal mencabut sesi. Coba lagi.</string>
+
+    <string name="feature_auth_impl_account_logout_all_error">Gagal keluar dari semua perangkat. Coba lagi.</string>
+
+    <string name="feature_auth_impl_account_retry">Coba lagi</string>
 
     <string name="feature_auth_impl_account_email_prefs_title">Preferensi email</string>
     <string name="feature_auth_impl_account_email_prefs_subtitle">Atur email yang ingin Anda terima.</string>
