@@ -16,5 +16,5 @@
 -->
 <resources>
     <string name="app_name">Surau</string>
-    <string name="not_connected">⚠️ Anda tidak terhubung ke internet</string>
+    <string name="not_connected">⚠️ You aren’t connected to the internet</string>
 </resources>

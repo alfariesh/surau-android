@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-     Copyright 2021 The Android Open Source Project
+     Copyright 2022 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
      limitations under the License.
 -->
 <resources>
-    <string name="app_name">Surau</string>
-    <string name="not_connected">⚠️ Anda tidak terhubung ke internet</string>
+    <string name="sync_work_notification_title">Surau</string>
+    <string name="sync_work_notification_channel_name">Sync</string>
+    <string name="sync_work_notification_channel_description">Background tasks for Surau</string>
+    <string name="sync_work_download_notification_title">Downloading the Qur\'an…</string>
 </resources>

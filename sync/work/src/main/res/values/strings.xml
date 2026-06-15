@@ -16,8 +16,8 @@
 -->
 <resources>
     <string name="sync_work_notification_title">Surau</string>
-    <string name="sync_work_notification_channel_name">Sync</string>
-    <string name="sync_work_notification_channel_description">Background tasks for Surau</string>
+    <string name="sync_work_notification_channel_name">Sinkronisasi</string>
+    <string name="sync_work_notification_channel_description">Tugas latar belakang Surau</string>
     <string name="sync_work_download_notification_title">Mengunduh Al-Qur\'an…</string>
 
 </resources>
