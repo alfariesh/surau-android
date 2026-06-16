@@ -21,6 +21,8 @@ package org.surau.app.feature.quran.impl
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -88,6 +90,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -103,8 +106,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import org.surau.app.core.designsystem.component.AyahText
+import org.surau.app.core.designsystem.component.SurauAnimatedMeshGradient
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
-import org.surau.app.core.designsystem.component.SurauMeshGradient
 import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.media.PlayerUiState
@@ -280,6 +283,14 @@ private fun FlowSuccess(
     val flowMesh = flowMeshColors()
     val listState = rememberLazyListState()
     val inspection = LocalInspectionMode.current
+    // The backdrop mesh drifts gently, unless previews, reduced motion or battery saver say otherwise.
+    val context = LocalContext.current
+    val meshAnimated = !inspection && remember(context) {
+        val animScale =
+            Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+        val powerManager = context.getSystemService(PowerManager::class.java)
+        animScale != 0f && powerManager?.isPowerSaveMode != true
+    }
 
     var chromeVisible by rememberSaveable { mutableStateOf(initialChromeVisible) }
     var interactionTick by remember { mutableIntStateOf(0) }
@@ -369,16 +380,17 @@ private fun FlowSuccess(
             }
             .testTag("flow:screen"),
     ) {
-        // Vibrant themed Catmull-Rom mesh behind the ayahs — the Flow player's backdrop. A warped 3×3
-        // grid of accent colors, low-alpha so the centred ayah stays high-contrast; the normal reader
-        // page stays flat (this is the player, a deliberate exception).
-        SurauMeshGradient(
-            gridWidth = 3,
-            gridHeight = 3,
-            points = FlowMeshPoints,
+        // Vibrant themed mesh behind the ayahs — the Flow player's living backdrop. A 4×4 ramp of
+        // accent colors whose interior points drift slowly (simplex noise). Low-alpha so the centred
+        // ayah stays high-contrast; the normal reader page stays flat (this is the player exception).
+        SurauAnimatedMeshGradient(
+            gridWidth = 4,
+            gridHeight = 4,
+            basePoints = FlowMeshPoints,
             colors = flowMesh,
             modifier = Modifier.fillMaxSize(),
-            subdivisions = 14,
+            subdivisions = 6,
+            animated = meshAnimated,
         )
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             // Half-viewport top/bottom padding lets any ayah scroll to the centre.
@@ -481,28 +493,38 @@ private fun FlowSuccess(
 }
 
 /**
- * The 9 colors of the Flow backdrop's 3×3 mesh, derived from the active (themed) scheme. Mixing
- * primary / secondary / tertiary across the grid gives the mesh real hue variety (so it reads as a
- * mesh, not one flat tint), while the low alpha keeps the recited ayah's onSurface ink legible.
+ * The 16 colors of the Flow backdrop's 4×4 mesh — a diagonal ramp through the active (themed)
+ * scheme's container/primary/tertiary/secondary, so the mesh flows through several hues (it reads as
+ * a real mesh, not one flat tint) while the low alpha keeps the recited ayah's onSurface ink legible.
  */
 @Composable
 private fun flowMeshColors(): List<Color> {
     val cs = MaterialTheme.colorScheme
     val dark = cs.surface.luminance() < 0.5f
     val a = if (dark) 0.24f else 0.32f
-    return listOf(
-        cs.primary.copy(alpha = a), cs.tertiary.copy(alpha = a), cs.secondary.copy(alpha = a),
-        cs.secondary.copy(alpha = a), cs.primaryContainer.copy(alpha = a * 0.9f), cs.primary.copy(alpha = a),
-        cs.tertiary.copy(alpha = a), cs.primary.copy(alpha = a), cs.secondary.copy(alpha = a),
-    )
+    val stops = listOf(cs.primaryContainer, cs.primary, cs.tertiary, cs.secondary)
+    return List(16) { i ->
+        val col = i % 4
+        val row = i / 4
+        sampleRamp(stops, (col + row) / 6f).copy(alpha = a)
+    }
 }
 
-/** A 3×3 control grid with interior/edge points nudged off-axis so the mesh flows organically. */
-private val FlowMeshPoints = listOf(
-    Offset(0f, 0f), Offset(0.55f, 0f), Offset(1f, 0f),
-    Offset(0f, 0.45f), Offset(0.62f, 0.5f), Offset(1f, 0.55f),
-    Offset(0f, 1f), Offset(0.45f, 1f), Offset(1f, 1f),
-)
+/** Samples a list of color stops at [fraction] in 0..1. */
+private fun sampleRamp(stops: List<Color>, fraction: Float): Color {
+    val x = fraction.coerceIn(0f, 1f) * (stops.size - 1)
+    val i = x.toInt().coerceIn(0, stops.size - 2)
+    return androidx.compose.ui.graphics.lerp(stops[i], stops[i + 1], x - i)
+}
+
+/** A regular 4×4 control grid (row-major, normalized 0..1); the animator drifts the interior points. */
+private val FlowMeshPoints: List<Offset> = buildList {
+    for (row in 0..3) {
+        for (col in 0..3) {
+            add(Offset(col / 3f, row / 3f))
+        }
+    }
+}
 
 @Composable
 private fun FlowAyah(

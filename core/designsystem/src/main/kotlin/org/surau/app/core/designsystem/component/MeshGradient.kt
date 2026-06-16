@@ -21,7 +21,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -193,6 +200,95 @@ fun SurauMeshGradient(
                 },
         ) {
             content()
+        }
+    }
+}
+
+/**
+ * A living mesh gradient: the same Catmull-Rom mesh as [SurauMeshGradient], but the *interior*
+ * control points drift continuously via simplex noise (borders stay pinned) for a slow, calming
+ * "aurora" motion — the animation pattern from the reference library's SimplexNoise example. The
+ * point positions are recomputed in the draw phase from a single per-frame clock, so the motion
+ * never triggers recomposition. Pass [animated] = false (reduced motion / battery saver) to freeze
+ * it to the base grid.
+ */
+@Composable
+fun SurauAnimatedMeshGradient(
+    gridWidth: Int,
+    gridHeight: Int,
+    basePoints: List<Offset>,
+    colors: List<Color>,
+    modifier: Modifier = Modifier,
+    subdivisions: Int = 6,
+    animationSpeed: Float = 0.2f,
+    noiseIntensity: Float = 0.14f,
+    animated: Boolean = true,
+    content: @Composable () -> Unit = {},
+) {
+    val paint = remember { Paint() }
+    var elapsedSeconds by remember { mutableFloatStateOf(0f) }
+    if (animated) {
+        LaunchedEffect(Unit) {
+            var startNanos = 0L
+            while (true) {
+                withFrameNanos { now ->
+                    if (startNanos == 0L) startNanos = now
+                    elapsedSeconds = (now - startNanos) / 1_000_000_000f
+                }
+            }
+        }
+    }
+    Surface(color = Color.Transparent, modifier = modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawBehind {
+                    val time = if (animated) elapsedSeconds else 0f
+                    val pts = animatedMeshPoints(
+                        basePoints,
+                        gridWidth,
+                        gridHeight,
+                        time,
+                        animationSpeed,
+                        noiseIntensity,
+                    )
+                    val vertices = buildCatmullRomVertices(
+                        gridWidth,
+                        gridHeight,
+                        pts,
+                        colors,
+                        subdivisions,
+                        size.width,
+                        size.height,
+                    )
+                    drawIntoCanvas { canvas -> canvas.drawVertices(vertices, BlendMode.SrcOver, paint) }
+                },
+        ) {
+            content()
+        }
+    }
+}
+
+/** Drifts the interior control points by simplex noise around their base grid; borders stay fixed. */
+private fun animatedMeshPoints(
+    base: List<Offset>,
+    gridWidth: Int,
+    gridHeight: Int,
+    time: Float,
+    speed: Float,
+    intensity: Float,
+): List<Offset> {
+    if (time == 0f) return base
+    return base.mapIndexed { i, bp ->
+        val col = i % gridWidth
+        val row = i / gridWidth
+        val isBorder = row == 0 || row == gridHeight - 1 || col == 0 || col == gridWidth - 1
+        if (isBorder) {
+            bp
+        } else {
+            val nx = SurauSimplexNoise.noise(bp.x * 1.5f, time * speed + i) * intensity
+            val ny = SurauSimplexNoise.noise(bp.y * 1.5f, time * speed + i + 100f) * intensity
+            Offset(bp.x + nx, bp.y + ny)
         }
     }
 }
