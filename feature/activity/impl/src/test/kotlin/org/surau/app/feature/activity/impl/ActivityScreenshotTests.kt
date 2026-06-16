@@ -47,9 +47,8 @@ class ActivityScreenshotTests {
             name = "Activity",
             shouldCompareDynamicColor = false,
         ) {
-            ActivityScreen(
+            ActivityPane(
                 uiState = sampleSuccess,
-                onBackClick = {},
                 onLoginClick = {},
                 onRetry = {},
                 onStartKhatam = {},
@@ -66,9 +65,8 @@ class ActivityScreenshotTests {
             name = "ActivityLoginRequired",
             shouldCompareDynamicColor = false,
         ) {
-            ActivityScreen(
+            ActivityPane(
                 uiState = ActivityUiState.LoginRequired,
-                onBackClick = {},
                 onLoginClick = {},
                 onRetry = {},
                 onStartKhatam = {},

@@ -46,15 +46,7 @@ class QuranScreenshotTests {
                 uiState = QuranHomeUiState.Success(
                     surahs = QuranTestData.surahs,
                     juzList = QuranTestData.juz,
-                    lastRead = null,
                     progressBySurah = mapOf(QuranTestData.surahs.first().surahId to 0.4f),
-                    streak = org.surau.app.core.model.data.activity.ReadingStreak(
-                        currentStreakDays = 5,
-                        longestStreakDays = 12,
-                        totalActiveDays = 40,
-                        lastActiveDate = null,
-                        activeToday = true,
-                    ),
                 ),
                 onSurahClick = { _, _ -> },
                 onSearchClick = {},

@@ -56,7 +56,6 @@ fun ProfileScreen(
     appVersionName: String,
     onManageAccount: () -> Unit,
     onSettings: () -> Unit,
-    onActivity: () -> Unit,
     onSignIn: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
@@ -121,8 +120,6 @@ fun ProfileScreen(
                     ProfileRow(SurauIcons.Person, stringResource(R.string.profile_manage_account), onManageAccount)
                     HorizontalDivider(color = SurauTheme.colors.separator)
                 }
-                ProfileRow(SurauIcons.Activity, stringResource(R.string.profile_activity), onActivity)
-                HorizontalDivider(color = SurauTheme.colors.separator)
                 ProfileRow(SurauIcons.Settings, stringResource(R.string.profile_settings), onSettings)
             }
         }

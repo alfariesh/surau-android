@@ -81,8 +81,6 @@ import org.surau.app.core.designsystem.component.SurauNavigationBarItem
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.navigation.Navigator
 import org.surau.app.core.navigation.toEntries
-import org.surau.app.feature.activity.api.navigation.navigateToActivity
-import org.surau.app.feature.activity.impl.navigation.activityEntry
 import org.surau.app.feature.auth.api.navigation.ResetPasswordNavKey
 import org.surau.app.feature.auth.api.navigation.WelcomeNavKey
 import org.surau.app.feature.auth.api.navigation.navigateToLogin
@@ -256,14 +254,12 @@ fun SurauApp(
                             onContinueReading = { surahId, ayahNumber ->
                                 navigator.navigateToSurahReader(surahId, ayahNumber)
                             },
-                            onSeeActivity = navigator::navigateToActivity,
                             onSignIn = navigator::navigateToLogin,
                         )
                     }
                     quranHomeEntry(
                         navigator = navigator,
                         onSettingsClick = navigator::navigateToSettings,
-                        onActivityClick = navigator::navigateToActivity,
                     )
                     surahReaderEntry(
                         navigator = navigator,
@@ -307,14 +303,9 @@ fun SurauApp(
                             appVersionName = appVersionName,
                             onManageAccount = navigator::navigateToManageAccount,
                             onSettings = navigator::navigateToSettings,
-                            onActivity = navigator::navigateToActivity,
                             onSignIn = navigator::navigateToLogin,
                         )
                     }
-                    activityEntry(
-                        navigator = navigator,
-                        onLoginClick = navigator::navigateToLogin,
-                    )
                     authEntries(
                         navigator = navigator,
                         onAuthFlowDone = { navigator.navigate(HomeNavKey) },

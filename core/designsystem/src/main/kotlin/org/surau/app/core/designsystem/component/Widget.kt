@@ -49,6 +49,9 @@ import org.surau.app.core.designsystem.theme.LocalSurauColors
  * asymmetric padding (header 2dp top / 6dp bottom, footer mirrored).
  *
  * @param modifier Modifier applied to the widget shell.
+ * @param shellColor Background of the outer shell (and header/footer band). Defaults to
+ *        `surface-secondary`.
+ * @param containerVariant Surface token for the elevated content card. Defaults to `surface`.
  * @param title Optional heading. Rendered with the 14sp medium title style.
  * @param description Optional sub-heading. Rendered 12sp muted, beneath the title.
  * @param legend Optional trailing header content, laid out in a [RowScope]. Pair with
@@ -59,6 +62,8 @@ import org.surau.app.core.designsystem.theme.LocalSurauColors
 @Composable
 fun SurauWidget(
     modifier: Modifier = Modifier,
+    shellColor: Color = LocalSurauColors.current.surfaceSecondary,
+    containerVariant: SurauSurfaceVariant = SurauSurfaceVariant.Default,
     title: (@Composable () -> Unit)? = null,
     description: (@Composable () -> Unit)? = null,
     legend: (@Composable RowScope.() -> Unit)? = null,
@@ -69,7 +74,7 @@ fun SurauWidget(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.surfaceSecondary)
+            .background(shellColor)
             .padding(6.dp),
     ) {
         if (title != null || description != null || legend != null) {
@@ -106,7 +111,7 @@ fun SurauWidget(
 
         SurauSurface(
             modifier = Modifier.fillMaxWidth(),
-            variant = SurauSurfaceVariant.Default,
+            variant = containerVariant,
             shape = RoundedCornerShape(12.dp),
         ) {
             Column(content = content)

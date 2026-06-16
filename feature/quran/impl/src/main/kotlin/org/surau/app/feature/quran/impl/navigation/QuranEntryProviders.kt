@@ -38,7 +38,6 @@ import org.surau.app.feature.quran.impl.SurahReaderScreen
 fun EntryProviderScope<NavKey>.quranHomeEntry(
     navigator: Navigator,
     onSettingsClick: () -> Unit,
-    onActivityClick: () -> Unit,
 ) {
     // On expanded widths this pairs with the SurahReader detail pane (two-pane list-detail). On
     // compact widths the strategy collapses to a single pane, so phones are unaffected.
@@ -51,7 +50,6 @@ fun EntryProviderScope<NavKey>.quranHomeEntry(
             },
             onSearchClick = navigator::navigateToQuranSearch,
             onBookmarksClick = navigator::navigateToQuranBookmarks,
-            onActivityClick = onActivityClick,
             onSettingsClick = onSettingsClick,
         )
     }

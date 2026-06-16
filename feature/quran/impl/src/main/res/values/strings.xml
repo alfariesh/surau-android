@@ -18,8 +18,6 @@
     <string name="feature_quran_impl_title">Al-Qur\'an</string>
     <string name="feature_quran_impl_tab_surah">Surah</string>
     <string name="feature_quran_impl_tab_juz">Juz</string>
-    <string name="feature_quran_impl_last_read">Terakhir dibaca</string>
-    <string name="feature_quran_impl_continue_reading">Lanjutkan</string>
     <string name="feature_quran_impl_ayah_number">Ayat %1$d</string>
     <string name="feature_quran_impl_juz_number">Juz %1$d</string>
     <string name="feature_quran_impl_juz_range">%1$s %2$d – %3$s %4$d</string>
@@ -38,7 +36,6 @@
     <string name="feature_quran_impl_reader_placeholder">Pilih surah untuk mulai membaca</string>
     <string name="feature_quran_impl_settings">Pengaturan</string>
     <string name="feature_quran_impl_bookmarks">Bookmark</string>
-    <string name="feature_quran_impl_activity">Aktivitas</string>
     <string name="feature_quran_impl_bookmarks_title">Bookmark</string>
     <string name="feature_quran_impl_bookmarks_empty">Belum ada ayat tersimpan</string>
     <string name="feature_quran_impl_bookmarks_empty_hint">Tekan lama sebuah ayat untuk menyimpannya.</string>

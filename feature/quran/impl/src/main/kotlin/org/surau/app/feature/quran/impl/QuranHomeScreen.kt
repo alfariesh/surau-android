@@ -18,7 +18,6 @@ package org.surau.app.feature.quran.impl
 
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,8 +32,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -71,8 +68,6 @@ import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.designsystem.theme.SurahNameFontFamily
 import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.designsystem.theme.surahNameGlyphCode
-import org.surau.app.core.domain.LastRead
-import org.surau.app.core.model.data.activity.ReadingStreak
 import org.surau.app.core.model.data.quran.JuzSegment
 import org.surau.app.core.model.data.quran.RevelationType
 import org.surau.app.core.model.data.quran.Surah
@@ -83,7 +78,6 @@ fun QuranHomeScreen(
     onSurahClick: (surahId: Int, ayahNumber: Int?) -> Unit,
     onSearchClick: () -> Unit,
     onBookmarksClick: () -> Unit,
-    onActivityClick: () -> Unit,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: QuranHomeViewModel = hiltViewModel(),
@@ -94,7 +88,6 @@ fun QuranHomeScreen(
         onSurahClick = onSurahClick,
         onSearchClick = onSearchClick,
         onBookmarksClick = onBookmarksClick,
-        onActivityClick = onActivityClick,
         onSettingsClick = onSettingsClick,
         modifier = modifier,
     )
@@ -108,17 +101,14 @@ internal fun QuranHomeScreen(
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
     onBookmarksClick: () -> Unit = {},
-    onActivityClick: () -> Unit = {},
 ) {
     ReportDrawnWhen { uiState !is QuranHomeUiState.Loading }
     TrackScreenViewEvent(screenName = "QuranHome")
 
     Column(modifier = modifier.fillMaxSize()) {
         QuranHomeHeader(
-            streak = (uiState as? QuranHomeUiState.Success)?.streak,
             onSearchClick = onSearchClick,
             onBookmarksClick = onBookmarksClick,
-            onActivityClick = onActivityClick,
             onSettingsClick = onSettingsClick,
         )
 
@@ -148,10 +138,8 @@ internal fun QuranHomeScreen(
 
 @Composable
 private fun QuranHomeHeader(
-    streak: ReadingStreak?,
     onSearchClick: () -> Unit,
     onBookmarksClick: () -> Unit,
-    onActivityClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
     Row(
@@ -177,43 +165,10 @@ private fun QuranHomeHeader(
                 contentDescription = stringResource(R.string.feature_quran_impl_bookmarks),
             )
         }
-        StreakEntry(streak = streak, onClick = onActivityClick)
         IconButton(onClick = onSettingsClick, modifier = Modifier.testTag("quranHome:settings")) {
             Icon(
                 imageVector = SurauIcons.Settings,
                 contentDescription = stringResource(R.string.feature_quran_impl_settings),
-            )
-        }
-    }
-}
-
-/**
- * Entry point to the Activity screen. Shows a "🔥 N" streak chip for signed-in users with an active
- * streak, otherwise a plain activity icon (guests still reach the screen, which shows a login CTA).
- */
-@Composable
-private fun StreakEntry(streak: ReadingStreak?, onClick: () -> Unit) {
-    if (streak != null && streak.currentStreakDays > 0) {
-        AssistChip(
-            onClick = onClick,
-            modifier = Modifier
-                .padding(horizontal = 4.dp)
-                .testTag("quranHome:streak"),
-            leadingIcon = {
-                Icon(
-                    imageVector = SurauIcons.Streak,
-                    contentDescription = null,
-                    modifier = Modifier.size(AssistChipDefaults.IconSize),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            },
-            label = { Text(streak.currentStreakDays.toString()) },
-        )
-    } else {
-        IconButton(onClick = onClick, modifier = Modifier.testTag("quranHome:activity")) {
-            Icon(
-                imageVector = SurauIcons.Activity,
-                contentDescription = stringResource(R.string.feature_quran_impl_activity),
             )
         }
     }
@@ -227,15 +182,6 @@ private fun QuranHomeContent(
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     Column {
-        uiState.lastRead?.let { lastRead ->
-            LastReadCard(
-                lastRead = lastRead,
-                onContinue = {
-                    onSurahClick(lastRead.position.surahId, lastRead.position.ayahNumber)
-                },
-            )
-        }
-
         SurauTabRow(selectedTabIndex = selectedTab) {
             SurauTab(
                 selected = selectedTab == 0,
@@ -272,47 +218,6 @@ private fun QuranHomeContent(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun LastReadCard(
-    lastRead: LastRead,
-    onContinue: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(16.dp)
-            .testTag("quranHome:lastRead"),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.feature_quran_impl_last_read),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Text(
-                text = lastRead.surah.nameLatin,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Text(
-                text = stringResource(
-                    R.string.feature_quran_impl_ayah_number,
-                    lastRead.position.ayahNumber,
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-        }
-        SurauButton(onClick = onContinue) {
-            Text(stringResource(R.string.feature_quran_impl_continue_reading))
         }
     }
 }
@@ -470,7 +375,6 @@ private fun QuranHomePreview() {
                     Surah(2, "البقرة", "Al-Baqarah", "Sapi Betina", RevelationType.MADANIYAH, 286),
                 ),
                 juzList = emptyList(),
-                lastRead = null,
             ),
             onSurahClick = { _, _ -> },
             onSearchClick = {},

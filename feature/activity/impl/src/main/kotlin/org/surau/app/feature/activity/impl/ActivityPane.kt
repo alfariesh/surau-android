@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
@@ -41,7 +42,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -70,20 +70,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
-import org.surau.app.core.designsystem.component.SurauBarChart
-import org.surau.app.core.designsystem.component.SurauBarEntry
 import org.surau.app.core.designsystem.component.SurauButton
-import org.surau.app.core.designsystem.component.SurauLineChart
+import org.surau.app.core.designsystem.component.SurauChromeBackground
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauProgressRing
-import org.surau.app.core.designsystem.component.SurauSegmentSize
-import org.surau.app.core.designsystem.component.SurauSegmentedControl
 import org.surau.app.core.designsystem.component.SurauTextButton
 import org.surau.app.core.designsystem.component.SurauTextField
 import org.surau.app.core.designsystem.component.SurauWidget
@@ -96,14 +90,18 @@ import org.surau.app.core.model.data.activity.ReadingStreak
 import org.surau.app.core.model.data.quran.KhatamCycle
 import org.surau.app.core.model.data.quran.RevelationType
 import org.surau.app.core.model.data.quran.Surah
-import org.surau.app.core.ui.TrackScreenViewEvent
 import kotlin.math.roundToInt
 
+/**
+ * The reading-activity experience, embedded directly in the Home tab (no top bar / back button).
+ * [header] lets the host prepend its own items (e.g. greeting + continue-reading) into the same
+ * scroll so everything moves together.
+ */
 @Composable
-fun ActivityScreen(
-    onBackClick: () -> Unit,
+fun ActivityPane(
     onLoginClick: () -> Unit,
     modifier: Modifier = Modifier,
+    header: LazyListScope.() -> Unit = {},
     viewModel: ActivityViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -114,9 +112,8 @@ fun ActivityScreen(
             snackbarHostState.showSnackbar(resources.getString(resId))
         }
     }
-    ActivityScreen(
+    ActivityPane(
         uiState = uiState,
-        onBackClick = onBackClick,
         onLoginClick = onLoginClick,
         onRetry = viewModel::refresh,
         onStartKhatam = viewModel::startKhatam,
@@ -125,13 +122,13 @@ fun ActivityScreen(
         onCompleteKhatam = viewModel::completeKhatam,
         modifier = modifier,
         snackbarHostState = snackbarHostState,
+        header = header,
     )
 }
 
 @Composable
-internal fun ActivityScreen(
+internal fun ActivityPane(
     uiState: ActivityUiState,
-    onBackClick: () -> Unit,
     onLoginClick: () -> Unit,
     onRetry: () -> Unit,
     onStartKhatam: (String?) -> Unit,
@@ -140,31 +137,50 @@ internal fun ActivityScreen(
     onCompleteKhatam: () -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    header: LazyListScope.() -> Unit = {},
 ) {
-    TrackScreenViewEvent(screenName = "Activity")
-
     Box(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            ActivityTopBar(onBackClick = onBackClick)
+        // Themed decorative background behind the dashboard chrome (Home + Activity): the mesh
+        // gradient when the user enables it (and battery/motion gates allow), otherwise a subtle
+        // linear wash. The app's page color always shows through. Never used behind the Arabic reader.
+        SurauChromeBackground {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("activity:content"),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                header()
 
-            when (uiState) {
-                ActivityUiState.Loading -> CenteredBox {
-                    SurauLoadingWheel(
-                        contentDesc = stringResource(R.string.feature_activity_impl_loading),
+                when (uiState) {
+                    ActivityUiState.Loading -> item {
+                        CenteredBox(modifier = Modifier.fillParentMaxSize()) {
+                            SurauLoadingWheel(
+                                contentDesc = stringResource(R.string.feature_activity_impl_loading),
+                            )
+                        }
+                    }
+
+                    ActivityUiState.LoginRequired -> item {
+                        LoginRequiredContent(
+                            onLoginClick = onLoginClick,
+                            modifier = Modifier.fillParentMaxSize(),
+                        )
+                    }
+
+                    ActivityUiState.Error -> item {
+                        ErrorContent(onRetry = onRetry, modifier = Modifier.fillParentMaxSize())
+                    }
+
+                    is ActivityUiState.Success -> activitySuccessItems(
+                        state = uiState,
+                        onStartKhatam = onStartKhatam,
+                        onMarkJuz = onMarkJuz,
+                        onUnmarkJuz = onUnmarkJuz,
+                        onCompleteKhatam = onCompleteKhatam,
                     )
                 }
-
-                ActivityUiState.LoginRequired -> LoginRequiredContent(onLoginClick = onLoginClick)
-
-                ActivityUiState.Error -> ErrorContent(onRetry = onRetry)
-
-                is ActivityUiState.Success -> ActivityContent(
-                    state = uiState,
-                    onStartKhatam = onStartKhatam,
-                    onMarkJuz = onMarkJuz,
-                    onUnmarkJuz = onUnmarkJuz,
-                    onCompleteKhatam = onCompleteKhatam,
-                )
             }
         }
 
@@ -177,68 +193,37 @@ internal fun ActivityScreen(
     }
 }
 
-@Composable
-private fun ActivityTopBar(onBackClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 4.dp, end = 16.dp, top = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onBackClick, modifier = Modifier.testTag("activity:back")) {
-            Icon(
-                imageVector = SurauIcons.ArrowBack,
-                contentDescription = stringResource(R.string.feature_activity_impl_back),
-            )
-        }
-        Text(
-            text = stringResource(R.string.feature_activity_impl_title),
-            style = MaterialTheme.typography.headlineSmall,
-        )
-    }
-}
-
-@Composable
-private fun ActivityContent(
+private fun LazyListScope.activitySuccessItems(
     state: ActivityUiState.Success,
     onStartKhatam: (String?) -> Unit,
     onMarkJuz: (Int) -> Unit,
     onUnmarkJuz: (Int) -> Unit,
     onCompleteKhatam: () -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("activity:content"),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        item { StreakHeader(streak = state.streak) }
-        item { DailyReadingSection(today = state.today, activity = state.activity) }
-        item { ActivityHeatmapCard(today = state.today, activity = state.activity) }
-        if (state.surahProgress.isNotEmpty()) {
-            item { SurahProgressSection(items = state.surahProgress) }
-        }
+    item { StreakHeader(streak = state.streak) }
+    item { ActivityHeatmapSection(today = state.today, activity = state.activity) }
+    if (state.surahProgress.isNotEmpty()) {
+        item { SurahProgressSection(items = state.surahProgress) }
+    }
+    item {
+        KhatamSection(
+            khatam = state.khatam,
+            juzInFlight = state.juzInFlight,
+            completing = state.completing,
+            onStartKhatam = onStartKhatam,
+            onMarkJuz = onMarkJuz,
+            onUnmarkJuz = onUnmarkJuz,
+            onCompleteKhatam = onCompleteKhatam,
+        )
+    }
+    if (state.history.isNotEmpty()) {
         item {
-            KhatamSection(
-                khatam = state.khatam,
-                juzInFlight = state.juzInFlight,
-                completing = state.completing,
-                onStartKhatam = onStartKhatam,
-                onMarkJuz = onMarkJuz,
-                onUnmarkJuz = onUnmarkJuz,
-                onCompleteKhatam = onCompleteKhatam,
+            Text(
+                text = stringResource(R.string.feature_activity_impl_khatam_history_title),
+                style = MaterialTheme.typography.titleMedium,
             )
         }
-        if (state.history.isNotEmpty()) {
-            item {
-                Text(
-                    text = stringResource(R.string.feature_activity_impl_khatam_history_title),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
-            items(state.history, key = { it.id }) { cycle -> KhatamHistoryRow(cycle) }
-        }
+        items(state.history, key = { it.id }) { cycle -> KhatamHistoryRow(cycle) }
     }
 }
 
@@ -306,33 +291,30 @@ private fun StreakHeader(streak: ReadingStreak) {
 }
 
 @Composable
-private fun ActivityHeatmapCard(today: LocalDate, activity: ReadingActivity) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
+private fun ActivityHeatmapSection(today: LocalDate, activity: ReadingActivity) {
+    SurauWidget(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("activity:heatmap"),
+        title = { Text(stringResource(R.string.feature_activity_impl_heatmap_title)) },
+        description = {
             Text(
-                text = stringResource(R.string.feature_activity_impl_heatmap_title),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(
+                stringResource(
                     R.string.feature_activity_impl_activity_summary,
                     activity.activeDays,
                     activity.totalQuranAyahs,
                 ),
-                style = MaterialTheme.typography.bodyMedium,
+            )
+        },
+    ) {
+        ActivityHeatmap(today = today, countsByDate = activity.quranAyahsByDate)
+        if (activity.quranAyahsByDate.values.none { it > 0 }) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.feature_activity_impl_heatmap_empty),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            ActivityHeatmap(today = today, countsByDate = activity.quranAyahsByDate)
-            if (activity.quranAyahsByDate.values.none { it > 0 }) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.feature_activity_impl_heatmap_empty),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 }
@@ -483,59 +465,6 @@ private fun heatmapLevelColor(level: Int): Color = when (level) {
     else -> MaterialTheme.colorScheme.primary
 }
 
-/**
- * Daily reading activity charted from the per-day Quran ayah deltas (zero-filled). A segmented
- * control switches between a 7-day bar chart and a 30-day trend line; both roll up client-side from
- * the sparse `days[]` series the API returns.
- */
-@Composable
-private fun DailyReadingSection(today: LocalDate, activity: ReadingActivity) {
-    var rangeIndex by remember { mutableStateOf(0) }
-    val days = if (rangeIndex == 0) 7 else 30
-    val series = remember(today, activity, days) {
-        dailySeries(today, activity.quranAyahsByDate, days)
-    }
-    val months = stringArrayResource(R.array.feature_activity_impl_month_abbrev)
-    SurauWidget(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("activity:daily"),
-        title = { Text(stringResource(R.string.feature_activity_impl_daily_title)) },
-        description = { Text(stringResource(R.string.feature_activity_impl_daily_subtitle)) },
-    ) {
-        SurauSegmentedControl(
-            options = listOf(
-                stringResource(R.string.feature_activity_impl_range_7),
-                stringResource(R.string.feature_activity_impl_range_30),
-            ),
-            selectedIndex = rangeIndex,
-            onSelectedIndexChange = { rangeIndex = it },
-            size = SurauSegmentSize.Sm,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        if (rangeIndex == 0) {
-            SurauBarChart(
-                entries = series.map { (date, count) ->
-                    SurauBarEntry(value = count.toFloat(), label = date.dayOfMonth.toString())
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        } else {
-            // ~4 evenly-spaced date markers across the 30-day trend.
-            val markers = 4
-            val labels = (0 until markers).map { k ->
-                val index = k * series.lastIndex / (markers - 1)
-                series[index].first.formatShort(months)
-            }
-            SurauLineChart(
-                values = series.map { it.second.toFloat() },
-                labels = labels,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
 /** Surahs the user has started, each with a thin accent progress bar. */
 @Composable
 private fun SurahProgressSection(items: List<SurahReadProgress>) {
@@ -600,25 +529,23 @@ private fun KhatamSection(
     onUnmarkJuz: (Int) -> Unit,
     onCompleteKhatam: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth().testTag("activity:khatam")) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.feature_activity_impl_khatam_title),
-                style = MaterialTheme.typography.titleMedium,
+    SurauWidget(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("activity:khatam"),
+        title = { Text(stringResource(R.string.feature_activity_impl_khatam_title)) },
+    ) {
+        if (khatam == null) {
+            KhatamEmpty(onStartKhatam = onStartKhatam)
+        } else {
+            KhatamActive(
+                khatam = khatam,
+                juzInFlight = juzInFlight,
+                completing = completing,
+                onMarkJuz = onMarkJuz,
+                onUnmarkJuz = onUnmarkJuz,
+                onCompleteKhatam = onCompleteKhatam,
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            if (khatam == null) {
-                KhatamEmpty(onStartKhatam = onStartKhatam)
-            } else {
-                KhatamActive(
-                    khatam = khatam,
-                    juzInFlight = juzInFlight,
-                    completing = completing,
-                    onMarkJuz = onMarkJuz,
-                    onUnmarkJuz = onUnmarkJuz,
-                    onCompleteKhatam = onCompleteKhatam,
-                )
-            }
         }
     }
 }
@@ -860,10 +787,9 @@ private fun KhatamHistoryRow(cycle: KhatamCycle) {
 }
 
 @Composable
-private fun LoginRequiredContent(onLoginClick: () -> Unit) {
+private fun LoginRequiredContent(onLoginClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .padding(32.dp)
             .testTag("activity:loginRequired"),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -896,10 +822,9 @@ private fun LoginRequiredContent(onLoginClick: () -> Unit) {
 }
 
 @Composable
-private fun ErrorContent(onRetry: () -> Unit) {
+private fun ErrorContent(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -923,11 +848,9 @@ private fun ErrorContent(onRetry: () -> Unit) {
 }
 
 @Composable
-private fun CenteredBox(content: @Composable () -> Unit) {
+private fun CenteredBox(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("activity:loading"),
+        modifier = modifier.testTag("activity:loading"),
         contentAlignment = Alignment.Center,
     ) {
         content()
@@ -945,16 +868,6 @@ private fun LocalDate.formatShort(months: Array<String>): String = "$dayOfMonth 
 
 private fun LocalDate.monthAbbrev(months: Array<String>): String =
     months.getOrElse(monthNumber - 1) { monthNumber.toString() }
-
-/** The last [days] days ending at [today] (oldest first), with ayah counts zero-filled. */
-private fun dailySeries(
-    today: LocalDate,
-    countsByDate: Map<LocalDate, Int>,
-    days: Int,
-): List<Pair<LocalDate, Int>> = (days - 1 downTo 0).map { offset ->
-    val date = today.minus(offset, DateTimeUnit.DAY)
-    date to (countsByDate[date] ?: 0)
-}
 
 private const val JUZ_COLUMNS = 5
 private val CELL_SIZE = 28.dp
@@ -975,7 +888,7 @@ private val WEEKDAY_LABELS = listOf(
 @Composable
 private fun ActivitySuccessPreview() {
     SurauTheme {
-        ActivityScreen(
+        ActivityPane(
             uiState = ActivityUiState.Success(
                 today = LocalDate(2026, 6, 14),
                 streak = ReadingStreak(
@@ -1017,7 +930,6 @@ private fun ActivitySuccessPreview() {
                     ),
                 ),
             ),
-            onBackClick = {},
             onLoginClick = {},
             onRetry = {},
             onStartKhatam = {},
@@ -1032,9 +944,8 @@ private fun ActivitySuccessPreview() {
 @Composable
 private fun ActivityLoginRequiredPreview() {
     SurauTheme {
-        ActivityScreen(
+        ActivityPane(
             uiState = ActivityUiState.LoginRequired,
-            onBackClick = {},
             onLoginClick = {},
             onRetry = {},
             onStartKhatam = {},

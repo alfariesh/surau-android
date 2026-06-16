@@ -24,12 +24,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,71 +43,54 @@ import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauSurface
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.designsystem.theme.SurauTheme
+import org.surau.app.core.ui.TrackScreenViewEvent
+import org.surau.app.feature.activity.impl.ActivityPane
 
+/**
+ * The Home tab. A lightweight header (greeting + continue-reading) sits above the full reading
+ * activity ([ActivityPane]) — streak, daily chart, heatmap, surah progress and khatam — so the whole
+ * dashboard lives on one screen. Guests see a login CTA from [ActivityPane] instead of the activity.
+ */
 @Composable
 fun HomeScreen(
     onContinueReading: (surahId: Int, ayahNumber: Int) -> Unit,
-    onSeeActivity: () -> Unit,
     onSignIn: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = stringResource(R.string.home_greeting),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Text(
-                    text = stringResource(R.string.home_subtitle),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = SurauTheme.colors.muted,
-                )
-            }
-        }
+    TrackScreenViewEvent(screenName = "Home")
 
-        uiState.continueReading?.let { resume ->
+    ActivityPane(
+        onLoginClick = onSignIn,
+        modifier = modifier,
+        header = {
             item {
-                ContinueReadingCard(
-                    resume = resume,
-                    onClick = { onContinueReading(resume.surahId, resume.ayahNumber) },
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = stringResource(R.string.home_greeting),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Text(
+                        text = stringResource(R.string.home_subtitle),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = SurauTheme.colors.muted,
+                    )
+                }
             }
-        }
 
-        if (uiState.signedIn) {
-            uiState.streak?.let { streak ->
+            uiState.continueReading?.let { resume ->
                 item {
-                    StatCard(
-                        icon = SurauIcons.Streak,
-                        title = stringResource(R.string.home_streak_title),
-                        value = stringResource(R.string.home_streak_days, streak.currentStreakDays),
-                        caption = stringResource(R.string.home_streak_longest, streak.longestStreakDays),
-                        onClick = onSeeActivity,
+                    ContinueReadingCard(
+                        resume = resume,
+                        onClick = { onContinueReading(resume.surahId, resume.ayahNumber) },
                     )
                 }
             }
-            uiState.khatam?.let { khatam ->
-                item {
-                    KhatamCard(
-                        completedJuz = khatam.completedJuz.size,
-                        percent = khatam.percent.toFloat(),
-                        onClick = onSeeActivity,
-                    )
-                }
-            }
-        } else {
-            item { SignInCard(onSignIn = onSignIn) }
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -145,97 +125,6 @@ private fun ContinueReadingCard(
                 )
             }
             SurauButton(onClick = onClick, text = { Text(stringResource(R.string.home_continue_action)) })
-        }
-    }
-}
-
-@Composable
-private fun StatCard(
-    icon: ImageVector,
-    title: String,
-    value: String,
-    caption: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    SurauSurface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(20.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            IconBadge(icon)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.labelMedium, color = SurauTheme.colors.muted)
-                Text(value, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
-                Text(caption, style = MaterialTheme.typography.bodySmall, color = SurauTheme.colors.muted)
-            }
-            Icon(SurauIcons.ChevronRight, contentDescription = null, tint = SurauTheme.colors.muted)
-        }
-    }
-}
-
-@Composable
-private fun KhatamCard(
-    completedJuz: Int,
-    percent: Float,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    SurauSurface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(20.dp),
-    ) {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                IconBadge(SurauIcons.Activity)
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        stringResource(R.string.home_khatam_title),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = SurauTheme.colors.muted,
-                    )
-                    Text(
-                        stringResource(R.string.home_khatam_progress, completedJuz),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-            LinearProgressIndicator(
-                progress = { (percent / 100f).coerceIn(0f, 1f) },
-                color = SurauTheme.colors.accent,
-                trackColor = SurauTheme.colors.default,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
-@Composable
-private fun SignInCard(onSignIn: () -> Unit, modifier: Modifier = Modifier) {
-    SurauSurface(modifier = modifier.fillMaxWidth(), contentPadding = PaddingValues(20.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                stringResource(R.string.home_signin_title),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                stringResource(R.string.home_signin_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = SurauTheme.colors.muted,
-            )
-            Spacer(Modifier.height(4.dp))
-            SurauButton(onClick = onSignIn, text = { Text(stringResource(R.string.home_signin_action)) })
         }
     }
 }

@@ -27,8 +27,6 @@ android {
 }
 
 dependencies {
-    api(projects.feature.activity.api)
-
     implementation(projects.core.data)
     implementation(projects.core.model)
 

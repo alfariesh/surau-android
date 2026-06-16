@@ -15,8 +15,6 @@
      limitations under the License.
 -->
 <resources>
-    <string name="feature_activity_impl_title">Aktivitas</string>
-    <string name="feature_activity_impl_back">Kembali</string>
     <string name="feature_activity_impl_loading">Memuat aktivitas</string>
     <string name="feature_activity_impl_cancel">Batal</string>
     <string name="feature_activity_impl_retry">Coba lagi</string>
@@ -55,12 +53,6 @@
         <item>Nov</item>
         <item>Des</item>
     </string-array>
-
-    <!-- Daily reading chart -->
-    <string name="feature_activity_impl_daily_title">Aktivitas bacaan</string>
-    <string name="feature_activity_impl_daily_subtitle">Ayat per hari</string>
-    <string name="feature_activity_impl_range_7">7 hari</string>
-    <string name="feature_activity_impl_range_30">30 hari</string>
 
     <!-- Surah progress -->
     <string name="feature_activity_impl_surah_progress_title">Kemajuan surah</string>

@@ -41,6 +41,8 @@ data class SurauSemanticColors(
     val accentSoft: Color,
     /** Neutral interactive background — switch-off track, segmented track base, subtle chips. */
     val default: Color,
+    /** The app canvas / page background — the lowest layer, beneath surfaces and cards. */
+    val background: Color,
     val surface: Color,
     val surfaceSecondary: Color,
     val surfaceTertiary: Color,
@@ -71,6 +73,7 @@ internal val LightSurauSemanticColors = SurauSemanticColors(
     onAccent = Color.White,
     accentSoft = HeroLightPrimaryContainer,
     default = HeroLightDefault,
+    background = HeroLightBackground,
     surface = HeroLightSurface,
     surfaceSecondary = HeroLightSurfaceSecondary,
     surfaceTertiary = HeroLightSurfaceTertiary,
@@ -100,6 +103,7 @@ internal val DarkSurauSemanticColors = SurauSemanticColors(
     onAccent = HeroDarkOnAccent,
     accentSoft = HeroDarkPrimaryContainer,
     default = HeroDarkDefault,
+    background = HeroDarkBackground,
     surface = HeroDarkSurface,
     surfaceSecondary = HeroDarkSurfaceSecondary,
     surfaceTertiary = HeroDarkSurfaceTertiary,
@@ -137,6 +141,7 @@ internal fun surauSemanticColorsFromScheme(
         onAccent = colorScheme.onPrimary,
         accentSoft = colorScheme.primaryContainer,
         default = colorScheme.surfaceContainerHigh,
+        background = colorScheme.background,
         surface = colorScheme.surface,
         surfaceSecondary = colorScheme.surfaceContainer,
         surfaceTertiary = colorScheme.surfaceContainerHighest,

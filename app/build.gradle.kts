@@ -100,7 +100,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.feature.activity.api)
     implementation(projects.feature.activity.impl)
     implementation(projects.feature.auth.api)
     implementation(projects.feature.auth.impl)

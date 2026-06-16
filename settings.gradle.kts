@@ -65,7 +65,6 @@ include(":core:screenshot-testing")
 include(":core:testing")
 include(":core:ui")
 
-include(":feature:activity:api")
 include(":feature:activity:impl")
 include(":feature:auth:api")
 include(":feature:auth:impl")

@@ -79,6 +79,7 @@ import org.surau.app.core.designsystem.component.SurauButtonGroup
 import org.surau.app.core.designsystem.component.SurauDropdownMenu
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauMenuItem
+import org.surau.app.core.designsystem.component.SurauSurfaceVariant
 import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.component.SurauWidget
 import org.surau.app.core.designsystem.icon.SurauIcons
@@ -502,6 +503,8 @@ private fun AyahItem(
     if (hasBody) {
         SurauWidget(
             modifier = cardModifier,
+            shellColor = SurauTheme.colors.surface,
+            containerVariant = SurauSurfaceVariant.Background,
             title = heading,
             content = {
                 if (transliterationVisible) {
@@ -537,11 +540,11 @@ private fun AyahItem(
             },
         )
     } else {
-        // Arabic-only with nothing to show beneath it: a single tinted card, no inner body.
+        // Arabic-only with nothing to show beneath it: a single surface card, no inner body.
         Column(
             modifier = cardModifier
                 .clip(shape)
-                .background(SurauTheme.colors.surfaceSecondary)
+                .background(SurauTheme.colors.surface)
                 .padding(6.dp),
         ) {
             heading()

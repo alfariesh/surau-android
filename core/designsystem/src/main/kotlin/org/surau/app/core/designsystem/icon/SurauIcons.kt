@@ -17,106 +17,94 @@
 package org.surau.app.core.designsystem.icon
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.AutoStories
-import androidx.compose.material.icons.outlined.Bookmarks
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Upcoming
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.AutoStories
-import androidx.compose.material.icons.rounded.Bedtime
-import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material.icons.rounded.BookmarkBorder
-import androidx.compose.material.icons.rounded.Bookmarks
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.DownloadDone
-import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Grid3x3
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.LocalFireDepartment
-import androidx.compose.material.icons.rounded.LocationSearching
-import androidx.compose.material.icons.rounded.MyLocation
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material.icons.rounded.SkipNext
-import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material.icons.rounded.Upcoming
-import androidx.compose.material.icons.rounded.ViewDay
-import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
- * Now in Android icons. Material icons are [ImageVector]s, custom icons are drawable resource IDs.
+ * App icon set. Almost everything comes from the custom [SurauHugeIcons] set (duotone default,
+ * outline for unselected, solid for active states). A handful of generic glyphs with no custom
+ * artwork yet still fall back to Material Icons — see the bottom block.
  */
 object SurauIcons {
-    val Activity = Icons.Rounded.CalendarMonth
+    val Activity = SurauHugeIcons.CalendarAnalysis
+    val ArrowBack = SurauHugeIcons.ArrowLeft
+    val AutoStories = SurauHugeIcons.Hadith
+    val AutoStoriesBorder = SurauHugeIcons.HadithOutline
+    val Bedtime = SurauHugeIcons.Moon
+    val Book = SurauHugeIcons.Book
+    val BookBorder = SurauHugeIcons.BookOutline
+    val BookOpen = SurauHugeIcons.BookOpen
+
+    // Bookmark: outline/duotone = not saved, solid (with check) = saved.
+    val Bookmark = SurauHugeIcons.BookmarkSaved
+    val BookmarkBorder = SurauHugeIcons.Bookmark
+    val Bookmarks = SurauHugeIcons.Bookmark
+    val BookmarksBorder = SurauHugeIcons.Bookmark
+    val CalendarAnalysis = SurauHugeIcons.CalendarAnalysis
+    val Check = SurauHugeIcons.Tick
+    val CheckCircle = SurauHugeIcons.CheckCircle
+    val CloudOff = SurauHugeIcons.CloudOff
+    val Colors = SurauHugeIcons.Colors
+    val Dashboard = SurauHugeIcons.Dashboard
+    val Delete = SurauHugeIcons.Delete
+    val Download = SurauHugeIcons.Download
+    val DownloadDone = SurauHugeIcons.CheckCircle
+    val Flame = SurauHugeIcons.Flame
+    val Flow = SurauHugeIcons.AudioWave
+    val Headphones = SurauHugeIcons.Headphones
+    val Home = SurauHugeIcons.Mosque
+    val HomeBorder = SurauHugeIcons.MosqueOutline
+    val Language = SurauHugeIcons.Language
+    val LibraryBooks = SurauHugeIcons.Book
+    val LibraryBooksBorder = SurauHugeIcons.BookOutline
+    val Lock = SurauHugeIcons.Lock
+    val Login = SurauHugeIcons.Login
+    val Logout = SurauHugeIcons.Logout
+    val Mail = SurauHugeIcons.Mail
+    val MenuBook = SurauHugeIcons.Quran
+    val MenuBookBorder = SurauHugeIcons.QuranOutline
+    val Mic = SurauHugeIcons.Mic
+    val Moon = SurauHugeIcons.Moon
+    val Mosque = SurauHugeIcons.Mosque
+    val Note = SurauHugeIcons.Note
+    val Palette = SurauHugeIcons.Palette
+    val Pause = SurauHugeIcons.Pause
+    val Person = SurauHugeIcons.Muslim
+    val PersonBorder = SurauHugeIcons.MuslimOutline
+    val PlayArrow = SurauHugeIcons.Play
+    val ScreenCast = SurauHugeIcons.ScreenCast
+    val Search = SurauHugeIcons.Search
+    val Settings = SurauHugeIcons.Settings
+    val Share = SurauHugeIcons.Marketing
+    val ShortText = SurauHugeIcons.TextFont
+    val SkipNext = SurauHugeIcons.Next
+    val SkipPrevious = SurauHugeIcons.Previous
+    val SmartPhone = SurauHugeIcons.SmartPhone
+    val Streak = SurauHugeIcons.Flame
+    val View = SurauHugeIcons.View
+    val ViewOff = SurauHugeIcons.ViewOff
+
+    // --- Fallbacks: no custom artwork yet (still Material Icons) ---
     val Add = Icons.Rounded.Add
-    val ArrowBack = Icons.AutoMirrored.Rounded.ArrowBack
     val ArrowForward = Icons.AutoMirrored.Rounded.ArrowForward
-    val AutoStories = Icons.Rounded.AutoStories
-    val AutoStoriesBorder = Icons.Outlined.AutoStories
-    val Bedtime = Icons.Rounded.Bedtime
-    val Bookmark = Icons.Rounded.Bookmark
-    val BookmarkBorder = Icons.Rounded.BookmarkBorder
-    val Bookmarks = Icons.Rounded.Bookmarks
-    val BookmarksBorder = Icons.Outlined.Bookmarks
-    val Check = Icons.Rounded.Check
     val ChevronDown = Icons.Rounded.KeyboardArrowDown
     val ChevronRight = Icons.AutoMirrored.Rounded.KeyboardArrowRight
     val Close = Icons.Rounded.Close
-    val CloudOff = Icons.Rounded.CloudOff
     val ContentCopy = Icons.Rounded.ContentCopy
-    val Delete = Icons.Rounded.Delete
-    val Download = Icons.Rounded.Download
-    val DownloadDone = Icons.Rounded.DownloadDone
     val Grid3x3 = Icons.Rounded.Grid3x3
-    val Home = Icons.Rounded.Home
-    val HomeBorder = Icons.Outlined.Home
-    val Language = Icons.Rounded.Language
-    val LibraryBooks = Icons.AutoMirrored.Rounded.LibraryBooks
-    val LibraryBooksBorder = Icons.AutoMirrored.Outlined.LibraryBooks
-    val MenuBook = Icons.AutoMirrored.Rounded.MenuBook
-    val MenuBookBorder = Icons.AutoMirrored.Outlined.MenuBook
     val MoreVert = Icons.Default.MoreVert
-    val Flow = Icons.Rounded.GraphicEq
-    val FollowReading = Icons.Rounded.MyLocation
-    val FollowReadingOff = Icons.Rounded.LocationSearching
-    val Pause = Icons.Rounded.Pause
-    val Person = Icons.Rounded.Person
-    val PersonBorder = Icons.Outlined.Person
-    val PlayArrow = Icons.Rounded.PlayArrow
     val Repeat = Icons.Rounded.Repeat
     val RepeatOne = Icons.Rounded.RepeatOne
-    val Search = Icons.Rounded.Search
-    val Settings = Icons.Rounded.Settings
-    val Share = Icons.Rounded.Share
-    val ShortText = Icons.AutoMirrored.Rounded.ShortText
-    val Streak = Icons.Rounded.LocalFireDepartment
-    val SkipNext = Icons.Rounded.SkipNext
-    val SkipPrevious = Icons.Rounded.SkipPrevious
     val Upcoming = Icons.Rounded.Upcoming
     val UpcomingBorder = Icons.Outlined.Upcoming
-    val ViewDay = Icons.Rounded.ViewDay
 }
