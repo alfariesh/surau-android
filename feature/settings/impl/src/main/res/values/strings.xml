@@ -49,6 +49,16 @@
     <string name="feature_settings_impl_theme_contrast_medium">Sedang</string>
     <string name="feature_settings_impl_theme_contrast_high">Tinggi</string>
     <string name="feature_settings_impl_theme_reset">Kembali ke bawaan</string>
+    <string name="feature_settings_impl_theme_custom">Warna kustom…</string>
+    <string name="feature_settings_impl_theme_custom_title">Pilih warna</string>
+    <string name="feature_settings_impl_theme_apply">Terapkan</string>
+    <string name="feature_settings_impl_theme_preview_light">Terang</string>
+    <string name="feature_settings_impl_theme_preview_dark">Gelap</string>
+    <string name="feature_settings_impl_theme_contrast_readout">Kontras %1$s:1 · %2$s</string>
+    <string name="feature_settings_impl_theme_grade_aaa">AAA</string>
+    <string name="feature_settings_impl_theme_grade_aa">AA</string>
+    <string name="feature_settings_impl_theme_grade_low">Kurang</string>
+    <string name="feature_settings_impl_theme_adjusted">Warna disesuaikan agar teks tetap terbaca.</string>
     <string name="feature_settings_impl_section_language">Bahasa</string>
     <string name="feature_settings_impl_language_system">Ikuti sistem</string>
     <string name="feature_settings_impl_language_id">Bahasa Indonesia</string>

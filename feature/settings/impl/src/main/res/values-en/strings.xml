@@ -49,6 +49,16 @@
     <string name="feature_settings_impl_theme_contrast_medium">Medium</string>
     <string name="feature_settings_impl_theme_contrast_high">High</string>
     <string name="feature_settings_impl_theme_reset">Reset to default</string>
+    <string name="feature_settings_impl_theme_custom">Custom color…</string>
+    <string name="feature_settings_impl_theme_custom_title">Pick a color</string>
+    <string name="feature_settings_impl_theme_apply">Apply</string>
+    <string name="feature_settings_impl_theme_preview_light">Light</string>
+    <string name="feature_settings_impl_theme_preview_dark">Dark</string>
+    <string name="feature_settings_impl_theme_contrast_readout">Contrast %1$s:1 · %2$s</string>
+    <string name="feature_settings_impl_theme_grade_aaa">AAA</string>
+    <string name="feature_settings_impl_theme_grade_aa">AA</string>
+    <string name="feature_settings_impl_theme_grade_low">Low</string>
+    <string name="feature_settings_impl_theme_adjusted">Color adjusted to keep text legible.</string>
     <string name="feature_settings_impl_section_language">Language</string>
     <string name="feature_settings_impl_language_system">Follow system</string>
     <string name="feature_settings_impl_language_id">Bahasa Indonesia</string>

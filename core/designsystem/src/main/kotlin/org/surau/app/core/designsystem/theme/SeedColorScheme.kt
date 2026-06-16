@@ -65,6 +65,39 @@ internal fun colorSchemeFromSeed(
     dark: Boolean,
     style: SeedPaletteStyle = SeedPaletteStyle.TONAL_SPOT,
     contrast: Float = 0f,
+): ColorScheme = buildSeedScheme(seed, dark, style, contrast) {}
+
+/** Output of [seedScheme]: the scheme plus live-feedback signals for the custom-color UI. */
+data class SeedSchemeReport(
+    val scheme: ColorScheme,
+    /** True if the WCAG clamp had to nudge at least one on-color away from its natural tone. */
+    val adjusted: Boolean,
+    /** Contrast of the primary accent against the surface — the main "is my color readable" signal. */
+    val accentOnSurface: Float,
+)
+
+/** Like [colorSchemeFromSeed] but also reports whether the clamp intervened and the accent contrast. */
+fun seedScheme(
+    seed: Color,
+    dark: Boolean,
+    style: SeedPaletteStyle = SeedPaletteStyle.TONAL_SPOT,
+    contrast: Float = 0f,
+): SeedSchemeReport {
+    var clamps = 0
+    val scheme = buildSeedScheme(seed, dark, style, contrast) { clamps++ }
+    return SeedSchemeReport(
+        scheme = scheme,
+        adjusted = clamps > 0,
+        accentOnSurface = contrastRatio(scheme.primary, scheme.surface),
+    )
+}
+
+private fun buildSeedScheme(
+    seed: Color,
+    dark: Boolean,
+    style: SeedPaletteStyle,
+    contrast: Float,
+    onClamp: () -> Unit,
 ): ColorScheme {
     val seedLch = seed.toOkLch()
     val hue = seedLch.h
@@ -81,6 +114,13 @@ internal fun colorSchemeFromSeed(
     val readingTarget = lerp(7.0f, 10.5f, contrast)
     val generalTarget = lerp(4.5f, 7.0f, contrast)
 
+    // Contrast clamp that also reports when it had to intervene.
+    fun ens(fg: Color, bg: Color, target: Float): Color {
+        val result = ensureContrast(fg, bg, target)
+        if (result != fg) onClamp()
+        return result
+    }
+
     return if (dark) {
         val background = neutral.tone(6)
         val surface = neutral.tone(6)
@@ -93,31 +133,28 @@ internal fun colorSchemeFromSeed(
         val tertiaryColor = tertiary.tone(80)
         darkColorScheme(
             primary = primaryColor,
-            onPrimary = ensureContrast(primary.tone(20), primaryColor, generalTarget),
+            onPrimary = ens(primary.tone(20), primaryColor, generalTarget),
             primaryContainer = primaryContainer,
-            onPrimaryContainer = ensureContrast(primary.tone(90), primaryContainer, generalTarget),
+            onPrimaryContainer = ens(primary.tone(90), primaryContainer, generalTarget),
             inversePrimary = primary.tone(40),
             secondary = secondaryColor,
-            onSecondary = ensureContrast(secondary.tone(20), secondaryColor, generalTarget),
+            onSecondary = ens(secondary.tone(20), secondaryColor, generalTarget),
             secondaryContainer = secondaryContainer,
-            onSecondaryContainer =
-            ensureContrast(secondary.tone(90), secondaryContainer, generalTarget),
+            onSecondaryContainer = ens(secondary.tone(90), secondaryContainer, generalTarget),
             tertiary = tertiaryColor,
-            onTertiary = ensureContrast(tertiary.tone(20), tertiaryColor, generalTarget),
+            onTertiary = ens(tertiary.tone(20), tertiaryColor, generalTarget),
             tertiaryContainer = tertiaryContainer,
-            onTertiaryContainer =
-            ensureContrast(tertiary.tone(90), tertiaryContainer, generalTarget),
+            onTertiaryContainer = ens(tertiary.tone(90), tertiaryContainer, generalTarget),
             error = Red80,
             onError = Red20,
             errorContainer = Red30,
             onErrorContainer = Red90,
             background = background,
-            onBackground = ensureContrast(neutral.tone(90), background, readingTarget),
+            onBackground = ens(neutral.tone(90), background, readingTarget),
             surface = surface,
-            onSurface = ensureContrast(neutral.tone(90), surface, readingTarget),
+            onSurface = ens(neutral.tone(90), surface, readingTarget),
             surfaceVariant = surfaceVariant,
-            onSurfaceVariant =
-            ensureContrast(neutralVariant.tone(80), surfaceVariant, generalTarget),
+            onSurfaceVariant = ens(neutralVariant.tone(80), surfaceVariant, generalTarget),
             surfaceContainerLowest = neutral.tone(4),
             surfaceContainerLow = neutral.tone(10),
             surfaceContainer = neutral.tone(12),
@@ -140,31 +177,28 @@ internal fun colorSchemeFromSeed(
         val tertiaryColor = tertiary.tone(40)
         lightColorScheme(
             primary = primaryColor,
-            onPrimary = ensureContrast(primary.tone(100), primaryColor, generalTarget),
+            onPrimary = ens(primary.tone(100), primaryColor, generalTarget),
             primaryContainer = primaryContainer,
-            onPrimaryContainer = ensureContrast(primary.tone(10), primaryContainer, generalTarget),
+            onPrimaryContainer = ens(primary.tone(10), primaryContainer, generalTarget),
             inversePrimary = primary.tone(80),
             secondary = secondaryColor,
-            onSecondary = ensureContrast(secondary.tone(100), secondaryColor, generalTarget),
+            onSecondary = ens(secondary.tone(100), secondaryColor, generalTarget),
             secondaryContainer = secondaryContainer,
-            onSecondaryContainer =
-            ensureContrast(secondary.tone(10), secondaryContainer, generalTarget),
+            onSecondaryContainer = ens(secondary.tone(10), secondaryContainer, generalTarget),
             tertiary = tertiaryColor,
-            onTertiary = ensureContrast(tertiary.tone(100), tertiaryColor, generalTarget),
+            onTertiary = ens(tertiary.tone(100), tertiaryColor, generalTarget),
             tertiaryContainer = tertiaryContainer,
-            onTertiaryContainer =
-            ensureContrast(tertiary.tone(10), tertiaryContainer, generalTarget),
+            onTertiaryContainer = ens(tertiary.tone(10), tertiaryContainer, generalTarget),
             error = Red40,
             onError = Color.White,
             errorContainer = Red90,
             onErrorContainer = Red10,
             background = background,
-            onBackground = ensureContrast(neutral.tone(10), background, readingTarget),
+            onBackground = ens(neutral.tone(10), background, readingTarget),
             surface = surface,
-            onSurface = ensureContrast(neutral.tone(10), surface, readingTarget),
+            onSurface = ens(neutral.tone(10), surface, readingTarget),
             surfaceVariant = surfaceVariant,
-            onSurfaceVariant =
-            ensureContrast(neutralVariant.tone(30), surfaceVariant, generalTarget),
+            onSurfaceVariant = ens(neutralVariant.tone(30), surfaceVariant, generalTarget),
             surfaceContainerLowest = neutral.tone(100),
             surfaceContainerLow = neutral.tone(96),
             surfaceContainer = neutral.tone(94),

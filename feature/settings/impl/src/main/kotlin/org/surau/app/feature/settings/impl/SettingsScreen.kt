@@ -471,6 +471,30 @@ private fun ThemeColorChooser(
         }
     }
 
+    var showPicker by rememberSaveable { mutableStateOf(false) }
+    SurauTextButton(
+        onClick = { showPicker = true },
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .testTag("settings:themeCustom"),
+    ) {
+        Text(stringResource(R.string.feature_settings_impl_theme_custom))
+    }
+    if (showPicker) {
+        val initial = settings.seedColorArgb.takeIf { it != 0L }?.let { Color(it) }
+            ?: Color(0xFF0E7C86L)
+        ThemeColorPickerSheet(
+            initial = initial,
+            style = settings.themeStyle.toSeedPaletteStyle(),
+            contrast = settings.themeContrast.toContrastLevel(),
+            onApply = {
+                onChangeThemeSeed(it.toThemeArgb())
+                showPicker = false
+            },
+            onDismiss = { showPicker = false },
+        )
+    }
+
     val customActive = !settings.useDynamicColor && settings.seedColorArgb != 0L
     if (customActive) {
         val styles = listOf(
