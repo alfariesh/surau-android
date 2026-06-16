@@ -19,6 +19,8 @@ package org.surau.app.core.datastore
 import androidx.datastore.core.DataStore
 import kotlinx.coroutines.flow.map
 import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.UserData
 import org.surau.app.core.model.data.quran.ReaderMode
 import javax.inject.Inject
@@ -79,6 +81,26 @@ class SurauPreferencesDataSource @Inject constructor(
                     it.readerTranslationScalePercent / 100f
                 },
                 readerKeepScreenOn = !it.readerKeepScreenOnDisabled,
+                seedColorArgb = it.seedColorArgb,
+                themeStyle = when (it.themeStyle) {
+                    null,
+                    ThemeStyleProto.THEME_STYLE_UNSPECIFIED,
+                    ThemeStyleProto.UNRECOGNIZED,
+                    ThemeStyleProto.THEME_STYLE_TONAL_SPOT,
+                    -> ThemeStyle.TONAL_SPOT
+                    ThemeStyleProto.THEME_STYLE_VIBRANT -> ThemeStyle.VIBRANT
+                    ThemeStyleProto.THEME_STYLE_EXPRESSIVE -> ThemeStyle.EXPRESSIVE
+                    ThemeStyleProto.THEME_STYLE_NEUTRAL -> ThemeStyle.NEUTRAL
+                },
+                themeContrast = when (it.themeContrast) {
+                    null,
+                    ThemeContrastProto.THEME_CONTRAST_UNSPECIFIED,
+                    ThemeContrastProto.UNRECOGNIZED,
+                    ThemeContrastProto.THEME_CONTRAST_STANDARD,
+                    -> ThemeContrast.STANDARD
+                    ThemeContrastProto.THEME_CONTRAST_MEDIUM -> ThemeContrast.MEDIUM
+                    ThemeContrastProto.THEME_CONTRAST_HIGH -> ThemeContrast.HIGH
+                },
             )
         }
 
@@ -188,6 +210,39 @@ class SurauPreferencesDataSource @Inject constructor(
     suspend fun setWelcomeShown(shown: Boolean) {
         userPreferences.updateData {
             it.copy { this.welcomeShown = shown }
+        }
+    }
+
+    /** Stores the custom theme seed (ARGB). Alpha is forced to 0xFF so 0 reliably means "unset". */
+    suspend fun setSeedColor(argb: Long) {
+        val normalized = if (argb == 0L) 0L else argb or 0xFF000000L
+        userPreferences.updateData {
+            it.copy { this.seedColorArgb = normalized }
+        }
+    }
+
+    suspend fun setThemeStyle(themeStyle: ThemeStyle) {
+        userPreferences.updateData {
+            it.copy {
+                this.themeStyle = when (themeStyle) {
+                    ThemeStyle.TONAL_SPOT -> ThemeStyleProto.THEME_STYLE_TONAL_SPOT
+                    ThemeStyle.VIBRANT -> ThemeStyleProto.THEME_STYLE_VIBRANT
+                    ThemeStyle.EXPRESSIVE -> ThemeStyleProto.THEME_STYLE_EXPRESSIVE
+                    ThemeStyle.NEUTRAL -> ThemeStyleProto.THEME_STYLE_NEUTRAL
+                }
+            }
+        }
+    }
+
+    suspend fun setThemeContrast(themeContrast: ThemeContrast) {
+        userPreferences.updateData {
+            it.copy {
+                this.themeContrast = when (themeContrast) {
+                    ThemeContrast.STANDARD -> ThemeContrastProto.THEME_CONTRAST_STANDARD
+                    ThemeContrast.MEDIUM -> ThemeContrastProto.THEME_CONTRAST_MEDIUM
+                    ThemeContrast.HIGH -> ThemeContrastProto.THEME_CONTRAST_HIGH
+                }
+            }
         }
     }
 }

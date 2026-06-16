@@ -120,20 +120,32 @@ val DarkSurauColorScheme = darkColorScheme(
  * @param darkTheme Whether the theme should use a dark color scheme (follows system by default).
  * @param disableDynamicTheming If `true`, disables the use of dynamic theming, even when it is
  *        supported.
+ * @param seedColor A user-chosen seed color. When specified (and dynamic theming is off), the whole
+ *        scheme is generated from it via [colorSchemeFromSeed]; [Color.Unspecified] keeps the default
+ *        HeroUI Pro (Zamrud) scheme so existing call sites and goldens are unaffected.
+ * @param seedStyle How vivid the generated scheme's accents are.
+ * @param seedContrast Extra contrast floor for the generated scheme (0f = standard, 1f = high).
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SurauTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     disableDynamicTheming: Boolean = true,
+    seedColor: Color = Color.Unspecified,
+    seedStyle: SeedPaletteStyle = SeedPaletteStyle.TONAL_SPOT,
+    seedContrast: Float = 0f,
     content: @Composable () -> Unit,
 ) {
+    val useDynamic = !disableDynamicTheming && supportsDynamicTheming()
+    val useSeed = !useDynamic && seedColor != Color.Unspecified
     // Color scheme
     val colorScheme = when {
-        !disableDynamicTheming && supportsDynamicTheming() -> {
+        useDynamic -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+
+        useSeed -> colorSchemeFromSeed(seedColor, darkTheme, seedStyle, seedContrast)
 
         else -> if (darkTheme) DarkSurauColorScheme else LightSurauColorScheme
     }
@@ -145,23 +157,22 @@ fun SurauTheme(
         container = colorScheme.surface,
     )
     val gradientColors = when {
-        !disableDynamicTheming && supportsDynamicTheming() -> emptyGradientColors
+        useDynamic -> emptyGradientColors
         else -> defaultGradientColors
     }
-    // Background theme
+    // Background theme — the app canvas uses the `background` token (page color), not `surface`.
     val backgroundTheme = BackgroundTheme(
-        color = colorScheme.surface,
-        tonalElevation = 2.dp,
+        color = colorScheme.background,
+        tonalElevation = 0.dp,
     )
     val tintTheme = when {
-        !disableDynamicTheming && supportsDynamicTheming() -> TintTheme(colorScheme.primary)
+        useDynamic -> TintTheme(colorScheme.primary)
         else -> TintTheme()
     }
-    // Extended HeroUI semantic tokens: static by default, derived from the dynamic scheme when on.
+    // Extended HeroUI semantic tokens: static by default, derived from the live scheme for both the
+    // dynamic (wallpaper) and the user-seed paths so every component follows the chosen color.
     val semanticColors = when {
-        !disableDynamicTheming && supportsDynamicTheming() ->
-            surauSemanticColorsFromScheme(colorScheme, darkTheme)
-
+        useDynamic || useSeed -> surauSemanticColorsFromScheme(colorScheme, darkTheme)
         else -> if (darkTheme) DarkSurauSemanticColors else LightSurauSemanticColors
     }
     // Composition locals

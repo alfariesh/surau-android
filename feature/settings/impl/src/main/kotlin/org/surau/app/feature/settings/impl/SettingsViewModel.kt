@@ -32,6 +32,8 @@ import org.surau.app.core.data.repository.UserRepository
 import org.surau.app.core.data.util.QuranDownloadManager
 import org.surau.app.core.data.util.QuranDownloadState
 import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.model.data.quran.Recitation
@@ -63,6 +65,9 @@ class SettingsViewModel @Inject constructor(
                 settings = UserEditableSettings(
                     useDynamicColor = userData.useDynamicColor,
                     darkThemeConfig = userData.darkThemeConfig,
+                    seedColorArgb = userData.seedColorArgb,
+                    themeStyle = userData.themeStyle,
+                    themeContrast = userData.themeContrast,
                     readerMode = userData.readerMode,
                     translationSourceId = userData.translationSourceId,
                     recitationId = userData.recitationId,
@@ -94,6 +99,31 @@ class SettingsViewModel @Inject constructor(
     fun updateDynamicColorPreference(useDynamicColor: Boolean) {
         viewModelScope.launch {
             userDataRepository.setDynamicColorPreference(useDynamicColor)
+        }
+    }
+
+    /**
+     * Applies a preset/custom theme seed (0 resets to the default scheme). Choosing a seed is
+     * mutually exclusive with wallpaper-based dynamic color, so it is turned off here.
+     */
+    fun updateThemeSeed(argb: Long) {
+        viewModelScope.launch {
+            userDataRepository.setSeedColor(argb)
+            if (argb != 0L) {
+                userDataRepository.setDynamicColorPreference(false)
+            }
+        }
+    }
+
+    fun updateThemeStyle(themeStyle: ThemeStyle) {
+        viewModelScope.launch {
+            userDataRepository.setThemeStyle(themeStyle)
+        }
+    }
+
+    fun updateThemeContrast(themeContrast: ThemeContrast) {
+        viewModelScope.launch {
+            userDataRepository.setThemeContrast(themeContrast)
         }
     }
 
@@ -164,6 +194,9 @@ data class UserEditableSettings(
     val readerMode: ReaderMode,
     val translationSourceId: String?,
     val arabicFontScale: Float,
+    val seedColorArgb: Long = 0L,
+    val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
+    val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
     val recitationId: String? = null,
     val showTransliteration: Boolean = false,
     val showTranslation: Boolean = true,

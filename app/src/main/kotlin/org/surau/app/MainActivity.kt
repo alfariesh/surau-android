@@ -28,6 +28,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,7 +47,10 @@ import org.surau.app.core.analytics.AnalyticsHelper
 import org.surau.app.core.analytics.LocalAnalyticsHelper
 import org.surau.app.core.data.util.NetworkMonitor
 import org.surau.app.core.data.util.TimeZoneMonitor
+import org.surau.app.core.designsystem.theme.SeedPaletteStyle
 import org.surau.app.core.designsystem.theme.SurauTheme
+import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.ui.LocalTimeZone
 import org.surau.app.ui.SurauApp
 import org.surau.app.ui.rememberSurauAppState
@@ -97,6 +101,9 @@ class MainActivity : ComponentActivity() {
             ThemeSettings(
                 darkTheme = resources.configuration.isSystemInDarkTheme,
                 disableDynamicTheming = Loading.shouldDisableDynamicTheming,
+                seedColorArgb = Loading.seedColorArgb,
+                themeStyle = Loading.themeStyle,
+                themeContrast = Loading.themeContrast,
             ),
         )
 
@@ -110,6 +117,9 @@ class MainActivity : ComponentActivity() {
                     ThemeSettings(
                         darkTheme = uiState.shouldUseDarkTheme(systemDark),
                         disableDynamicTheming = uiState.shouldDisableDynamicTheming,
+                        seedColorArgb = uiState.seedColorArgb,
+                        themeStyle = uiState.themeStyle,
+                        themeContrast = uiState.themeContrast,
                     )
                 }
                     .onEach { themeSettings = it }
@@ -158,6 +168,12 @@ class MainActivity : ComponentActivity() {
                 SurauTheme(
                     darkTheme = themeSettings.darkTheme,
                     disableDynamicTheming = themeSettings.disableDynamicTheming,
+                    seedColor = themeSettings.seedColorArgb
+                        .takeIf { it != 0L }
+                        ?.let { Color(it) }
+                        ?: Color.Unspecified,
+                    seedStyle = themeSettings.themeStyle.toSeedPaletteStyle(),
+                    seedContrast = themeSettings.themeContrast.toContrastLevel(),
                 ) {
                     SurauApp(
                         appState = appState,
@@ -218,4 +234,22 @@ private val darkScrim = android.graphics.Color.argb(0x80, 0x1b, 0x1b, 0x1b)
 data class ThemeSettings(
     val darkTheme: Boolean,
     val disableDynamicTheming: Boolean,
+    val seedColorArgb: Long = 0L,
+    val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
+    val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
 )
+
+/** Maps the persisted domain [ThemeStyle] to the design-system's generator style. */
+private fun ThemeStyle.toSeedPaletteStyle(): SeedPaletteStyle = when (this) {
+    ThemeStyle.TONAL_SPOT -> SeedPaletteStyle.TONAL_SPOT
+    ThemeStyle.VIBRANT -> SeedPaletteStyle.VIBRANT
+    ThemeStyle.EXPRESSIVE -> SeedPaletteStyle.EXPRESSIVE
+    ThemeStyle.NEUTRAL -> SeedPaletteStyle.NEUTRAL
+}
+
+/** Maps the persisted domain [ThemeContrast] to the generator's 0f..1f contrast level. */
+private fun ThemeContrast.toContrastLevel(): Float = when (this) {
+    ThemeContrast.STANDARD -> 0f
+    ThemeContrast.MEDIUM -> 0.5f
+    ThemeContrast.HIGH -> 1f
+}

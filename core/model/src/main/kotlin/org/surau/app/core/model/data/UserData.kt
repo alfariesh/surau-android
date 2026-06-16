@@ -32,6 +32,13 @@ data class UserData(
     val recitationId: String?,
     val arabicFontScale: Float,
     val welcomeShown: Boolean,
+    /**
+     * Custom theme seed color as a packed ARGB int (alpha always 0xFF), or 0 to use the default
+     * HeroUI Pro (Zamrud) scheme. Local-only. Mutually exclusive with [useDynamicColor].
+     */
+    val seedColorArgb: Long = 0L,
+    val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
+    val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
     val flowArabicFontScale: Float = DEFAULT_ARABIC_FONT_SCALE,
     val flowShowTranslation: Boolean = false,
     val flowAutoContinue: Boolean = true,

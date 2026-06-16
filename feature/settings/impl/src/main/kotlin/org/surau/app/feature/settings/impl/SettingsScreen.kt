@@ -16,6 +16,10 @@
 
 package org.surau.app.feature.settings.impl
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +32,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -46,9 +51,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,11 +66,14 @@ import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauButtonGroup
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauOutlinedButton
+import org.surau.app.core.designsystem.component.SurauSurface
 import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.component.SurauTextButton
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.designsystem.theme.supportsDynamicTheming
 import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.ReaderMode
 import org.surau.app.core.model.data.quran.Recitation
@@ -94,6 +105,9 @@ fun SettingsScreen(
         onLogout = viewModel::logout,
         onChangeDynamicColorPreference = viewModel::updateDynamicColorPreference,
         onChangeDarkThemeConfig = viewModel::updateDarkThemeConfig,
+        onChangeThemeSeed = viewModel::updateThemeSeed,
+        onChangeThemeStyle = viewModel::updateThemeStyle,
+        onChangeThemeContrast = viewModel::updateThemeContrast,
         onChangeReaderMode = viewModel::updateReaderMode,
         onChangeTranslationSource = viewModel::updateTranslationSource,
         onChangeRecitation = viewModel::updateRecitation,
@@ -123,6 +137,9 @@ internal fun SettingsScreen(
     onChangeTranslationSource: (String) -> Unit,
     onChangeArabicFontScale: (Float) -> Unit,
     modifier: Modifier = Modifier,
+    onChangeThemeSeed: (Long) -> Unit = {},
+    onChangeThemeStyle: (ThemeStyle) -> Unit = {},
+    onChangeThemeContrast: (ThemeContrast) -> Unit = {},
     onChangeRecitation: (String) -> Unit = {},
     onChangeShowTransliteration: (Boolean) -> Unit = {},
     onChangeShowTranslation: (Boolean) -> Unit = {},
@@ -189,6 +206,12 @@ internal fun SettingsScreen(
                         onChangeDynamicColorPreference = onChangeDynamicColorPreference,
                     )
                 }
+                ThemeColorChooser(
+                    settings = uiState.settings,
+                    onChangeThemeSeed = onChangeThemeSeed,
+                    onChangeThemeStyle = onChangeThemeStyle,
+                    onChangeThemeContrast = onChangeThemeContrast,
+                )
 
                 SectionTitle(stringResource(R.string.feature_settings_impl_section_language))
                 LanguageChooser(
@@ -389,6 +412,191 @@ private fun DynamicColorChooser(
             text = stringResource(R.string.feature_settings_impl_dynamic_color_no),
             selected = !useDynamicColor,
             onClick = { onChangeDynamicColorPreference(false) },
+        )
+    }
+}
+
+private data class ThemePreset(
+    val name: String,
+    /** Packed ARGB seed, or 0 for the default (Zamrud) scheme. */
+    val argb: Long,
+    /** The color shown on the swatch chip. */
+    val swatch: Color,
+)
+
+// Curated, spiritually-named presets. Zamrud (argb 0) keeps the default hardcoded HeroUI scheme; the
+// rest drive the generated scheme. Display names are brand proper-nouns, identical across locales.
+private val themePresets = listOf(
+    ThemePreset("Zamrud", 0L, Color(0xFF006D4AL)),
+    ThemePreset("Mihrab", 0xFF0E7C86L, Color(0xFF0E7C86L)),
+    ThemePreset("Lazuardi", 0xFF2D5BD0L, Color(0xFF2D5BD0L)),
+    ThemePreset("Senja", 0xFFC2562EL, Color(0xFFC2562EL)),
+    ThemePreset("Kurma", 0xFF8A5A2BL, Color(0xFF8A5A2BL)),
+    ThemePreset("Nila", 0xFF3B3F8FL, Color(0xFF3B3F8FL)),
+    ThemePreset("Salju", 0xFF5B6B61L, Color(0xFF5B6B61L)),
+    ThemePreset("Monokrom", 0xFF3A3A3AL, Color(0xFF3A3A3AL)),
+)
+
+@Composable
+private fun ThemeColorChooser(
+    settings: UserEditableSettings,
+    onChangeThemeSeed: (Long) -> Unit,
+    onChangeThemeStyle: (ThemeStyle) -> Unit,
+    onChangeThemeContrast: (ThemeContrast) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.feature_settings_impl_theme_color),
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.padding(top = 12.dp),
+    )
+
+    // The preview uses the currently-applied theme, which re-skins instantly when a preset is tapped.
+    ThemePreviewCard()
+
+    // Choosing a preset is mutually exclusive with wallpaper dynamic color.
+    val activeSeed = if (settings.useDynamicColor) -1L else settings.seedColorArgb
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(top = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        themePresets.forEach { preset ->
+            ThemeSwatch(
+                preset = preset,
+                selected = preset.argb == activeSeed,
+                onClick = { onChangeThemeSeed(preset.argb) },
+            )
+        }
+    }
+
+    val customActive = !settings.useDynamicColor && settings.seedColorArgb != 0L
+    if (customActive) {
+        val styles = listOf(
+            ThemeStyle.TONAL_SPOT to
+                stringResource(R.string.feature_settings_impl_theme_style_standard),
+            ThemeStyle.VIBRANT to
+                stringResource(R.string.feature_settings_impl_theme_style_vibrant),
+            ThemeStyle.EXPRESSIVE to
+                stringResource(R.string.feature_settings_impl_theme_style_expressive),
+            ThemeStyle.NEUTRAL to
+                stringResource(R.string.feature_settings_impl_theme_style_neutral),
+        )
+        Text(
+            text = stringResource(R.string.feature_settings_impl_theme_style),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(top = 16.dp),
+        )
+        Spacer(Modifier.size(8.dp))
+        SurauButtonGroup(
+            options = styles.map { it.second },
+            selectedIndex = styles.indexOfFirst { it.first == settings.themeStyle }
+                .coerceAtLeast(0),
+            onOptionSelected = { index -> onChangeThemeStyle(styles[index].first) },
+        )
+
+        val contrasts = listOf(
+            ThemeContrast.STANDARD to
+                stringResource(R.string.feature_settings_impl_theme_contrast_standard),
+            ThemeContrast.MEDIUM to
+                stringResource(R.string.feature_settings_impl_theme_contrast_medium),
+            ThemeContrast.HIGH to
+                stringResource(R.string.feature_settings_impl_theme_contrast_high),
+        )
+        Text(
+            text = stringResource(R.string.feature_settings_impl_theme_contrast),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(top = 16.dp),
+        )
+        Spacer(Modifier.size(8.dp))
+        SurauButtonGroup(
+            options = contrasts.map { it.second },
+            selectedIndex = contrasts.indexOfFirst { it.first == settings.themeContrast }
+                .coerceAtLeast(0),
+            onOptionSelected = { index -> onChangeThemeContrast(contrasts[index].first) },
+        )
+
+        SurauTextButton(
+            onClick = { onChangeThemeSeed(0L) },
+            modifier = Modifier.padding(top = 4.dp),
+        ) {
+            Text(stringResource(R.string.feature_settings_impl_theme_reset))
+        }
+    }
+}
+
+@Composable
+private fun ThemePreviewCard() {
+    SurauSurface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
+    ) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SurauButton(onClick = {}) {
+                    Text(stringResource(R.string.feature_settings_impl_theme_preview_action))
+                }
+                Spacer(Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.feature_settings_impl_theme_preview_chip),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
+            Spacer(Modifier.size(12.dp))
+            AyahText(
+                text = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThemeSwatch(
+    preset: ThemePreset,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .width(64.dp)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(preset.swatch)
+                .then(
+                    if (selected) {
+                        Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                    } else {
+                        Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                    },
+                ),
+        )
+        Spacer(Modifier.size(6.dp))
+        Text(
+            text = preset.name,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = if (selected) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
         )
     }
 }
