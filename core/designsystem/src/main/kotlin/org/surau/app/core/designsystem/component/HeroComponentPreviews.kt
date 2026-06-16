@@ -19,16 +19,23 @@ package org.surau.app.core.designsystem.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import org.surau.app.core.designsystem.theme.LocalSurauColors
 import org.surau.app.core.designsystem.theme.SurauTheme
+import java.time.LocalDate
 import java.time.LocalTime
 
 /**
@@ -114,7 +121,7 @@ fun SurauWidgetPreview() {
                 title = { Text("Bacaan minggu ini") },
                 description = { Text("5 hari berturut-turut") },
                 legend = { SurauWidgetLegendItem(label = "Selesai", color = Color(0xFF4F772D)) },
-                footer = { Text("Lihat butiran") },
+                footer = { Text("Lihat detail") },
             ) {
                 Text(text = "32 ayat", style = MaterialTheme.typography.headlineSmall)
             }
@@ -146,7 +153,7 @@ fun SurauToastPreview() {
                 SurauToastVariant.entries.forEach { variant ->
                     SurauToast(
                         message = variant.name,
-                        description = "Mesej toast contoh",
+                        description = "Pesan toast contoh",
                         variant = variant,
                         onClose = {},
                     )
@@ -166,6 +173,20 @@ fun SurauWheelPickerPreview() {
                 selectedIndex = 3,
                 onSelectedIndexChange = {},
                 modifier = Modifier.width(96.dp).padding(16.dp),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauWheelDatePickerPreview() {
+    SurauTheme {
+        SurauBackground {
+            SurauWheelDatePicker(
+                value = LocalDate.of(2026, 6, 14),
+                onValueChange = {},
+                modifier = Modifier.width(300.dp).padding(16.dp),
             )
         }
     }
@@ -197,6 +218,157 @@ fun SurauTimePickerFieldPreview() {
                     modifier = Modifier.width(220.dp),
                 )
             }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauAlertPreview() {
+    SurauTheme {
+        SurauBackground {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SurauAlertVariant.entries.forEach { variant ->
+                    SurauAlert(
+                        title = variant.name,
+                        description = "Pesan peringatan contoh",
+                        variant = variant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauCellPreview() {
+    SurauTheme {
+        SurauBackground {
+            SurauListGroup(modifier = Modifier.padding(16.dp)) {
+                SurauCell(title = "Profil", description = "Kelola akun", onClick = {})
+                SurauCell(title = "Notifikasi", onClick = {})
+                SurauCell(title = "Versi", trailing = { Text("1.0.0") })
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauSliderPreview() {
+    var value by remember { mutableFloatStateOf(40f) }
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauSlider(value = value, onValueChange = { value = it })
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauSelectPreview() {
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauSelect(
+                    value = "Bahasa Indonesia",
+                    onValueChange = {},
+                    options = listOf("Bahasa Indonesia", "English"),
+                    modifier = Modifier.width(240.dp),
+                )
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauPopoverContentPreview() {
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauOverlayCard(horizontalPadding = 16.dp, verticalPadding = 12.dp) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            "Judul popover",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            "Keterangan singkat di dalam popover.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = LocalSurauColors.current.muted,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauDropdownMenuContentPreview() {
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauOverlayCard(horizontalPadding = 6.dp, verticalPadding = 12.dp) {
+                    Column(modifier = Modifier.width(IntrinsicSize.Max)) {
+                        SurauMenuItem(text = "Edit", onClick = {})
+                        SurauMenuItem(text = "Bagikan", onClick = {})
+                        SurauMenuItem(text = "Hapus", onClick = {}, danger = true)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauProgressRingPreview() {
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauProgressRing(progress = 0.57f) {
+                    Text("57%", style = MaterialTheme.typography.titleLarge)
+                }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauBarChartPreview() {
+    SurauTheme {
+        SurauBackground {
+            SurauBarChart(
+                entries = listOf(3f, 8f, 2f, 12f, 6f, 0f, 9f).mapIndexed { i, v ->
+                    SurauBarEntry(value = v, label = (i + 1).toString())
+                },
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauLineChartPreview() {
+    SurauTheme {
+        SurauBackground {
+            SurauLineChart(
+                values = listOf(2f, 5f, 3f, 8f, 6f, 11f, 7f, 9f, 4f, 12f),
+                labels = listOf("1", "", "", "5", "", "", "", "", "", "10"),
+                modifier = Modifier.padding(16.dp),
+            )
         }
     }
 }

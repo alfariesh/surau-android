@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright 2025 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <string name="feature_auth_impl_welcome_title">Assalamu\'alaikum</string>
+    <string name="feature_auth_impl_welcome_subtitle">Read the Qur\'an anytime. Sign in to keep your reading progress across devices.</string>
+    <string name="feature_auth_impl_continue_as_guest">Continue as guest</string>
+    <string name="feature_auth_impl_sign_in">Sign in</string>
+    <string name="feature_auth_impl_sign_in_title">Sign in to Surau</string>
+    <string name="feature_auth_impl_register">Sign up</string>
+    <string name="feature_auth_impl_register_title">Create account</string>
+    <string name="feature_auth_impl_no_account">Don\'t have an account?</string>
+    <string name="feature_auth_impl_have_account">Already have an account?</string>
+    <string name="feature_auth_impl_email">Email</string>
+    <string name="feature_auth_impl_password">Password</string>
+    <string name="feature_auth_impl_display_name">Name (optional)</string>
+    <string name="feature_auth_impl_forgot_password">Forgot password?</string>
+    <string name="feature_auth_impl_email_invalid">Invalid email format</string>
+    <string name="feature_auth_impl_password_too_short">Password must be at least 8 characters</string>
+    <string name="feature_auth_impl_invalid_credentials">Incorrect email or password</string>
+    <string name="feature_auth_impl_email_exists">Email is already registered. Please sign in.</string>
+    <string name="feature_auth_impl_rate_limited">Too many attempts. Try again in %1$d seconds.</string>
+    <string name="feature_auth_impl_generic_error">Something went wrong. Try again.</string>
+    <string name="feature_auth_impl_offline_error">No internet connection.</string>
+    <string name="feature_auth_impl_verify_title">Verify email</string>
+    <string name="feature_auth_impl_verify_subtitle">Enter the 6-digit code we sent to %1$s</string>
+    <string name="feature_auth_impl_otp">Verification code</string>
+    <string name="feature_auth_impl_verify">Verify</string>
+    <string name="feature_auth_impl_verified_title">Email verified</string>
+    <string name="feature_auth_impl_verified_subtitle">Please sign in with your account.</string>
+    <string name="feature_auth_impl_resend">Resend code</string>
+    <string name="feature_auth_impl_resend_in">Resend in %1$d s</string>
+    <string name="feature_auth_impl_resend_sent">A new code has been sent</string>
+    <string name="feature_auth_impl_otp_invalid">The code must be 6 digits</string>
+    <string name="feature_auth_impl_forgot_title">Reset password</string>
+    <string name="feature_auth_impl_forgot_subtitle">Enter your email. We\'ll send a link and a token to reset your password.</string>
+    <string name="feature_auth_impl_send">Send</string>
+    <string name="feature_auth_impl_forgot_sent">Check your email. Once you have the token, continue below.</string>
+    <string name="feature_auth_impl_enter_token">I already have a token</string>
+    <string name="feature_auth_impl_reset_title">New password</string>
+    <string name="feature_auth_impl_reset_token">Token</string>
+    <string name="feature_auth_impl_new_password">New password</string>
+    <string name="feature_auth_impl_reset">Reset</string>
+    <string name="feature_auth_impl_reset_done">Password changed. Please sign in.</string>
+    <string name="feature_auth_impl_token_required">Token is required</string>
+    <string name="feature_auth_impl_back">Back</string>
+    <string name="feature_auth_impl_show_password">Show password</string>
+    <string name="feature_auth_impl_hide_password">Hide password</string>
+    <string name="feature_auth_impl_invalid_password">Incorrect password</string>
+    <string name="feature_auth_impl_email_delivery_failed">Couldn\'t send the email. Try again later.</string>
+    <string name="feature_auth_impl_invalid_code">Code is incorrect or expired.</string>
+
+    <!-- Account management (M5) -->
+    <string name="feature_auth_impl_account_title">Manage account</string>
+    <string name="feature_auth_impl_account_profile">Profile</string>
+    <string name="feature_auth_impl_account_change_password">Change password</string>
+    <string name="feature_auth_impl_account_change_email">Change email</string>
+    <string name="feature_auth_impl_account_sessions">Devices &amp; sessions</string>
+    <string name="feature_auth_impl_account_email_prefs">Email preferences</string>
+    <string name="feature_auth_impl_account_logout_all">Sign out of all devices</string>
+    <string name="feature_auth_impl_account_delete">Delete account</string>
+    <string name="feature_auth_impl_account_cancel">Cancel</string>
+    <string name="feature_auth_impl_account_save">Save</string>
+    <string name="feature_auth_impl_account_done">Done</string>
+    <string name="feature_auth_impl_account_current_password">Current password</string>
+    <string name="feature_auth_impl_account_logout_all_confirm_title">Sign out of all devices?</string>
+    <string name="feature_auth_impl_account_logout_all_confirm_body">You\'ll be signed out everywhere, including this device.</string>
+
+    <string name="feature_auth_impl_account_profile_title">Edit profile</string>
+    <string name="feature_auth_impl_account_name_required">Name is required</string>
+    <string name="feature_auth_impl_account_country_code">Country code (optional)</string>
+
+    <string name="feature_auth_impl_account_password_title">Change password</string>
+    <string name="feature_auth_impl_account_password_subtitle">Enter your current password, then your new one.</string>
+    <string name="feature_auth_impl_account_password_done">Password changed successfully.</string>
+
+    <string name="feature_auth_impl_account_email_title">Change email</string>
+    <string name="feature_auth_impl_account_email_subtitle">Enter your password and new email. We\'ll send a code to the new address.</string>
+    <string name="feature_auth_impl_account_email_send_code">Send code</string>
+    <string name="feature_auth_impl_account_email_done">Email changed to %1$s.</string>
+
+    <string name="feature_auth_impl_account_sessions_title">Devices &amp; sessions</string>
+    <string name="feature_auth_impl_account_sessions_subtitle">Sessions currently active on your account.</string>
+    <string name="feature_auth_impl_account_sessions_error">Couldn\'t load sessions. Try again.</string>
+    <string name="feature_auth_impl_account_session_unknown">Unknown device</string>
+    <string name="feature_auth_impl_account_session_current">This device</string>
+    <string name="feature_auth_impl_account_session_revoke">Revoke</string>
+    <string name="feature_auth_impl_account_session_revoke_error">Couldn\'t revoke the session. Try again.</string>
+
+    <string name="feature_auth_impl_account_logout_all_error">Couldn\'t sign out of all devices. Try again.</string>
+
+    <string name="feature_auth_impl_account_retry">Try again</string>
+
+    <string name="feature_auth_impl_account_email_prefs_title">Email preferences</string>
+    <string name="feature_auth_impl_account_email_prefs_subtitle">Choose which emails you\'d like to receive.</string>
+    <string name="feature_auth_impl_account_email_prefs_error">Couldn\'t load preferences. Try again.</string>
+    <string name="feature_auth_impl_account_email_marketing">Marketing &amp; promotional emails</string>
+
+    <string name="feature_auth_impl_account_delete_title">Delete account</string>
+    <string name="feature_auth_impl_account_delete_subtitle">This permanently deletes your account identity. Reading progress on this device stays as a guest.</string>
+    <string name="feature_auth_impl_account_delete_confirm_word">DELETE</string>
+    <string name="feature_auth_impl_account_delete_confirm_label">Type %1$s to confirm</string>
+</resources>

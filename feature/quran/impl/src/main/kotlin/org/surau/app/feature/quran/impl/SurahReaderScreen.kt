@@ -18,12 +18,11 @@
 
 package org.surau.app.feature.quran.impl
 
-import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,15 +36,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -53,7 +48,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -61,7 +55,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -76,17 +69,21 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
 import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButtonGroup
+import org.surau.app.core.designsystem.component.SurauDropdownMenu
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
+import org.surau.app.core.designsystem.component.SurauMenuItem
+import org.surau.app.core.designsystem.component.SurauSurfaceVariant
 import org.surau.app.core.designsystem.component.SurauSwitch
+import org.surau.app.core.designsystem.component.SurauWidget
 import org.surau.app.core.designsystem.icon.SurauIcons
+import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.media.PlayerUiState
 import org.surau.app.core.model.data.quran.Bookmark
 import org.surau.app.core.model.data.quran.PopulatedAyah
@@ -231,8 +228,9 @@ internal fun SurahReaderScreen(
             val content = uiState.content
             val surah = content.surah
             val listState = rememberLazyListState()
-            val scope = rememberCoroutineScope()
-            var followRecitation by rememberSaveable { mutableStateOf(true) }
+            // Auto-scroll the reader to the actively reciting ayah (the global player now owns the
+            // transport controls that used to live in an inline bar here).
+            val followRecitation = true
 
             // Resume/scroll-to-ayah once per surah load.
             LaunchedEffect(surah?.surahId, uiState.initialAyahNumber) {
@@ -327,28 +325,6 @@ internal fun SurahReaderScreen(
                                 },
                             )
                         }
-                    }
-
-                    if (surah != null && playerState.surahId == surah.surahId) {
-                        MiniPlayerBar(
-                            surahName = surah.nameLatin,
-                            playerState = playerState,
-                            followRecitation = followRecitation,
-                            onPlayPause = onPlayPause,
-                            onPrevious = onPrevious,
-                            onNext = onNext,
-                            onToggleFollow = { followRecitation = it },
-                            onBarClick = {
-                                val target = playerState.currentAyahNumber
-                                if (target != null) {
-                                    val index =
-                                        content.ayahs.indexOfFirst { it.ayah.ayahNumber == target }
-                                    if (index >= 0) {
-                                        scope.launch { listState.animateScrollToItem(index) }
-                                    }
-                                }
-                            },
-                        )
                     }
                 }
 
@@ -473,206 +449,105 @@ private fun AyahItem(
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val copiedMessage = stringResource(R.string.feature_quran_impl_copied)
-    var showActions by rememberSaveable { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
     var showEditor by rememberSaveable { mutableStateOf(false) }
+    val ayahNumber = populated.ayah.ayahNumber
 
-    val shareText = buildString {
+    val copyText = buildString {
         append(populated.ayah.textQpcHafs)
         populated.translation?.let { append("\n\n").append(it.text) }
         append("\n(QS ").append(populated.ayah.ayahKey.value).append(")")
     }
 
-    fun share() {
-        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, shareText)
-        }
-        context.startActivity(Intent.createChooser(sendIntent, null))
-    }
+    val showArabic = readerMode != ReaderMode.TRANSLATION_ONLY
+    val translationVisible = readerMode == ReaderMode.TRANSLATION_ONLY ||
+        (readerMode != ReaderMode.ARABIC_ONLY && showTranslation)
+    val transliterationVisible =
+        showArabic && showTransliteration && populated.transliteration != null
+    val hasBody = (translationVisible && populated.translation != null) || transliterationVisible
 
-    val highlightColor by animateColorAsState(
-        targetValue = if (isActive) {
-            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-        } else {
-            Color.Transparent
-        },
-        label = "ayahHighlight",
+    // The currently-playing ayah gets an accent outline around its card.
+    val activeBorder by animateColorAsState(
+        targetValue = if (isActive) SurauTheme.colors.accent else Color.Transparent,
+        label = "ayahActiveBorder",
     )
+    val shape = RoundedCornerShape(16.dp)
+    val cardModifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp, vertical = 6.dp)
+        .border(width = 1.5.dp, color = activeBorder, shape = shape)
+        .testTag("reader:ayah:$ayahNumber")
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = {},
-                onLongClick = { showActions = true },
-            )
-            .background(highlightColor)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .testTag("reader:ayah:${populated.ayah.ayahNumber}"),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AyahNumberBadge(populated.ayah.ayahNumber)
-            Spacer(modifier = Modifier.weight(1f))
-            IconToggleButton(
-                checked = isBookmarked,
-                onCheckedChange = { onToggleBookmark() },
-                modifier = Modifier.testTag("reader:bookmark:${populated.ayah.ayahNumber}"),
-            ) {
-                Icon(
-                    imageVector = if (isBookmarked) {
-                        SurauIcons.Bookmark
-                    } else {
-                        SurauIcons.BookmarkBorder
-                    },
-                    contentDescription = stringResource(
-                        if (isBookmarked) {
-                            R.string.feature_quran_impl_unbookmark
-                        } else {
-                            R.string.feature_quran_impl_bookmark
-                        },
-                    ),
-                    tint = if (isBookmarked) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
-            IconButton(
-                onClick = onPlayClick,
-                modifier = Modifier.testTag("reader:play:${populated.ayah.ayahNumber}"),
-            ) {
-                Icon(
-                    imageVector = if (isPlaying) SurauIcons.Pause else SurauIcons.PlayArrow,
-                    contentDescription = stringResource(
-                        if (isPlaying) {
-                            R.string.feature_quran_impl_pause
-                        } else {
-                            R.string.feature_quran_impl_play
-                        },
-                    ),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
-
-        if (readerMode != ReaderMode.TRANSLATION_ONLY) {
-            AyahText(
-                text = populated.ayah.textQpcHafs,
-                fontScale = fontScale,
-                lineHeightMultiplier = arabicLineSpacing,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-
-            if (showTransliteration) {
-                populated.transliteration?.let { transliteration ->
-                    Text(
-                        text = transliteration.text,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontStyle = FontStyle.Italic,
-                            fontSize = MaterialTheme.typography.bodyMedium.fontSize * translationScale,
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                }
-            }
-        }
-
-        // The translation is shown when the mode allows it AND the user hasn't hidden it; in
-        // translation-only mode it is always shown (it's the only content).
-        val translationVisible = readerMode == ReaderMode.TRANSLATION_ONLY ||
-            (readerMode != ReaderMode.ARABIC_ONLY && showTranslation)
-        if (translationVisible) {
-            populated.translation?.let { translation ->
-                Text(
-                    text = translation.text,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize * translationScale,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-            }
-        }
-
-        HorizontalDivider(
-            modifier = Modifier.padding(top = 16.dp),
-            color = MaterialTheme.colorScheme.outlineVariant,
+    // The heading band (ayah + kebab actions menu) is shared by both card layouts.
+    val heading: @Composable () -> Unit = {
+        AyahHeading(
+            populated = populated,
+            ayahNumber = ayahNumber,
+            showArabic = showArabic,
+            fontScale = fontScale,
+            arabicLineSpacing = arabicLineSpacing,
+            isPlaying = isPlaying,
+            isBookmarked = isBookmarked,
+            menuExpanded = menuExpanded,
+            onMenuExpandedChange = { menuExpanded = it },
+            onPlay = onPlayClick,
+            onToggleBookmark = onToggleBookmark,
+            onCopy = {
+                clipboardManager.setText(AnnotatedString(copyText))
+                Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
+            },
+            onAddNote = { showEditor = true },
         )
     }
 
-    if (showActions) {
-        ModalBottomSheet(
-            onDismissRequest = { showActions = false },
-            modifier = Modifier.testTag("reader:ayahActions"),
-        ) {
-            Column(modifier = Modifier.padding(bottom = 24.dp)) {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.feature_quran_impl_copy)) },
-                    leadingContent = { Icon(SurauIcons.ContentCopy, contentDescription = null) },
-                    modifier = Modifier.clickable {
-                        clipboardManager.setText(AnnotatedString(shareText))
-                        Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
-                        showActions = false
-                    },
-                )
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.feature_quran_impl_share)) },
-                    leadingContent = { Icon(SurauIcons.Share, contentDescription = null) },
-                    modifier = Modifier.clickable {
-                        share()
-                        showActions = false
-                    },
-                )
-                ListItem(
-                    headlineContent = {
+    if (hasBody) {
+        SurauWidget(
+            modifier = cardModifier,
+            shellColor = SurauTheme.colors.surface,
+            containerVariant = SurauSurfaceVariant.Background,
+            title = heading,
+            content = {
+                if (transliterationVisible) {
+                    populated.transliteration?.let { transliteration ->
                         Text(
-                            stringResource(
-                                if (isBookmarked) {
-                                    R.string.feature_quran_impl_unbookmark
-                                } else {
-                                    R.string.feature_quran_impl_bookmark
-                                },
+                            text = transliteration.text,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontStyle = FontStyle.Italic,
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize *
+                                    translationScale,
                             ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    },
-                    leadingContent = {
-                        Icon(
-                            imageVector = if (isBookmarked) {
-                                SurauIcons.Bookmark
+                    }
+                }
+                if (translationVisible) {
+                    populated.translation?.let { translation ->
+                        Text(
+                            text = translation.text,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = MaterialTheme.typography.bodyLarge.fontSize *
+                                    translationScale,
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = if (transliterationVisible) {
+                                Modifier.padding(top = 8.dp)
                             } else {
-                                SurauIcons.BookmarkBorder
+                                Modifier
                             },
-                            contentDescription = null,
                         )
-                    },
-                    modifier = Modifier
-                        .testTag("reader:ayahActions:bookmark")
-                        .clickable {
-                            onToggleBookmark()
-                            showActions = false
-                        },
-                )
-                ListItem(
-                    headlineContent = {
-                        Text(stringResource(R.string.feature_quran_impl_bookmark_note))
-                    },
-                    leadingContent = {
-                        Icon(SurauIcons.ShortText, contentDescription = null)
-                    },
-                    modifier = Modifier
-                        .testTag("reader:ayahActions:note")
-                        .clickable {
-                            showActions = false
-                            showEditor = true
-                        },
-                )
-            }
+                    }
+                }
+            },
+        )
+    } else {
+        // Arabic-only with nothing to show beneath it: a single surface card, no inner body.
+        Column(
+            modifier = cardModifier
+                .clip(shape)
+                .background(SurauTheme.colors.surface)
+                .padding(6.dp),
+        ) {
+            heading()
         }
     }
 
@@ -700,124 +575,144 @@ private fun AyahItem(
     }
 }
 
+/**
+ * The widget's heading band: a kebab actions menu on the left and the Arabic ayah filling the rest
+ * (right-aligned, RTL). When Arabic is hidden (translation-only) the ayah number takes its place so
+ * the band still identifies the verse.
+ */
 @Composable
-private fun AyahNumberBadge(ayahNumber: Int) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.secondaryContainer),
-            contentAlignment = Alignment.Center,
-        ) {
+private fun AyahHeading(
+    populated: PopulatedAyah,
+    ayahNumber: Int,
+    showArabic: Boolean,
+    fontScale: Float,
+    arabicLineSpacing: Float,
+    isPlaying: Boolean,
+    isBookmarked: Boolean,
+    menuExpanded: Boolean,
+    onMenuExpandedChange: (Boolean) -> Unit,
+    onPlay: () -> Unit,
+    onToggleBookmark: () -> Unit,
+    onCopy: () -> Unit,
+    onAddNote: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box {
+            IconButton(
+                onClick = { onMenuExpandedChange(true) },
+                modifier = Modifier.testTag("reader:menu:$ayahNumber"),
+            ) {
+                Icon(
+                    imageVector = SurauIcons.MoreVert,
+                    contentDescription = stringResource(R.string.feature_quran_impl_ayah_actions),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            AyahActionsMenu(
+                expanded = menuExpanded,
+                ayahNumber = ayahNumber,
+                isPlaying = isPlaying,
+                isBookmarked = isBookmarked,
+                onDismiss = { onMenuExpandedChange(false) },
+                onPlay = {
+                    onMenuExpandedChange(false)
+                    onPlay()
+                },
+                onToggleBookmark = {
+                    onMenuExpandedChange(false)
+                    onToggleBookmark()
+                },
+                onCopy = {
+                    onMenuExpandedChange(false)
+                    onCopy()
+                },
+                onAddNote = {
+                    onMenuExpandedChange(false)
+                    onAddNote()
+                },
+            )
+        }
+        if (showArabic) {
+            AyahText(
+                text = populated.ayah.textQpcHafs,
+                fontScale = fontScale,
+                lineHeightMultiplier = arabicLineSpacing,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
+            )
+        } else {
             Text(
-                text = ayahNumber.toString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                text = stringResource(R.string.feature_quran_impl_ayah_number, ayahNumber),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.End,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
             )
         }
     }
 }
 
+/** The kebab dropdown: play this ayah, save (bookmark), copy, and add notes. */
 @Composable
-private fun MiniPlayerBar(
-    surahName: String,
-    playerState: PlayerUiState,
-    followRecitation: Boolean,
-    onPlayPause: () -> Unit,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    onToggleFollow: (Boolean) -> Unit,
-    onBarClick: () -> Unit,
-    modifier: Modifier = Modifier,
+private fun AyahActionsMenu(
+    expanded: Boolean,
+    ayahNumber: Int,
+    isPlaying: Boolean,
+    isBookmarked: Boolean,
+    onDismiss: () -> Unit,
+    onPlay: () -> Unit,
+    onToggleBookmark: () -> Unit,
+    onCopy: () -> Unit,
+    onAddNote: () -> Unit,
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 3.dp,
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("reader:miniPlayer"),
-    ) {
-        Column {
-            val progress = if (playerState.durationMs > 0L) {
-                (playerState.positionMs.toFloat() / playerState.durationMs).coerceIn(0f, 1f)
-            } else {
-                0f
-            }
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(
-                        R.string.feature_quran_impl_now_playing,
-                        surahName,
-                        playerState.currentAyahNumber ?: 0,
-                    ),
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable(onClick = onBarClick)
-                        .padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
+    SurauDropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        SurauMenuItem(
+            text = stringResource(
+                if (isPlaying) R.string.feature_quran_impl_pause else R.string.feature_quran_impl_play,
+            ),
+            onClick = onPlay,
+            leading = {
+                Icon(
+                    imageVector = if (isPlaying) SurauIcons.Pause else SurauIcons.PlayArrow,
+                    contentDescription = null,
                 )
-                IconToggleButton(checked = followRecitation, onCheckedChange = onToggleFollow) {
-                    Icon(
-                        imageVector = if (followRecitation) {
-                            SurauIcons.FollowReading
-                        } else {
-                            SurauIcons.FollowReadingOff
-                        },
-                        contentDescription = stringResource(
-                            R.string.feature_quran_impl_follow_recitation,
-                        ),
-                        tint = if (followRecitation) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                    )
-                }
-                IconButton(onClick = onPrevious) {
-                    Icon(
-                        imageVector = SurauIcons.SkipPrevious,
-                        contentDescription = stringResource(
-                            R.string.feature_quran_impl_previous_ayah,
-                        ),
-                    )
-                }
-                FilledTonalIconButton(
-                    onClick = onPlayPause,
-                    modifier = Modifier.testTag("reader:miniPlayer:playPause"),
-                ) {
-                    Icon(
-                        imageVector = if (playerState.isPlaying) {
-                            SurauIcons.Pause
-                        } else {
-                            SurauIcons.PlayArrow
-                        },
-                        contentDescription = stringResource(
-                            if (playerState.isPlaying) {
-                                R.string.feature_quran_impl_pause
-                            } else {
-                                R.string.feature_quran_impl_play
-                            },
-                        ),
-                    )
-                }
-                IconButton(onClick = onNext, modifier = Modifier.padding(end = 4.dp)) {
-                    Icon(
-                        imageVector = SurauIcons.SkipNext,
-                        contentDescription = stringResource(R.string.feature_quran_impl_next_ayah),
-                    )
-                }
-            }
-        }
+            },
+        )
+        SurauMenuItem(
+            text = stringResource(
+                if (isBookmarked) {
+                    R.string.feature_quran_impl_unbookmark
+                } else {
+                    R.string.feature_quran_impl_bookmark
+                },
+            ),
+            onClick = onToggleBookmark,
+            modifier = Modifier.testTag("reader:menu:save:$ayahNumber"),
+            leading = {
+                Icon(
+                    imageVector = if (isBookmarked) SurauIcons.Bookmark else SurauIcons.BookmarkBorder,
+                    contentDescription = null,
+                )
+            },
+        )
+        SurauMenuItem(
+            text = stringResource(R.string.feature_quran_impl_copy),
+            onClick = onCopy,
+            leading = { Icon(SurauIcons.ContentCopy, contentDescription = null) },
+        )
+        SurauMenuItem(
+            text = stringResource(R.string.feature_quran_impl_bookmark_note),
+            onClick = onAddNote,
+            modifier = Modifier.testTag("reader:menu:note:$ayahNumber"),
+            leading = { Icon(SurauIcons.ShortText, contentDescription = null) },
+        )
     }
 }
 

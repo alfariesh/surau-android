@@ -27,6 +27,9 @@ import org.surau.app.MainActivityUiState.Loading
 import org.surau.app.MainActivityUiState.Success
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
+import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.UserData
 import javax.inject.Inject
 
@@ -51,6 +54,16 @@ sealed interface MainActivityUiState {
 
         override val shouldDisableDynamicTheming = !userData.useDynamicColor
 
+        override val seedColorArgb = userData.seedColorArgb
+
+        override val themeStyle = userData.themeStyle
+
+        override val themeContrast = userData.themeContrast
+
+        override val themePalette = userData.themePalette
+
+        override val useMeshGradient = userData.useMeshGradient
+
         override fun shouldUseDarkTheme(isSystemDarkTheme: Boolean) =
             when (userData.darkThemeConfig) {
                 DarkThemeConfig.FOLLOW_SYSTEM -> isSystemDarkTheme
@@ -73,6 +86,31 @@ sealed interface MainActivityUiState {
      * Returns `true` if the dynamic color is disabled.
      */
     val shouldDisableDynamicTheming: Boolean get() = true
+
+    /**
+     * The custom theme seed color as a packed ARGB int, or 0 for the default scheme.
+     */
+    val seedColorArgb: Long get() = 0L
+
+    /**
+     * The vibrancy style used when generating a scheme from [seedColorArgb].
+     */
+    val themeStyle: ThemeStyle get() = ThemeStyle.TONAL_SPOT
+
+    /**
+     * The minimum contrast enforced on the generated custom scheme.
+     */
+    val themeContrast: ThemeContrast get() = ThemeContrast.STANDARD
+
+    /**
+     * Whether the user has enabled the decorative mesh gradient (runtime gates applied separately).
+     */
+    val useMeshGradient: Boolean get() = false
+
+    /**
+     * The chosen named HeroUI palette for the static scheme.
+     */
+    val themePalette: ThemePalette get() = ThemePalette.DEFAULT
 
     /**
      * Returns `true` if dark theme should be used.

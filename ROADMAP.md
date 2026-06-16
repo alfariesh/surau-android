@@ -206,6 +206,13 @@ Item: Profil, Ganti kata sandi, Ganti email, Perangkat & sesi, Preferensi email,
 
 ## M6 — Offline Penuh, Kualitas & Internasionalisasi
 
+> Status: **diimplementasi** (branch `M6-Offline-Penuh,-Kualitas-&-Internasionalisasi`) — 6.1 unduh
+> penuh, 6.2 pencarian offline (FTS), 6.3 layout adaptif list-detail, 6.4 i18n (values-en + pemilih
+> bahasa in-app), 6.6 enkripsi token (Tink AEAD), 6.7 journey baseline profile + benchmark jank.
+> **6.5 Telemetri: diputuskan TANPA telemetri** — `AnalyticsHelper` tetap no-op, tanpa SDK baru.
+> Catatan: regenerasi `baseline-prof.txt` & E2E on-device menyusul (lihat DoD); golden Roborazzi
+> dirender dalam bahasa Inggris karena Robolectric memakai locale host (en) — lihat ScreenshotHelper.
+
 ### 6.1 Unduh semua surah (teks)
 - Tombol di Settings > Bacaan: "Unduh seluruh Al-Qur'an (±X MB)".
 - `DownloadQuranWorker` (WorkManager unique, constraint network) iterasi 114 × `ensureSurahCached(surahId, sourceId)` + progress (setProgress) → indikator di Settings (persentase, batal). Saat sumber terjemahan diganti → tawarkan unduh ulang.
@@ -220,8 +227,9 @@ Item: Profil, Ganti kata sandi, Ganti email, Perangkat & sesi, Preferensi email,
 ### 6.4 Bahasa
 - Tambah `values-en/strings.xml` untuk seluruh modul (default tetap ID). Per-app language picker di Settings (API `LocaleManager`/AppCompat per-app locales) — opsional.
 
-### 6.5 Telemetri & crash (keputusan produk)
-- Pilih: Firebase kembali / Sentry / tanpa telemetri. Implement `AnalyticsHelper` nyata di `core:analytics` (interface sudah ada, tinggal binding) + crash reporter. Opt-in setting privasi.
+### 6.5 Telemetri & crash (keputusan produk) — **DILEWATI: tanpa telemetri**
+- Keputusan: **tanpa telemetri**. `AnalyticsHelper` tetap no-op (sesuai keputusan awal proyek), tanpa SDK baru, tanpa permukaan privasi/izin baru.
+- ~~Pilih: Firebase kembali / Sentry / tanpa telemetri. Implement `AnalyticsHelper` nyata di `core:analytics` + crash reporter. Opt-in setting privasi.~~
 
 ### 6.6 Hardening token (opsional)
 - Bungkus refresh token dengan Keystore AEAD (Tink) sebelum simpan ke DataStore. Layak dikerjakan bila target audit keamanan.

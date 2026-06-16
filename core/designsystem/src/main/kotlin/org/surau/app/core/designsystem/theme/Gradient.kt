@@ -38,3 +38,26 @@ data class GradientColors(
  * A composition local for [GradientColors].
  */
 val LocalGradientColors = staticCompositionLocalOf { GradientColors() }
+
+/**
+ * Corner colors for the decorative mesh gradient drawn on chrome surfaces. Already alpha-capped by
+ * [SurauTheme] so the mesh stays a subtle wash; [Color.Unspecified] corners are treated as fully
+ * transparent. Derived from the active color scheme so the mesh follows the user's theme.
+ */
+@Immutable
+data class MeshGradientColors(
+    val topStart: Color = Color.Unspecified,
+    val topEnd: Color = Color.Unspecified,
+    val bottomStart: Color = Color.Unspecified,
+    val bottomEnd: Color = Color.Unspecified,
+)
+
+/** A composition local for [MeshGradientColors]. */
+val LocalMeshGradientColors = staticCompositionLocalOf { MeshGradientColors() }
+
+/**
+ * Whether the decorative mesh gradient should actually render. Resolved by the app from the user
+ * preference AND runtime gates (battery saver, reduced motion); `false` by default so chrome falls
+ * back to the flat/linear background.
+ */
+val LocalMeshGradientEnabled = staticCompositionLocalOf { false }

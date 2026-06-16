@@ -31,6 +31,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -71,6 +73,10 @@ enum class SurauOtpVariant { Primary, Secondary }
  * @param enabled When `false`, input is disabled and the cells are dimmed.
  * @param isError When `true`, cell borders use the danger colour.
  * @param variant Cell background style.
+ * @param groupSize When `> 0`, a dash separator is drawn after every [groupSize] cells, splitting
+ *   the row into groups (e.g. `length = 6, groupSize = 3` renders `000 - 000`). `0` = no separator.
+ * @param fillWidth When `true`, the row fills the available width and spreads the cells edge-to-edge
+ *   (gaps grow to fit the screen, leaving no empty space on either side). `false` = wrap content.
  * @param keyboardType IME type. Numeric types restrict input to digits.
  * @param onFilled Called once when the code reaches [length] characters.
  */
@@ -83,6 +89,8 @@ fun SurauOtpInput(
     enabled: Boolean = true,
     isError: Boolean = false,
     variant: SurauOtpVariant = SurauOtpVariant.Primary,
+    groupSize: Int = 0,
+    fillWidth: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.NumberPassword,
     onFilled: (String) -> Unit = {},
 ) {
@@ -102,14 +110,28 @@ fun SurauOtpInput(
                 if (filtered.length == length) onFilled(filtered)
             }
         },
-        modifier = modifier.onFocusChanged { isFocused = it.isFocused },
+        modifier = modifier
+            .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier)
+            .onFocusChanged { isFocused = it.isFocused },
         enabled = enabled,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
         // We render our own cells and intentionally do not place the inner text field.
         decorationBox = {
             val activeIndex = if (isFocused && enabled && value.length < length) value.length else -1
-            Row(horizontalArrangement = Arrangement.spacedBy(SurauOtpDefaults.CellSpacing)) {
+            Row(
+                modifier = if (fillWidth) Modifier.fillMaxWidth() else Modifier,
+                horizontalArrangement = if (fillWidth) {
+                    Arrangement.SpaceBetween
+                } else {
+                    Arrangement.spacedBy(SurauOtpDefaults.CellSpacing)
+                },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 repeat(length) { index ->
+                    // Start of a new group (but not the very first cell) → draw the dash separator.
+                    if (groupSize > 0 && index > 0 && index % groupSize == 0) {
+                        OtpSeparator(enabled = enabled)
+                    }
                     OtpCell(
                         char = value.getOrNull(index),
                         isActive = index == activeIndex,
@@ -133,14 +155,15 @@ private fun OtpCell(
 ) {
     val colors = LocalSurauColors.current
     val shape = RoundedCornerShape(SurauOtpDefaults.CellCornerRadius)
+    // Match SurauTextField: filled container, no border at rest, full accent border when active.
     val borderColor = when {
         isError -> colors.danger
         isActive -> colors.accent
-        else -> colors.fieldBorder
+        else -> Color.Transparent
     }
     val background = when (variant) {
-        SurauOtpVariant.Primary -> colors.fieldBackground
-        SurauOtpVariant.Secondary -> colors.surfaceSecondary
+        SurauOtpVariant.Primary -> colors.surfaceSecondary
+        SurauOtpVariant.Secondary -> colors.surface
     }
     Box(
         modifier = Modifier
@@ -173,6 +196,19 @@ private fun OtpCell(
     }
 }
 
+/** The `-` divider drawn between OTP groups (e.g. the middle of `000 - 000`). */
+@Composable
+private fun OtpSeparator(enabled: Boolean) {
+    Box(
+        modifier = Modifier
+            .graphicsLayer { alpha = if (enabled) 1f else 0.5f }
+            .width(SurauOtpDefaults.SeparatorWidth)
+            .height(SurauOtpDefaults.SeparatorThickness)
+            .clip(RoundedCornerShape(SurauOtpDefaults.SeparatorThickness / 2))
+            .background(LocalSurauColors.current.muted),
+    )
+}
+
 @Composable
 private fun BlinkingCaret() {
     val transition = rememberInfiniteTransition(label = "SurauOtpCaret")
@@ -200,8 +236,12 @@ private fun BlinkingCaret() {
 
 object SurauOtpDefaults {
     const val LENGTH = 6
-    val CellWidth = 44.dp
+
+    // 40dp keeps six cells plus the group separator within a 24dp-inset form on a 360dp screen.
+    val CellWidth = 40.dp
     val CellHeight = 48.dp
     val CellSpacing = 8.dp
-    val CellCornerRadius = 12.dp
+    val CellCornerRadius = 18.dp
+    val SeparatorWidth = 10.dp
+    val SeparatorThickness = 2.dp
 }

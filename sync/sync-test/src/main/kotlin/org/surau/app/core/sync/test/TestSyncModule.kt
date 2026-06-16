@@ -20,6 +20,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
+import org.surau.app.core.data.util.QuranDownloadManager
 import org.surau.app.core.data.util.SyncManager
 import org.surau.app.sync.di.SyncModule
 import org.surau.app.sync.status.StubSyncSubscriber
@@ -35,6 +36,11 @@ internal interface TestSyncModule {
     fun bindsSyncStatusMonitor(
         syncStatusMonitor: NeverSyncingSyncManager,
     ): SyncManager
+
+    @Binds
+    fun bindsQuranDownloadManager(
+        downloadManager: IdleQuranDownloadManager,
+    ): QuranDownloadManager
 
     @Binds
     fun bindsSyncSubscriber(

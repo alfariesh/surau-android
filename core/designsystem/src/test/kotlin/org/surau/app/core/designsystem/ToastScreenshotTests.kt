@@ -56,7 +56,7 @@ class ToastScreenshotTests {
                     SurauToastVariant.entries.forEach { variant ->
                         SurauToast(
                             message = variant.name,
-                            description = "Mesej toast contoh",
+                            description = "Pesan toast contoh",
                             variant = variant,
                             onClose = {},
                         )

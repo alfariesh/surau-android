@@ -41,6 +41,8 @@ data class SurauSemanticColors(
     val accentSoft: Color,
     /** Neutral interactive background — switch-off track, segmented track base, subtle chips. */
     val default: Color,
+    /** The app canvas / page background — the lowest layer, beneath surfaces and cards. */
+    val background: Color,
     val surface: Color,
     val surfaceSecondary: Color,
     val surfaceTertiary: Color,
@@ -65,63 +67,14 @@ data class SurauSemanticColors(
     val dangerContainer: Color,
 )
 
-/** Static HeroUI Pro light semantic tokens. */
-internal val LightSurauSemanticColors = SurauSemanticColors(
-    accent = HeroLightAccent,
-    onAccent = Color.White,
-    accentSoft = HeroLightPrimaryContainer,
-    default = HeroLightDefault,
-    surface = HeroLightSurface,
-    surfaceSecondary = HeroLightSurfaceSecondary,
-    surfaceTertiary = HeroLightSurfaceTertiary,
-    surfaceHover = HeroLightSurfaceSecondary,
-    overlay = HeroLightSurface,
-    fieldBackground = HeroLightSurface,
-    fieldBorder = HeroLightBorder,
-    border = HeroLightBorder,
-    separator = HeroLightSeparator,
-    muted = HeroLightMuted,
-    scrollbar = HeroLightScrollbar,
-    segment = Color.White,
-    success = HeroLightSuccess,
-    onSuccess = Color.White,
-    successContainer = HeroLightSuccessSoft,
-    warning = HeroLightWarning,
-    onWarning = Color.White,
-    warningContainer = HeroLightWarningSoft,
-    danger = Red40,
-    onDanger = Color.White,
-    dangerContainer = Red90,
-)
+/**
+ * The app's baseline extended semantic colors — the hand-tuned HeroUI **Default** palette (balanced
+ * neutral grey with a blue accent). Defined in HeroPalettes.kt; the seed/dynamic paths still derive
+ * their own from the live scheme via [surauSemanticColorsFromScheme].
+ */
+internal val LightSurauSemanticColors = DefaultLightSemanticColors
 
-/** Static HeroUI Pro dark semantic tokens. */
-internal val DarkSurauSemanticColors = SurauSemanticColors(
-    accent = HeroDarkAccent,
-    onAccent = HeroDarkOnAccent,
-    accentSoft = HeroDarkPrimaryContainer,
-    default = HeroDarkDefault,
-    surface = HeroDarkSurface,
-    surfaceSecondary = HeroDarkSurfaceSecondary,
-    surfaceTertiary = HeroDarkSurfaceTertiary,
-    surfaceHover = HeroDarkSurfaceTertiary,
-    overlay = HeroDarkOverlay,
-    fieldBackground = HeroDarkFieldBackground,
-    fieldBorder = HeroDarkFieldBorder,
-    border = HeroDarkBorder,
-    separator = HeroDarkSeparator,
-    muted = HeroDarkMuted,
-    scrollbar = HeroDarkScrollbar,
-    segment = HeroDarkSegment,
-    success = HeroDarkSuccess,
-    onSuccess = Color(0xFF052109),
-    successContainer = HeroDarkSuccessSoft,
-    warning = HeroDarkWarning,
-    onWarning = Color(0xFF3F2900),
-    warningContainer = HeroDarkWarningSoft,
-    danger = Red80,
-    onDanger = Red20,
-    dangerContainer = Red30,
-)
+internal val DarkSurauSemanticColors = DefaultDarkSemanticColors
 
 /**
  * Derives [SurauSemanticColors] from a Material 3 [ColorScheme] so the extended tokens follow a
@@ -137,6 +90,7 @@ internal fun surauSemanticColorsFromScheme(
         onAccent = colorScheme.onPrimary,
         accentSoft = colorScheme.primaryContainer,
         default = colorScheme.surfaceContainerHigh,
+        background = colorScheme.background,
         surface = colorScheme.surface,
         surfaceSecondary = colorScheme.surfaceContainer,
         surfaceTertiary = colorScheme.surfaceContainerHighest,

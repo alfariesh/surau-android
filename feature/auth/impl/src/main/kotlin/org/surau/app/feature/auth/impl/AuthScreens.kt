@@ -24,9 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,8 +42,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.surau.app.core.designsystem.component.SurauButton
+import org.surau.app.core.designsystem.component.SurauOtpInput
 import org.surau.app.core.designsystem.component.SurauOutlinedButton
 import org.surau.app.core.designsystem.component.SurauTextButton
+import org.surau.app.core.designsystem.component.SurauTextField
 import org.surau.app.core.ui.TrackScreenViewEvent
 
 @Composable
@@ -220,7 +220,7 @@ fun RegisterScreen(
         onBackClick = onBackClick,
         modifier = modifier,
     ) {
-        OutlinedTextField(
+        SurauTextField(
             value = displayName,
             onValueChange = { displayName = it },
             label = { Text(stringResource(R.string.feature_auth_impl_display_name)) },
@@ -323,22 +323,26 @@ fun VerifyEmailScreen(
         subtitle = stringResource(R.string.feature_auth_impl_verify_subtitle, email),
         modifier = modifier,
     ) {
-        OutlinedTextField(
-            value = otp,
-            onValueChange = { if (it.length <= 6) otp = it },
-            label = { Text(stringResource(R.string.feature_auth_impl_otp)) },
-            isError = showValidation && !AuthValidators.isValidOtp(otp),
-            supportingText = if (showValidation && !AuthValidators.isValidOtp(otp)) {
-                { Text(stringResource(R.string.feature_auth_impl_otp_invalid)) }
-            } else {
-                null
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("verify:otp"),
-        )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            SurauOtpInput(
+                value = otp,
+                onValueChange = { otp = it },
+                length = 6,
+                groupSize = 3,
+                fillWidth = true,
+                isError = showValidation && !AuthValidators.isValidOtp(otp),
+                keyboardType = KeyboardType.Number,
+                modifier = Modifier.testTag("verify:otp"),
+            )
+            if (showValidation && !AuthValidators.isValidOtp(otp)) {
+                Text(
+                    text = stringResource(R.string.feature_auth_impl_otp_invalid),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp, start = 4.dp),
+                )
+            }
+        }
 
         AuthSubmitError(submitState)
 
@@ -470,7 +474,7 @@ fun ResetPasswordScreen(
         onBackClick = onBackClick,
         modifier = modifier,
     ) {
-        OutlinedTextField(
+        SurauTextField(
             value = token,
             onValueChange = { token = it },
             label = { Text(stringResource(R.string.feature_auth_impl_reset_token)) },

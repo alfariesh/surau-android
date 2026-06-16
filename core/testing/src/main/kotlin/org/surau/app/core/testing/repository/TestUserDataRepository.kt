@@ -22,6 +22,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filterNotNull
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
+import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.UserData
 import org.surau.app.core.model.data.quran.ReaderMode
 
@@ -55,6 +58,36 @@ class TestUserDataRepository : UserDataRepository {
     override suspend fun setDynamicColorPreference(useDynamicColor: Boolean) {
         currentUserData.let { current ->
             _userData.tryEmit(current.copy(useDynamicColor = useDynamicColor))
+        }
+    }
+
+    override suspend fun setSeedColor(argb: Long) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(seedColorArgb = if (argb == 0L) 0L else argb or 0xFF000000L))
+        }
+    }
+
+    override suspend fun setThemeStyle(themeStyle: ThemeStyle) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(themeStyle = themeStyle))
+        }
+    }
+
+    override suspend fun setThemeContrast(themeContrast: ThemeContrast) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(themeContrast = themeContrast))
+        }
+    }
+
+    override suspend fun setMeshGradientPreference(useMeshGradient: Boolean) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(useMeshGradient = useMeshGradient))
+        }
+    }
+
+    override suspend fun setThemePalette(themePalette: ThemePalette) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(themePalette = themePalette))
         }
     }
 

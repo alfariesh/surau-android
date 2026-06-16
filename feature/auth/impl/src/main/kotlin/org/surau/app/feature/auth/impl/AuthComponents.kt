@@ -31,7 +31,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import org.surau.app.core.designsystem.component.SurauTextField
 import org.surau.app.core.designsystem.icon.SurauIcons
 
 /**
@@ -105,7 +105,7 @@ internal fun EmailField(
     isError: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    OutlinedTextField(
+    SurauTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(stringResource(R.string.feature_auth_impl_email)) },
@@ -130,7 +130,7 @@ internal fun PasswordField(
     label: String = stringResource(R.string.feature_auth_impl_password),
 ) {
     var visible by rememberSaveable { mutableStateOf(false) }
-    OutlinedTextField(
+    SurauTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },

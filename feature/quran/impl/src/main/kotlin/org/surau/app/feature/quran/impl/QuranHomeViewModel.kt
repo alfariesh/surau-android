@@ -19,28 +19,15 @@ package org.surau.app.feature.quran.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
-import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.common.result.Result
 import org.surau.app.core.common.result.asResult
-import org.surau.app.core.data.repository.ActivityRepository
-import org.surau.app.core.data.repository.AuthRepository
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.domain.GetSurahListWithLastReadUseCase
-import org.surau.app.core.domain.LastRead
-import org.surau.app.core.model.data.activity.ReadingStreak
-import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.JuzSegment
 import org.surau.app.core.model.data.quran.Surah
 import javax.inject.Inject
@@ -49,44 +36,19 @@ import javax.inject.Inject
 class QuranHomeViewModel @Inject constructor(
     getSurahListWithLastRead: GetSurahListWithLastReadUseCase,
     quranRepository: QuranRepository,
-    authRepository: AuthRepository,
-    private val activityRepository: ActivityRepository,
 ) : ViewModel() {
-
-    /**
-     * The signed-in user's reading streak for the home header chip. Authenticated-only and
-     * failure-tolerant: emits `null` for guests and on any error, and an immediate `null` first so
-     * it never delays the (offline-first) surah list.
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val streak: Flow<ReadingStreak?> =
-        authRepository.authState.flatMapLatest { state ->
-            if (state is AuthState.Authenticated) {
-                flow {
-                    emit(null)
-                    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-                    emit(runCatchingExceptCancellation { activityRepository.getStreak(today) }.getOrNull())
-                }
-            } else {
-                flowOf(null)
-            }
-        }
 
     val uiState: StateFlow<QuranHomeUiState> =
         combine(
-            combine(
-                getSurahListWithLastRead(),
-                quranRepository.observeJuzList(),
-            ) { surahsWithLastRead, juzList ->
-                QuranHomeData(
-                    surahs = surahsWithLastRead.surahs,
-                    juzList = juzList,
-                    lastRead = surahsWithLastRead.lastRead,
-                    progressBySurah = surahsWithLastRead.progressBySurah,
-                )
-            }.asResult(),
-            streak,
-        ) { result, streakValue ->
+            getSurahListWithLastRead(),
+            quranRepository.observeJuzList(),
+        ) { surahsWithLastRead, juzList ->
+            QuranHomeData(
+                surahs = surahsWithLastRead.surahs,
+                juzList = juzList,
+                progressBySurah = surahsWithLastRead.progressBySurah,
+            )
+        }.asResult().map { result ->
             when (result) {
                 is Result.Loading -> QuranHomeUiState.Loading
                 is Result.Error -> QuranHomeUiState.Error
@@ -98,9 +60,7 @@ class QuranHomeViewModel @Inject constructor(
                         QuranHomeUiState.Success(
                             surahs = result.data.surahs,
                             juzList = result.data.juzList,
-                            lastRead = result.data.lastRead,
                             progressBySurah = result.data.progressBySurah,
-                            streak = streakValue,
                         )
                     }
             }
@@ -114,7 +74,6 @@ class QuranHomeViewModel @Inject constructor(
     private data class QuranHomeData(
         val surahs: List<Surah>,
         val juzList: List<JuzSegment>,
-        val lastRead: LastRead?,
         val progressBySurah: Map<Int, Float>,
     )
 }
@@ -127,8 +86,6 @@ sealed interface QuranHomeUiState {
     data class Success(
         val surahs: List<Surah>,
         val juzList: List<JuzSegment>,
-        val lastRead: LastRead?,
         val progressBySurah: Map<Int, Float> = emptyMap(),
-        val streak: ReadingStreak? = null,
     ) : QuranHomeUiState
 }

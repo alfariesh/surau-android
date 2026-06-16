@@ -23,6 +23,8 @@ package org.surau.app.core.media
 data class PlayerUiState(
     val isPlaying: Boolean = false,
     val surahId: Int? = null,
+    /** Display name of the playing surah (e.g. "Al-Fatihah"), or `null` when no session. */
+    val surahName: String? = null,
     val currentAyahNumber: Int? = null,
     val recitationName: String? = null,
     val positionMs: Long = 0,

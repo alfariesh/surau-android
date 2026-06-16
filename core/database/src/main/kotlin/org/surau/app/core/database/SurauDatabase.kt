@@ -28,6 +28,7 @@ import org.surau.app.core.database.dao.SurahDao
 import org.surau.app.core.database.dao.TranslationSourceDao
 import org.surau.app.core.database.model.AyahEntity
 import org.surau.app.core.database.model.AyahFetchMetadataEntity
+import org.surau.app.core.database.model.AyahFtsEntity
 import org.surau.app.core.database.model.BookmarkEntity
 import org.surau.app.core.database.model.JuzEntity
 import org.surau.app.core.database.model.ReadingProgressEntity
@@ -51,8 +52,9 @@ import org.surau.app.core.database.util.StringListConverter
         ReadingProgressEntity::class,
         AyahFetchMetadataEntity::class,
         BookmarkEntity::class,
+        AyahFtsEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 @TypeConverters(

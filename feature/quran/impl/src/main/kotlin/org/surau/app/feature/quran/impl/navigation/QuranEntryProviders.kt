@@ -16,37 +16,40 @@
 
 package org.surau.app.feature.quran.impl.navigation
 
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import org.surau.app.core.navigation.Navigator
 import org.surau.app.feature.quran.api.navigation.QuranBookmarksNavKey
 import org.surau.app.feature.quran.api.navigation.QuranHomeNavKey
 import org.surau.app.feature.quran.api.navigation.QuranSearchNavKey
-import org.surau.app.feature.quran.api.navigation.SurahFlowNavKey
 import org.surau.app.feature.quran.api.navigation.SurahReaderNavKey
 import org.surau.app.feature.quran.api.navigation.navigateToQuranBookmarks
 import org.surau.app.feature.quran.api.navigation.navigateToQuranSearch
-import org.surau.app.feature.quran.api.navigation.navigateToSurahFlow
 import org.surau.app.feature.quran.api.navigation.navigateToSurahReader
 import org.surau.app.feature.quran.impl.QuranBookmarksScreen
 import org.surau.app.feature.quran.impl.QuranHomeScreen
 import org.surau.app.feature.quran.impl.QuranSearchScreen
-import org.surau.app.feature.quran.impl.SurahFlowScreen
+import org.surau.app.feature.quran.impl.SurahReaderPlaceholder
 import org.surau.app.feature.quran.impl.SurahReaderScreen
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 fun EntryProviderScope<NavKey>.quranHomeEntry(
     navigator: Navigator,
     onSettingsClick: () -> Unit,
-    onActivityClick: () -> Unit,
 ) {
-    entry<QuranHomeNavKey> {
+    // On expanded widths this pairs with the SurahReader detail pane (two-pane list-detail). On
+    // compact widths the strategy collapses to a single pane, so phones are unaffected.
+    entry<QuranHomeNavKey>(
+        metadata = ListDetailSceneStrategy.listPane { SurahReaderPlaceholder() },
+    ) {
         QuranHomeScreen(
             onSurahClick = { surahId, ayahNumber ->
                 navigator.navigateToSurahReader(surahId, ayahNumber)
             },
             onSearchClick = navigator::navigateToQuranSearch,
             onBookmarksClick = navigator::navigateToQuranBookmarks,
-            onActivityClick = onActivityClick,
             onSettingsClick = onSettingsClick,
         )
     }
@@ -63,23 +66,16 @@ fun EntryProviderScope<NavKey>.quranBookmarksEntry(navigator: Navigator) {
     }
 }
 
-fun EntryProviderScope<NavKey>.surahReaderEntry(navigator: Navigator) {
-    entry<SurahReaderNavKey> { navKey ->
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+fun EntryProviderScope<NavKey>.surahReaderEntry(
+    navigator: Navigator,
+    onFlowClick: (surahId: Int, ayahNumber: Int?) -> Unit,
+) {
+    entry<SurahReaderNavKey>(metadata = ListDetailSceneStrategy.detailPane()) { navKey ->
         SurahReaderScreen(
             navKey = navKey,
             onBackClick = navigator::goBack,
-            onFlowClick = { ayahNumber ->
-                navigator.navigateToSurahFlow(navKey.surahId, ayahNumber)
-            },
-        )
-    }
-}
-
-fun EntryProviderScope<NavKey>.surahFlowEntry(navigator: Navigator) {
-    entry<SurahFlowNavKey> { navKey ->
-        SurahFlowScreen(
-            navKey = navKey,
-            onBackClick = navigator::goBack,
+            onFlowClick = { ayahNumber -> onFlowClick(navKey.surahId, ayahNumber) },
         )
     }
 }

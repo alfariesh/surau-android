@@ -19,12 +19,10 @@ package org.surau.app.feature.quran.impl
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performTouchInput
 import dagger.hilt.android.testing.HiltTestApplication
 import org.junit.Rule
 import org.junit.Test
@@ -53,7 +51,8 @@ class SurahReaderInteractionTest {
             SurauTheme { Reader(onToggleBookmark = { toggled = it }) }
         }
 
-        composeTestRule.onNodeWithTag("reader:bookmark:1").performClick()
+        composeTestRule.onNodeWithTag("reader:menu:1").performClick()
+        composeTestRule.onNodeWithTag("reader:menu:save:1").performClick()
 
         assertEquals(1, toggled)
     }
@@ -67,17 +66,20 @@ class SurahReaderInteractionTest {
             }
         }
 
-        // Long-press an ayah -> actions sheet -> "Catatan & koleksi" -> inline editor.
-        composeTestRule.onNodeWithTag("reader:ayah:1").performTouchInput { longClick() }
-        composeTestRule.onNodeWithTag("reader:ayahActions:note").performClick()
+        // Open the ayah kebab menu -> "Catatan & koleksi" -> inline editor.
+        composeTestRule.onNodeWithTag("reader:menu:1").performClick()
+        composeTestRule.onNodeWithTag("reader:menu:note:1").performClick()
 
-        // Pick a preset collection, then save.
-        composeTestRule.onNodeWithText("Hafalan").performClick()
+        // Pick a preset collection (resolved from resources so it works in any locale), then save.
+        val preset = composeTestRule.activity.resources
+            .getStringArray(R.array.feature_quran_impl_bookmark_collections)
+            .first()
+        composeTestRule.onNodeWithText(preset).performClick()
         composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
 
         assertEquals(1, saved?.first)
         assertEquals(null, saved?.second)
-        assertEquals(listOf("Hafalan"), saved?.third)
+        assertEquals(listOf(preset), saved?.third)
     }
 
     @Composable

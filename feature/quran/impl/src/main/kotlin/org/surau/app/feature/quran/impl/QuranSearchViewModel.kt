@@ -26,16 +26,19 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.QuranSearchResult
+import org.surau.app.core.data.repository.UserDataRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class QuranSearchViewModel @Inject constructor(
     private val quranRepository: QuranRepository,
+    private val userDataRepository: UserDataRepository,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -54,9 +57,10 @@ class QuranSearchViewModel @Inject constructor(
                         emit(QuranSearchUiState.Loading)
                         emit(
                             try {
+                                val sourceId = userDataRepository.userData.first().translationSourceId
                                 QuranSearchUiState.Success(
                                     query = query,
-                                    results = quranRepository.search(query.trim()),
+                                    results = quranRepository.search(query.trim(), sourceId),
                                 )
                             } catch (exception: Exception) {
                                 QuranSearchUiState.Error
@@ -94,5 +98,8 @@ sealed interface QuranSearchUiState {
         val results: List<QuranSearchResult>,
     ) : QuranSearchUiState {
         val isEmpty: Boolean get() = results.isEmpty()
+
+        /** True when the hits came from the local index because the server was unreachable. */
+        val isOffline: Boolean get() = results.any { it.isOffline }
     }
 }

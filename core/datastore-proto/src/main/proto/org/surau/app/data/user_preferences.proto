@@ -18,6 +18,9 @@ syntax = "proto3";
 
 import "org/surau/app/data/dark_theme_config.proto";
 import "org/surau/app/data/reader_mode.proto";
+import "org/surau/app/data/theme_style.proto";
+import "org/surau/app/data/theme_contrast.proto";
+import "org/surau/app/data/theme_palette.proto";
 
 option java_package = "org.surau.app.core.datastore";
 option java_multiple_files = true;
@@ -63,5 +66,17 @@ message UserPreferences {
     // Inverse of "keep the screen on while reading" so the default (unset = false) means enabled.
     bool reader_keep_screen_on_disabled = 34;
 
-    // NEXT AVAILABLE ID: 35
+    // Custom theme seed color as a packed ARGB int (alpha is always 0xFF). 0 means "unset", in which
+    // case the app falls back to the default HeroUI Pro (Zamrud) scheme. Local-only, not synced.
+    int64 seed_color_argb = 35;
+    // Vibrancy style applied when generating the scheme from `seed_color_argb`.
+    ThemeStyleProto theme_style = 36;
+    // Minimum text contrast enforced on the generated scheme.
+    ThemeContrastProto theme_contrast = 37;
+    // Whether the decorative mesh gradient is enabled on chrome (default unset = false = off).
+    bool use_mesh_gradient = 38;
+    // The chosen named HeroUI palette for the static scheme (default unset = DEFAULT). Local-only.
+    ThemePaletteProto theme_palette = 39;
+
+    // NEXT AVAILABLE ID: 40
 }

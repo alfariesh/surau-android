@@ -23,10 +23,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -35,82 +33,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 /**
- * Light Surau color scheme — HeroUI Pro neutral sage palette with an olive-green accent.
+ * The app's baseline light/dark color schemes — the hand-tuned HeroUI **Default** palette (balanced
+ * neutral grey with a blue accent). Defined in HeroPalettes.kt; alternative palettes (Mouve, Sky)
+ * live alongside it and are selectable via [HeroPalette].
  */
 @VisibleForTesting
-val LightSurauColorScheme = lightColorScheme(
-    primary = HeroLightAccent,
-    onPrimary = Color.White,
-    primaryContainer = HeroLightPrimaryContainer,
-    onPrimaryContainer = HeroLightOnPrimaryContainer,
-    secondary = HeroLightSecondary,
-    onSecondary = Color.White,
-    secondaryContainer = HeroLightSecondaryContainer,
-    onSecondaryContainer = HeroLightOnSecondaryContainer,
-    tertiary = HeroLightTertiary,
-    onTertiary = Color.White,
-    tertiaryContainer = HeroLightTertiaryContainer,
-    onTertiaryContainer = HeroLightOnTertiaryContainer,
-    error = Red40,
-    onError = Color.White,
-    errorContainer = Red90,
-    onErrorContainer = Red10,
-    background = HeroLightBackground,
-    onBackground = HeroLightForeground,
-    surface = HeroLightSurface,
-    onSurface = HeroLightForeground,
-    surfaceVariant = HeroLightSurfaceSecondary,
-    onSurfaceVariant = HeroLightMuted,
-    surfaceContainerLowest = Color.White,
-    surfaceContainerLow = HeroLightBackground,
-    surfaceContainer = HeroLightSurfaceSecondary,
-    surfaceContainerHigh = HeroLightSurfaceTertiary,
-    surfaceContainerHighest = HeroLightSeparator,
-    inverseSurface = HeroDarkBackground,
-    inverseOnSurface = HeroLightBackground,
-    inversePrimary = HeroDarkAccent,
-    outline = HeroLightBorder,
-    outlineVariant = HeroLightSeparator,
-)
+val LightSurauColorScheme = DefaultLightColorScheme
 
-/**
- * Dark Surau color scheme — HeroUI Pro dark-olive palette with a lime-green accent.
- */
 @VisibleForTesting
-val DarkSurauColorScheme = darkColorScheme(
-    primary = HeroDarkAccent,
-    onPrimary = HeroDarkOnAccent,
-    primaryContainer = HeroDarkPrimaryContainer,
-    onPrimaryContainer = HeroDarkOnPrimaryContainer,
-    secondary = HeroDarkSecondary,
-    onSecondary = Color(0xFF26301E),
-    secondaryContainer = HeroDarkSecondaryContainer,
-    onSecondaryContainer = HeroDarkOnSecondaryContainer,
-    tertiary = HeroDarkTertiary,
-    onTertiary = Color(0xFF0E3438),
-    tertiaryContainer = HeroDarkTertiaryContainer,
-    onTertiaryContainer = HeroDarkOnTertiaryContainer,
-    error = Red80,
-    onError = Red20,
-    errorContainer = Red30,
-    onErrorContainer = Red90,
-    background = HeroDarkBackground,
-    onBackground = HeroDarkForeground,
-    surface = HeroDarkSurface,
-    onSurface = HeroDarkForeground,
-    surfaceVariant = HeroDarkSurfaceSecondary,
-    onSurfaceVariant = HeroDarkMuted,
-    surfaceContainerLowest = HeroDarkBackground,
-    surfaceContainerLow = HeroDarkSurface,
-    surfaceContainer = HeroDarkSurfaceSecondary,
-    surfaceContainerHigh = HeroDarkSurfaceTertiary,
-    surfaceContainerHighest = HeroDarkSegment,
-    inverseSurface = HeroLightBackground,
-    inverseOnSurface = HeroDarkSurface,
-    inversePrimary = HeroLightAccent,
-    outline = HeroDarkBorder,
-    outlineVariant = HeroDarkSeparator,
-)
+val DarkSurauColorScheme = DefaultDarkColorScheme
 
 /**
  * Surau theme.
@@ -120,22 +51,38 @@ val DarkSurauColorScheme = darkColorScheme(
  * @param darkTheme Whether the theme should use a dark color scheme (follows system by default).
  * @param disableDynamicTheming If `true`, disables the use of dynamic theming, even when it is
  *        supported.
+ * @param seedColor A user-chosen seed color. When specified (and dynamic theming is off), the whole
+ *        scheme is generated from it via [colorSchemeFromSeed]; [Color.Unspecified] keeps the default
+ *        HeroUI Pro (Zamrud) scheme so existing call sites and goldens are unaffected.
+ * @param seedStyle How vivid the generated scheme's accents are.
+ * @param seedContrast Extra contrast floor for the generated scheme (0f = standard, 1f = high).
+ * @param meshGradientEnabled Whether the decorative mesh gradient should render on chrome. Resolved
+ *        by the caller from the user preference and runtime gates (battery saver, reduced motion).
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SurauTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     disableDynamicTheming: Boolean = true,
+    seedColor: Color = Color.Unspecified,
+    seedStyle: SeedPaletteStyle = SeedPaletteStyle.TONAL_SPOT,
+    seedContrast: Float = 0f,
+    heroPalette: HeroPalette = HeroPalette.DEFAULT,
+    meshGradientEnabled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    val useDynamic = !disableDynamicTheming && supportsDynamicTheming()
+    val useSeed = !useDynamic && seedColor != Color.Unspecified
     // Color scheme
     val colorScheme = when {
-        !disableDynamicTheming && supportsDynamicTheming() -> {
+        useDynamic -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        else -> if (darkTheme) DarkSurauColorScheme else LightSurauColorScheme
+        useSeed -> colorSchemeFromSeed(seedColor, darkTheme, seedStyle, seedContrast)
+
+        else -> paletteColorScheme(heroPalette, darkTheme)
     }
     // Gradient colors
     val emptyGradientColors = GradientColors(container = colorScheme.surfaceColorAtElevation(2.dp))
@@ -145,28 +92,43 @@ fun SurauTheme(
         container = colorScheme.surface,
     )
     val gradientColors = when {
-        !disableDynamicTheming && supportsDynamicTheming() -> emptyGradientColors
+        useDynamic -> emptyGradientColors
         else -> defaultGradientColors
     }
-    // Background theme
+    // Background theme — the app canvas uses the `background` token (page color), not `surface`.
     val backgroundTheme = BackgroundTheme(
-        color = colorScheme.surface,
-        tonalElevation = 2.dp,
+        color = colorScheme.background,
+        tonalElevation = 0.dp,
     )
     val tintTheme = when {
-        !disableDynamicTheming && supportsDynamicTheming() -> TintTheme(colorScheme.primary)
+        useDynamic -> TintTheme(colorScheme.primary)
         else -> TintTheme()
     }
-    // Extended HeroUI semantic tokens: static by default, derived from the dynamic scheme when on.
+    // Extended HeroUI semantic tokens: static by default, derived from the live scheme for both the
+    // dynamic (wallpaper) and the user-seed paths so every component follows the chosen color.
     val semanticColors = when {
-        !disableDynamicTheming && supportsDynamicTheming() ->
-            surauSemanticColorsFromScheme(colorScheme, darkTheme)
-
-        else -> if (darkTheme) DarkSurauSemanticColors else LightSurauSemanticColors
+        useDynamic || useSeed -> surauSemanticColorsFromScheme(colorScheme, darkTheme)
+        else -> paletteSemanticColors(heroPalette, darkTheme)
+    }
+    // Decorative mesh corners: a top band of primary→tertiary containers fading to transparent,
+    // alpha-capped so it stays a subtle wash. Empty on the wallpaper-dynamic path (Material You owns
+    // its own look there).
+    val meshAlpha = if (darkTheme) 0.08f else 0.12f
+    val meshGradientColors = if (useDynamic) {
+        MeshGradientColors()
+    } else {
+        MeshGradientColors(
+            topStart = colorScheme.primaryContainer.copy(alpha = meshAlpha),
+            topEnd = colorScheme.tertiaryContainer.copy(alpha = meshAlpha),
+            bottomStart = Color.Unspecified,
+            bottomEnd = Color.Unspecified,
+        )
     }
     // Composition locals
     CompositionLocalProvider(
         LocalGradientColors provides gradientColors,
+        LocalMeshGradientColors provides meshGradientColors,
+        LocalMeshGradientEnabled provides meshGradientEnabled,
         LocalBackgroundTheme provides backgroundTheme,
         LocalTintTheme provides tintTheme,
         LocalSurauColors provides semanticColors,

@@ -46,8 +46,10 @@ val releaseStoreFilePath = signingProperty("RELEASE_STORE_FILE")
 android {
     defaultConfig {
         applicationId = "org.surau.app"
-        versionCode = 1
-        versionName = "0.1.0" // X.Y.Z; X = Major, Y = minor, Z = Patch level
+        // versionCode = epoch-day (hari sejak 1970-01-01): auto-monoton, satu kode per hari.
+        // Tiap rilis, hitung ulang: `date -ju -f "%Y-%m-%d %H:%M:%S" "<tgl> 00:00:00" +%s` / 86400.
+        versionCode = 20620 // 2026-06-16
+        versionName = "1.0.0" // X.Y.Z; X = Major, Y = minor, Z = Patch level
 
         // Custom test runner to set up Hilt dependency graph
         testInstrumentationRunner = "org.surau.app.core.testing.SurauTestRunner"
@@ -100,13 +102,11 @@ android {
 }
 
 dependencies {
-    implementation(projects.feature.activity.api)
     implementation(projects.feature.activity.impl)
     implementation(projects.feature.auth.api)
     implementation(projects.feature.auth.impl)
     implementation(projects.feature.quran.api)
     implementation(projects.feature.quran.impl)
-    implementation(projects.feature.settings.impl)
 
     implementation(projects.core.common)
     implementation(projects.core.ui)
@@ -119,6 +119,7 @@ dependencies {
     implementation(projects.sync.work)
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.compose.material3.adaptive)
@@ -129,6 +130,7 @@ dependencies {
     implementation(libs.androidx.compose.runtime.tracing)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.hilt.lifecycle.viewModelCompose)
     implementation(libs.androidx.lifecycle.runtimeCompose)
     implementation(libs.androidx.lifecycle.viewModel.navigation3)
     implementation(libs.androidx.profileinstaller)
@@ -136,6 +138,7 @@ dependencies {
     implementation(libs.androidx.window.core)
     implementation(libs.kotlinx.coroutines.guava)
     implementation(libs.coil.kt)
+    implementation(libs.haze)
     implementation(libs.kotlinx.serialization.json)
 
     ksp(libs.hilt.compiler)

@@ -20,6 +20,8 @@ import androidx.datastore.core.DataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import org.surau.app.core.datastore.crypto.AuthCrypto
+import org.surau.app.core.datastore.crypto.PlaintextAuthCrypto
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.auth.UserSession
 import javax.inject.Inject
@@ -27,12 +29,14 @@ import javax.inject.Inject
 /**
  * Persists the signed-in session (tokens + identity).
  *
- * The backing DataStore file is excluded from Android Auto Backup so tokens never leave the
- * device; combined with 15-minute access tokens and rotating refresh tokens this keeps plaintext
- * storage inside the app sandbox acceptable for milestone 1.
+ * The token fields are encrypted at rest with Keystore-backed AEAD ([crypto]) and the backing
+ * DataStore file is excluded from Android Auto Backup, so tokens never leave the device in the
+ * clear. Identity fields stay plaintext; combined with 15-minute access tokens and rotating refresh
+ * tokens this keeps storage inside the app sandbox safe.
  */
 class AuthSessionDataSource @Inject constructor(
     private val authSession: DataStore<AuthSession>,
+    private val crypto: AuthCrypto = PlaintextAuthCrypto,
 ) {
     /**
      * The current [AuthState]. Never emits [AuthState.Unknown]; that state only exists for UI
@@ -51,8 +55,8 @@ class AuthSessionDataSource @Inject constructor(
     ) {
         authSession.updateData {
             it.copy {
-                this.accessToken = accessToken
-                this.refreshToken = refreshToken
+                this.accessToken = crypto.encrypt(accessToken)
+                this.refreshToken = crypto.encrypt(refreshToken)
                 this.expiresAtEpochSeconds = expiresAtEpochSeconds
                 this.sessionId = session.sessionId
                 this.userId = session.userId
@@ -76,8 +80,8 @@ class AuthSessionDataSource @Inject constructor(
     ) {
         authSession.updateData {
             it.copy {
-                this.accessToken = accessToken
-                this.refreshToken = refreshToken
+                this.accessToken = crypto.encrypt(accessToken)
+                this.refreshToken = crypto.encrypt(refreshToken)
                 this.expiresAtEpochSeconds = expiresAtEpochSeconds
                 if (sessionId != null) this.sessionId = sessionId
             }
@@ -106,10 +110,10 @@ class AuthSessionDataSource @Inject constructor(
     }
 
     suspend fun currentAccessToken(): String? =
-        authSession.data.first().accessToken.ifEmpty { null }
+        authSession.data.first().accessToken.ifEmpty { null }?.let(crypto::decrypt)
 
     suspend fun currentRefreshToken(): String? =
-        authSession.data.first().refreshToken.ifEmpty { null }
+        authSession.data.first().refreshToken.ifEmpty { null }?.let(crypto::decrypt)
 }
 
 private fun AuthSession.toAuthState(): AuthState =

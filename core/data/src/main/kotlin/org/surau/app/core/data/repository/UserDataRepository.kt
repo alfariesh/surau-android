@@ -18,6 +18,9 @@ package org.surau.app.core.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import org.surau.app.core.model.data.DarkThemeConfig
+import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
+import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.UserData
 import org.surau.app.core.model.data.quran.ReaderMode
 
@@ -37,6 +40,32 @@ interface UserDataRepository {
      * Sets the preferred dynamic color config.
      */
     suspend fun setDynamicColorPreference(useDynamicColor: Boolean)
+
+    /**
+     * Sets the custom theme seed color as a packed ARGB int, or 0 to use the default scheme.
+     * Choosing a seed is mutually exclusive with dynamic (wallpaper) color. Local-only.
+     */
+    suspend fun setSeedColor(argb: Long)
+
+    /**
+     * Sets the vibrancy style used when generating a scheme from the custom seed. Local-only.
+     */
+    suspend fun setThemeStyle(themeStyle: ThemeStyle)
+
+    /**
+     * Sets the minimum contrast enforced on the generated custom scheme. Local-only.
+     */
+    suspend fun setThemeContrast(themeContrast: ThemeContrast)
+
+    /**
+     * Sets whether the decorative mesh gradient is enabled on chrome. Local-only.
+     */
+    suspend fun setMeshGradientPreference(useMeshGradient: Boolean)
+
+    /**
+     * Sets the named HeroUI palette for the static scheme. Local-only.
+     */
+    suspend fun setThemePalette(themePalette: ThemePalette)
 
     /**
      * Sets how the Quran reader lays out ayahs.

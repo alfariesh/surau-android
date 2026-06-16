@@ -38,3 +38,6 @@ object Sync {
 
 // This name should not be changed otherwise the app may have concurrent sync requests running
 internal const val SYNC_WORK_NAME = "SyncWorkName"
+
+// Unique name for the offline Qur'an download; keeps only one download running at a time.
+internal const val DOWNLOAD_WORK_NAME = "DownloadQuranWorkName"

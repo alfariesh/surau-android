@@ -27,7 +27,7 @@ class ActivityHeatmapModelTest {
     private val today = LocalDate(2026, 6, 10) // a Wednesday
 
     @Test
-    fun buildsFiveWeeksOfSevenDays() {
+    fun buildsConfiguredWeeksOfSevenDays() {
         val columns = buildHeatmapColumns(today, emptyMap())
         assertEquals(HEATMAP_WEEKS, columns.size)
         assertTrue(columns.all { it.size == HEATMAP_DAYS_PER_WEEK })
@@ -38,7 +38,7 @@ class ActivityHeatmapModelTest {
     fun cellsAreChronologicalAndContiguous() {
         val dates = buildHeatmapColumns(today, emptyMap()).flatten().map { it.date }
         assertEquals(dates.sorted(), dates)
-        // 35 consecutive days, no gaps/dupes.
+        // HEATMAP_WEEKS * 7 consecutive days, no gaps/dupes.
         assertEquals(dates.size, dates.toSet().size)
     }
 

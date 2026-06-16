@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,13 +41,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,6 +67,8 @@ import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
 import org.surau.app.core.designsystem.component.SurauTextButton
+import org.surau.app.core.designsystem.component.SurauTextField
+import org.surau.app.core.designsystem.component.SurauWidget
 import org.surau.app.core.designsystem.component.TagChip
 import org.surau.app.core.designsystem.component.TagDot
 import org.surau.app.core.designsystem.icon.SurauIcons
@@ -228,19 +229,15 @@ private fun BookmarksList(
         return
     }
 
-    LazyColumn(modifier = Modifier.testTag("bookmarks:list")) {
+    LazyColumn(
+        modifier = Modifier.testTag("bookmarks:list"),
+        contentPadding = PaddingValues(vertical = 8.dp),
+    ) {
         uiState.sections.forEach { section ->
-            item(key = "header-${section.surahId}") {
-                Text(
-                    text = section.surahName,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
-                )
-            }
             items(section.items, key = { it.ayahKey.value }) { item ->
                 BookmarkRow(
                     item = item,
+                    surahName = section.surahName,
                     onClick = { onOpenInReader(item.surahId, item.ayahNumber) },
                     onEdit = { onEdit(item) },
                     onDelete = { onDelete(item) },
@@ -253,24 +250,24 @@ private fun BookmarksList(
 @Composable
 private fun BookmarkRow(
     item: BookmarkListItem,
+    surahName: String,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    Column(
+    // Heading band: surah name + verse on the left, notes/delete actions on the right. The content
+    // card holds the ayah (with the user's note and tags beneath it).
+    SurauWidget(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
             .clickable(onClick = onClick)
-            .testTag("bookmarks:item:${item.ayahKey.value}")
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.feature_quran_impl_ayah_number, item.ayahNumber),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-            )
+            .testTag("bookmarks:item:${item.ayahKey.value}"),
+        title = { Text(surahName) },
+        description = {
+            Text(stringResource(R.string.feature_quran_impl_ayah_number, item.ayahNumber))
+        },
+        legend = {
             IconButton(
                 onClick = onEdit,
                 modifier = Modifier.testTag("bookmarks:edit:${item.ayahKey.value}"),
@@ -289,14 +286,13 @@ private fun BookmarkRow(
                     contentDescription = stringResource(R.string.feature_quran_impl_bookmarks_delete),
                 )
             }
-        }
-
+        },
+    ) {
         item.arabicText?.let { arabic ->
             AyahText(
                 text = arabic,
                 fontScale = 0.7f,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(top = 4.dp),
             )
         }
 
@@ -307,7 +303,7 @@ private fun BookmarkRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = if (item.arabicText != null) 8.dp else 0.dp),
             )
         }
 
@@ -322,11 +318,6 @@ private fun BookmarkRow(
                 item.tags.forEach { tag -> TagChip(label = tag) }
             }
         }
-
-        HorizontalDivider(
-            modifier = Modifier.padding(top = 12.dp),
-            color = MaterialTheme.colorScheme.outlineVariant,
-        )
     }
 }
 
@@ -367,7 +358,7 @@ internal fun BookmarkEditorContent(
         )
 
         Spacer(modifier = Modifier.size(16.dp))
-        OutlinedTextField(
+        SurauTextField(
             value = note,
             onValueChange = { note = it },
             label = { Text(stringResource(R.string.feature_quran_impl_bookmarks_note_hint)) },
@@ -418,7 +409,7 @@ internal fun BookmarkEditorContent(
         )
         Spacer(modifier = Modifier.size(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
+            SurauTextField(
                 value = tagInput,
                 onValueChange = { tagInput = it },
                 label = { Text(stringResource(R.string.feature_quran_impl_bookmarks_tag_hint)) },

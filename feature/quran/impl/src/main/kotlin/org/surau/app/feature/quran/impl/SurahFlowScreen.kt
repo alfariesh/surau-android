@@ -21,10 +21,16 @@ package org.surau.app.feature.quran.impl
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -62,7 +68,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -76,15 +81,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.core.view.WindowInsetsCompat
@@ -94,7 +105,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import org.surau.app.core.designsystem.component.AyahText
+import org.surau.app.core.designsystem.component.SurauAnimatedMeshGradient
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
+import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.media.PlayerUiState
 import org.surau.app.core.media.RepeatScope
@@ -109,6 +122,7 @@ fun SurahFlowScreen(
     navKey: SurahFlowNavKey,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    embedded: Boolean = false,
     viewModel: SurahFlowViewModel =
         hiltViewModel<SurahFlowViewModel, SurahFlowViewModel.Factory>(
             key = navKey.toString(),
@@ -151,6 +165,7 @@ fun SurahFlowScreen(
         onSetSleepTimer = viewModel::onSetSleepTimer,
         onSetSpeed = viewModel::onSetSpeed,
         snackbarHostState = snackbarHostState,
+        embedded = embedded,
         modifier = modifier,
     )
 }
@@ -179,6 +194,7 @@ internal fun SurahFlowScreen(
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     initialChromeVisible: Boolean = true,
+    embedded: Boolean = false,
 ) {
     ReportDrawnWhen { uiState !is FlowUiState.Loading }
     TrackScreenViewEvent(screenName = "SurahFlow")
@@ -230,6 +246,7 @@ internal fun SurahFlowScreen(
             onSetSpeed = onSetSpeed,
             snackbarHostState = snackbarHostState,
             initialChromeVisible = initialChromeVisible,
+            embedded = embedded,
             modifier = modifier,
         )
     }
@@ -258,15 +275,30 @@ private fun FlowSuccess(
     onSetSpeed: (Float) -> Unit,
     snackbarHostState: SnackbarHostState,
     initialChromeVisible: Boolean,
+    embedded: Boolean,
     modifier: Modifier,
 ) {
     val surface = MaterialTheme.colorScheme.surface
+    val flowMesh = flowMeshColors()
     val listState = rememberLazyListState()
     val inspection = LocalInspectionMode.current
+    // The backdrop mesh drifts gently, unless previews, reduced motion or battery saver say otherwise.
+    val context = LocalContext.current
+    val meshAnimated = !inspection && remember(context) {
+        val animScale =
+            Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+        val powerManager = context.getSystemService(PowerManager::class.java)
+        animScale != 0f && powerManager?.isPowerSaveMode != true
+    }
 
     var chromeVisible by rememberSaveable { mutableStateOf(initialChromeVisible) }
     var interactionTick by remember { mutableIntStateOf(0) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
+
+    // Material 3 motion: a spatial spring drives the bars' slide (movement/position) while an effects
+    // spring drives the fade (opacity never bounces). See m3.material.io/styles/motion.
+    val chromeSlideSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val chromeFadeSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
     // Auto-hide chrome after a few idle seconds (skipped in previews/screenshots).
     LaunchedEffect(chromeVisible, interactionTick) {
@@ -276,11 +308,36 @@ private fun FlowSuccess(
         }
     }
 
+    // Reveal the chrome when the reader drags back toward the top, hide it when reading forward —
+    // the standard "enter-always" toolbar feel, so a swipe (not only a tap) summons the header.
+    // Observe-only: it never consumes the delta, so the player's collapse hand-off is untouched.
+    // Only user drags count; programmatic centring dispatches as SideEffect and is ignored.
+    val chromeScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput) {
+                    val dy = available.y
+                    if (dy > CHROME_SCROLL_THRESHOLD_PX) {
+                        chromeVisible = true
+                        interactionTick++ // keep the idle timer fresh while dragging back
+                    } else if (dy < -CHROME_SCROLL_THRESHOLD_PX) {
+                        chromeVisible = false
+                    }
+                }
+                return Offset.Zero
+            }
+        }
+    }
+
     // Immersive: hide the system bars while the chrome is hidden; always restore them on leave.
+    // Skipped when embedded — the player is an expandable sheet that can be collapsed, so it must
+    // never take over the whole window's system bars.
     val view = LocalView.current
-    DisposableEffect(chromeVisible) {
-        val controller = view.context.findActivity()?.window?.let {
-            WindowInsetsControllerCompat(it, view)
+    DisposableEffect(chromeVisible, embedded) {
+        val controller = if (!embedded) {
+            view.context.findActivity()?.window?.let { WindowInsetsControllerCompat(it, view) }
+        } else {
+            null
         }
         if (chromeVisible) {
             controller?.show(WindowInsetsCompat.Type.systemBars())
@@ -311,6 +368,7 @@ private fun FlowSuccess(
         modifier = modifier
             .fillMaxSize()
             .background(surface)
+            .nestedScroll(chromeScrollConnection)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = {
@@ -321,6 +379,18 @@ private fun FlowSuccess(
             }
             .testTag("flow:screen"),
     ) {
+        // Vibrant themed mesh behind the ayahs — the Flow player's living backdrop. A 4×4 ramp of
+        // accent colors whose interior points drift slowly (simplex noise). Low-alpha so the centred
+        // ayah stays high-contrast; the normal reader page stays flat (this is the player exception).
+        SurauAnimatedMeshGradient(
+            gridWidth = 4,
+            gridHeight = 4,
+            basePoints = FlowMeshPoints,
+            colors = flowMesh,
+            modifier = Modifier.fillMaxSize(),
+            subdivisions = 6,
+            animated = meshAnimated,
+        )
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             // Half-viewport top/bottom padding lets any ayah scroll to the centre.
             val halfViewport = maxHeight / 2
@@ -343,27 +413,17 @@ private fun FlowSuccess(
             }
         }
 
-        // Fade the top and bottom edges so the centre ayah is the focus.
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(FADE_HEIGHT)
-                .align(Alignment.TopCenter)
-                .background(Brush.verticalGradient(listOf(surface, Color.Transparent))),
-        )
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(FADE_HEIGHT)
-                .align(Alignment.BottomCenter)
-                .background(Brush.verticalGradient(listOf(Color.Transparent, surface))),
-        )
-
-        AnimatedVisibility(visible = chromeVisible, modifier = Modifier.align(Alignment.TopCenter)) {
+        AnimatedVisibility(
+            visible = chromeVisible,
+            modifier = Modifier.align(Alignment.TopCenter),
+            enter = slideInVertically(chromeSlideSpec) { -it } + fadeIn(chromeFadeSpec),
+            exit = slideOutVertically(chromeSlideSpec) { -it } + fadeOut(chromeFadeSpec),
+        ) {
             FlowTopBar(
                 surahName = success.surahName,
                 sleepTimerRemainingMs = playerState.sleepTimerRemainingMs,
                 stopAtSurahEnd = playerState.stopAtSurahEnd,
+                embedded = embedded,
                 onBackClick = onBackClick,
                 onSettingsClick = {
                     showSettings = true
@@ -375,6 +435,8 @@ private fun FlowSuccess(
         AnimatedVisibility(
             visible = chromeVisible,
             modifier = Modifier.align(Alignment.BottomCenter),
+            enter = slideInVertically(chromeSlideSpec) { it } + fadeIn(chromeFadeSpec),
+            exit = slideOutVertically(chromeSlideSpec) { it } + fadeOut(chromeFadeSpec),
         ) {
             FlowBottomBar(
                 playerState = playerState,
@@ -410,6 +472,40 @@ private fun FlowSuccess(
             onSetRepeat = onSetRepeat,
             onDismiss = { showSettings = false },
         )
+    }
+}
+
+/**
+ * The 16 colors of the Flow backdrop's 4×4 mesh — a diagonal ramp through the active (themed)
+ * scheme's container/primary/tertiary/secondary, so the mesh flows through several hues (it reads as
+ * a real mesh, not one flat tint) while the low alpha keeps the recited ayah's onSurface ink legible.
+ */
+@Composable
+private fun flowMeshColors(): List<Color> {
+    val cs = MaterialTheme.colorScheme
+    val dark = cs.surface.luminance() < 0.5f
+    val a = if (dark) 0.24f else 0.32f
+    val stops = listOf(cs.primaryContainer, cs.primary, cs.tertiary, cs.secondary)
+    return List(16) { i ->
+        val col = i % 4
+        val row = i / 4
+        sampleRamp(stops, (col + row) / 6f).copy(alpha = a)
+    }
+}
+
+/** Samples a list of color stops at [fraction] in 0..1. */
+private fun sampleRamp(stops: List<Color>, fraction: Float): Color {
+    val x = fraction.coerceIn(0f, 1f) * (stops.size - 1)
+    val i = x.toInt().coerceIn(0, stops.size - 2)
+    return androidx.compose.ui.graphics.lerp(stops[i], stops[i + 1], x - i)
+}
+
+/** A regular 4×4 control grid (row-major, normalized 0..1); the animator drifts the interior points. */
+private val FlowMeshPoints: List<Offset> = buildList {
+    for (row in 0..3) {
+        for (col in 0..3) {
+            add(Offset(col / 3f, row / 3f))
+        }
     }
 }
 
@@ -479,10 +575,15 @@ private fun FlowTopBar(
     surahName: String,
     sleepTimerRemainingMs: Long?,
     stopAtSurahEnd: Boolean,
+    embedded: Boolean,
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
-    Surface(color = MaterialTheme.colorScheme.surface) {
+    // Transparent so the mesh flows behind the header (battery/signal area included) — no opaque bar.
+    Surface(
+        color = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -492,7 +593,7 @@ private fun FlowTopBar(
         ) {
             IconButton(onClick = onBackClick, modifier = Modifier.testTag("flow:back")) {
                 Icon(
-                    imageVector = SurauIcons.ArrowBack,
+                    imageVector = if (embedded) SurauIcons.ChevronDown else SurauIcons.ArrowBack,
                     contentDescription = stringResource(R.string.feature_quran_impl_back),
                 )
             }
@@ -544,7 +645,11 @@ private fun FlowBottomBar(
     onSetSleepTimer: (SleepTimerOption) -> Unit,
     onInteraction: () -> Unit,
 ) {
-    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
+    // Transparent so the mesh flows behind the controls all the way down — no opaque player bar.
+    Surface(
+        color = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -743,7 +848,7 @@ private fun FlowSettingsSheet(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(checked = showTranslation, onCheckedChange = { onToggleTranslation() })
+                SurauSwitch(checked = showTranslation, onCheckedChange = { onToggleTranslation() })
             }
             Row(
                 modifier = Modifier
@@ -756,7 +861,7 @@ private fun FlowSettingsSheet(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(checked = autoContinue, onCheckedChange = { onToggleAutoContinue() })
+                SurauSwitch(checked = autoContinue, onCheckedChange = { onToggleAutoContinue() })
             }
             Row(
                 modifier = Modifier
@@ -769,7 +874,7 @@ private fun FlowSettingsSheet(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(checked = keepScreenOn, onCheckedChange = { onToggleKeepScreenOn() })
+                SurauSwitch(checked = keepScreenOn, onCheckedChange = { onToggleKeepScreenOn() })
             }
 
             Text(
@@ -870,8 +975,10 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
-private val FADE_HEIGHT = 120.dp
 private const val CHROME_IDLE_MS = 3_000L
+
+/** Per-frame user-drag delta (px) past which a scroll reveals/hides the immersive chrome. */
+private const val CHROME_SCROLL_THRESHOLD_PX = 8f
 private val SLEEP_TIMER_MINUTES = listOf(15, 30, 45, 60)
 private val REPEAT_COUNTS = listOf(0, 3, 5, 7) // 0 = unlimited
 private val SPEEDS = listOf(0.75f, 1f, 1.25f, 1.5f)

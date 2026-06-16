@@ -31,6 +31,7 @@ internal fun reducePlayerState(
 ): PlayerUiState = base.copy(
     isPlaying = isPlaying,
     surahId = currentItem?.mediaMetadata?.extras?.getInt(KEY_SURAH_ID, 0)?.takeIf { it > 0 },
+    surahName = currentItem?.mediaMetadata?.extras?.getString(KEY_SURAH_NAME),
     currentAyahNumber = currentItem?.mediaId?.substringAfter(':', "")?.toIntOrNull(),
     recitationName = currentItem?.mediaMetadata?.artist?.toString(),
     durationMs = durationMs.coerceAtLeast(0L),

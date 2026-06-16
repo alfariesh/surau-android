@@ -31,6 +31,7 @@ import org.surau.app.core.database.dao.SurahDao
 import org.surau.app.core.database.dao.TranslationSourceDao
 import org.surau.app.core.database.model.AyahEntity
 import org.surau.app.core.database.model.AyahFetchMetadataEntity
+import org.surau.app.core.database.model.AyahFtsEntity
 import org.surau.app.core.database.model.JuzEntity
 import org.surau.app.core.database.model.SurahEntity
 import org.surau.app.core.database.model.TranslationEntity
@@ -101,6 +102,9 @@ internal class OfflineFirstQuranRepository @Inject constructor(
                 quranApi.ayahs(
                     surahId = surahId,
                     translationSource = translationSourceId,
+                    // `full` carries `text_imlaei_simple`/`search_text`, so every cached surah is
+                    // offline-searchable — whether reached by reading or by the bulk download.
+                    view = VIEW_FULL,
                 )
             }
         } catch (exception: IOException) {
@@ -118,6 +122,7 @@ internal class OfflineFirstQuranRepository @Inject constructor(
                 translationSourceId = translationSourceId,
                 fetchedAt = now,
             ),
+            ftsRows = response.items.map { it.asFtsEntity(translationSourceId) },
         )
     }
 
@@ -130,8 +135,11 @@ internal class OfflineFirstQuranRepository @Inject constructor(
             ?: DEFAULT_TRANSLATION_SOURCE_ID
     }
 
-    override suspend fun search(query: String): List<QuranSearchResult> =
-        apiCall { quranApi.search(query = query) }
+    override suspend fun search(
+        query: String,
+        translationSourceId: String?,
+    ): List<QuranSearchResult> = try {
+        apiCall { quranApi.search(query = query, translationSource = translationSourceId) }
             .items
             .map { result ->
                 QuranSearchResult(
@@ -148,6 +156,23 @@ internal class OfflineFirstQuranRepository @Inject constructor(
                     score = result.score,
                 )
             }
+    } catch (_: IOException) {
+        searchLocal(query, translationSourceId)
+    }
+
+    /**
+     * Offline fallback over the downloaded FTS index. Returns nothing (rather than throwing) when
+     * the query has no searchable tokens or nothing is downloaded for the resolved source.
+     */
+    private suspend fun searchLocal(
+        query: String,
+        translationSourceId: String?,
+    ): List<QuranSearchResult> {
+        val match = buildFtsMatchExpression(query) ?: return emptyList()
+        val sourceId = resolveTranslationSourceId(translationSourceId)
+        return ayahDao.searchAyahsFts(sourceId, match, LOCAL_SEARCH_LIMIT)
+            .map { row -> QuranSearchResult(ayah = row.asExternalModel(), score = 0.0, isOffline = true) }
+    }
 
     private suspend fun refreshSurahsIfNeeded() {
         surahRefreshMutex.withLock {
@@ -234,8 +259,33 @@ internal class OfflineFirstQuranRepository @Inject constructor(
 
         /** Kemenag Indonesian translation — sane fallback when the backend is unreachable. */
         private const val DEFAULT_TRANSLATION_SOURCE_ID = "kemenag-id-translation"
+
+        /** Full ayah view: includes `text_imlaei_simple`/`search_text` needed by offline search. */
+        private const val VIEW_FULL = "full"
+
+        /** Cap on offline FTS hits; the online endpoint defaults to 20, so mirror it. */
+        private const val LOCAL_SEARCH_LIMIT = 50
     }
 }
+
+/**
+ * Turns a free-text query into a safe FTS4 MATCH expression: split on whitespace, strip the FTS
+ * operator characters, and prefix-match each surviving token (implicit AND). Returns null when no
+ * usable token remains so the caller can skip the local query.
+ */
+internal fun buildFtsMatchExpression(query: String): String? {
+    val tokens = query
+        .split(Regex("\\s+"))
+        .mapNotNull { raw ->
+            val cleaned = raw.filterNot { it in FTS_RESERVED_CHARS }
+            cleaned.ifBlank { null }
+        }
+    if (tokens.isEmpty()) return null
+    return tokens.joinToString(" ") { "$it*" }
+}
+
+/** Characters with special meaning in an FTS4 MATCH expression; stripped from user tokens. */
+private const val FTS_RESERVED_CHARS = "\"*():^-"
 
 private fun AyahDto.asExternalModel() = Ayah(
     surahId = surahId,
@@ -254,6 +304,19 @@ private fun AyahDto.asAyahEntity() = AyahEntity(
     pageNumber = pageNumber,
     juzNumber = juzNumber,
     hizbNumber = hizbNumber,
+    textImlaeiSimple = textImlaeiSimple,
+    searchText = searchText,
+)
+
+/**
+ * The FTS row for one ayah under [requestedSourceId]. Indexes the server-normalised search text
+ * (falling back through imlaei to the Hafs text) plus this source's translation.
+ */
+private fun AyahDto.asFtsEntity(requestedSourceId: String) = AyahFtsEntity(
+    ayahKey = ayahKey,
+    sourceId = requestedSourceId,
+    arabic = searchText ?: textImlaeiSimple ?: textQpcHafs,
+    translation = translation?.text.orEmpty(),
 )
 
 private fun AyahDto.asTranslationEntity(requestedSourceId: String): TranslationEntity? =

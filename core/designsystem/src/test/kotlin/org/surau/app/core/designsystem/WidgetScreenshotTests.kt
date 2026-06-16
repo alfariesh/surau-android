@@ -56,9 +56,9 @@ class WidgetScreenshotTests {
                     description = { Text("5 hari berturut-turut") },
                     legend = {
                         SurauWidgetLegendItem(label = "Selesai", color = Color(0xFF4F772D))
-                        SurauWidgetLegendItem(label = "Baki", color = Color(0xFFB37903))
+                        SurauWidgetLegendItem(label = "Sisa", color = Color(0xFFB37903))
                     },
-                    footer = { Text("Lihat butiran") },
+                    footer = { Text("Lihat detail") },
                 ) {
                     Text(
                         text = "32 ayat",

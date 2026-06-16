@@ -55,9 +55,10 @@ class BookmarksInteractionTest {
             }
         }
 
+        val addLabel = composeTestRule.activity.getString(R.string.feature_quran_impl_bookmarks_add_tag)
         composeTestRule.onNodeWithTag("bookmarks:editor:note").performTextInput("renungan")
         composeTestRule.onNodeWithTag("bookmarks:editor:tagInput").performTextInput("tafsir")
-        composeTestRule.onNodeWithText("Tambahkan").performClick()
+        composeTestRule.onNodeWithText(addLabel).performClick()
         composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
 
         assertEquals("renungan", saved?.first)
@@ -115,11 +116,15 @@ class BookmarksInteractionTest {
             }
         }
 
-        // Tapping a preset collection chip adds it as a tag without typing.
-        composeTestRule.onNodeWithText("Hafalan").performClick()
+        // Tapping a preset collection chip adds it as a tag without typing. Resolve the label from
+        // resources so the assertion holds in whatever locale the test renders.
+        val preset = composeTestRule.activity.resources
+            .getStringArray(R.array.feature_quran_impl_bookmark_collections)
+            .first()
+        composeTestRule.onNodeWithText(preset).performClick()
         composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
 
-        assertEquals(listOf("Hafalan"), saved?.second)
+        assertEquals(listOf(preset), saved?.second)
     }
 
     @Test

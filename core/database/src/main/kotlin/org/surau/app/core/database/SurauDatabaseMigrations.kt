@@ -85,4 +85,25 @@ internal object SurauDatabaseMigrations {
             )
         }
     }
+
+    /**
+     * v4 → v5: milestone 6 offline search. Adds two nullable Arabic columns to `ayahs`
+     * (`text_imlaei_simple`, `search_text`, only filled by the full-download path) and the
+     * standalone `ayahs_fts` FTS4 table used for the offline-search fallback. Purely additive;
+     * existing rows keep their values and the new columns default to NULL. The `CREATE VIRTUAL
+     * TABLE` statement is copied verbatim from the Room-generated v5 schema (`schemas/.../5.json`)
+     * so `runMigrationsAndValidate` accepts it.
+     */
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `ayahs` ADD COLUMN `text_imlaei_simple` TEXT")
+            db.execSQL("ALTER TABLE `ayahs` ADD COLUMN `search_text` TEXT")
+            db.execSQL(
+                "CREATE VIRTUAL TABLE IF NOT EXISTS `ayahs_fts` USING FTS4(" +
+                    "`ayah_key` TEXT NOT NULL, `source_id` TEXT NOT NULL, " +
+                    "`arabic` TEXT NOT NULL, `translation` TEXT NOT NULL, " +
+                    "notindexed=`ayah_key`, notindexed=`source_id`)",
+            )
+        }
+    }
 }

@@ -50,6 +50,9 @@ data class AyahDto(
     @SerialName("ayah_number") val ayahNumber: Int,
     @SerialName("ayah_key") val ayahKey: String,
     @SerialName("text_qpc_hafs") val textQpcHafs: String = "",
+    // Only present on the `view=full` response (the download path); null for `reader_minimal`.
+    @SerialName("text_imlaei_simple") val textImlaeiSimple: String? = null,
+    @SerialName("search_text") val searchText: String? = null,
     @SerialName("page_number") val pageNumber: Int? = null,
     @SerialName("juz_number") val juzNumber: Int? = null,
     @SerialName("hizb_number") val hizbNumber: Int? = null,

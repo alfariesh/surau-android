@@ -19,10 +19,16 @@
         <exclude
             domain="file"
             path="datastore/auth_session.pb" />
+        <exclude
+            domain="sharedpref"
+            path="surau_auth_keyset.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude
             domain="file"
             path="datastore/auth_session.pb" />
+        <exclude
+            domain="sharedpref"
+            path="surau_auth_keyset.xml" />
     </device-transfer>
 </data-extraction-rules>

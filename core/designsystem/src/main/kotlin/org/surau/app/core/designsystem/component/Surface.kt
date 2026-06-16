@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import org.surau.app.core.designsystem.theme.LocalSurauColors
 
 /** Background level for [SurauSurface], mapping to the HeroUI surface tokens. */
-enum class SurauSurfaceVariant { Default, Secondary, Tertiary, Transparent }
+enum class SurauSurfaceVariant { Default, Secondary, Tertiary, Background, Transparent }
 
 /**
  * A themed container surface — HeroUI Native's `Surface`. Matches the source exactly: `rounded-3xl`
@@ -109,6 +109,7 @@ private fun SurauSurfaceVariant.color(): Color {
         SurauSurfaceVariant.Default -> colors.surface
         SurauSurfaceVariant.Secondary -> colors.surfaceSecondary
         SurauSurfaceVariant.Tertiary -> colors.surfaceTertiary
+        SurauSurfaceVariant.Background -> colors.background
         SurauSurfaceVariant.Transparent -> Color.Transparent
     }
 }

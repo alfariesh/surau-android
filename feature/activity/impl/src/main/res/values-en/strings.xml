@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright 2025 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <string name="feature_activity_impl_loading">Loading activity</string>
+    <string name="feature_activity_impl_cancel">Cancel</string>
+    <string name="feature_activity_impl_retry">Try again</string>
+    <string name="feature_activity_impl_error_generic">Something went wrong. Try again.</string>
+
+    <!-- Streak -->
+    <string name="feature_activity_impl_streak_unit">day streak</string>
+    <string name="feature_activity_impl_streak_longest">Longest: %1$d days</string>
+
+    <!-- Heatmap -->
+    <string name="feature_activity_impl_heatmap_title">Reading activity</string>
+    <string name="feature_activity_impl_activity_summary">%1$d active days · %2$d verses read</string>
+    <string name="feature_activity_impl_heatmap_empty">No reading activity yet. Start reading to fill the calendar.</string>
+    <string name="feature_activity_impl_heatmap_day">%1$s · %2$d verses</string>
+    <string name="feature_activity_impl_heatmap_cell_desc">%1$s, %2$d verses read</string>
+    <string name="feature_activity_impl_heatmap_legend_less">Less</string>
+    <string name="feature_activity_impl_heatmap_legend_more">More</string>
+    <string name="feature_activity_impl_weekday_mon">Mon</string>
+    <string name="feature_activity_impl_weekday_wed">Wed</string>
+    <string name="feature_activity_impl_weekday_fri">Fri</string>
+
+    <!-- Short month names (Jan..Dec) for the heatmap day readout and khatam history dates -->
+    <string-array name="feature_activity_impl_month_abbrev">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sep</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </string-array>
+
+    <!-- Surah progress -->
+    <string name="feature_activity_impl_surah_progress_title">Surah progress</string>
+    <string name="feature_activity_impl_surah_progress_percent">%1$d%%</string>
+
+    <!-- Khatam -->
+    <string name="feature_activity_impl_khatam_title">Qur\'an khatam</string>
+    <string name="feature_activity_impl_khatam_progress">%1$d / %2$d juz</string>
+    <string name="feature_activity_impl_juz_number">Juz %1$d</string>
+    <string name="feature_activity_impl_khatam_start">Start khatam</string>
+    <string name="feature_activity_impl_khatam_complete">Mark complete</string>
+    <string name="feature_activity_impl_khatam_none_desc">Start a khatam to track your progress through all 30 juz.</string>
+    <string name="feature_activity_impl_khatam_notes_label">Notes (optional)</string>
+    <string name="feature_activity_impl_khatam_start_dialog_title">Start a new khatam</string>
+    <string name="feature_activity_impl_khatam_history_title">Khatam history</string>
+    <string name="feature_activity_impl_khatam_history_range">%1$s – %2$s</string>
+
+    <!-- Guest -->
+    <string name="feature_activity_impl_login_required_title">Sign in to see your activity</string>
+    <string name="feature_activity_impl_login_required_desc">Streaks, the heatmap, and khatam need an account. Sign in to start tracking your reading.</string>
+    <string name="feature_activity_impl_login_button">Sign in</string>
+
+    <!-- Error -->
+    <string name="feature_activity_impl_error_title">Couldn\'t load</string>
+    <string name="feature_activity_impl_error_desc">Check your internet connection and try again.</string>
+
+    <!-- Weekday initials (Mon..Sun) for the streak week row -->
+    <string-array name="feature_activity_impl_weekday_initials">
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+        <item>S</item>
+    </string-array>
+</resources>

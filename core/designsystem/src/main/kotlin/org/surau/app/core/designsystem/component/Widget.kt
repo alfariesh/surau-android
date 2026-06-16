@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.surau.app.core.designsystem.theme.LocalSurauColors
 
 /**
@@ -49,8 +50,11 @@ import org.surau.app.core.designsystem.theme.LocalSurauColors
  * asymmetric padding (header 2dp top / 6dp bottom, footer mirrored).
  *
  * @param modifier Modifier applied to the widget shell.
- * @param title Optional heading. Rendered with the 14sp medium title style.
- * @param description Optional sub-heading. Rendered 12sp muted, beneath the title.
+ * @param shellColor Background of the outer shell (and header/footer band). Defaults to
+ *        `surface-secondary`.
+ * @param containerVariant Surface token for the elevated content card. Defaults to `surface`.
+ * @param title Optional heading. Rendered with the uniform ~20sp medium widget-title style.
+ * @param description Optional sub-heading. Rendered 14sp muted, beneath the title.
  * @param legend Optional trailing header content, laid out in a [RowScope]. Pair with
  *        [SurauWidgetLegendItem].
  * @param footer Optional footer content beneath the content card.
@@ -59,6 +63,8 @@ import org.surau.app.core.designsystem.theme.LocalSurauColors
 @Composable
 fun SurauWidget(
     modifier: Modifier = Modifier,
+    shellColor: Color = LocalSurauColors.current.surfaceSecondary,
+    containerVariant: SurauSurfaceVariant = SurauSurfaceVariant.Default,
     title: (@Composable () -> Unit)? = null,
     description: (@Composable () -> Unit)? = null,
     legend: (@Composable RowScope.() -> Unit)? = null,
@@ -69,7 +75,7 @@ fun SurauWidget(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.surfaceSecondary)
+            .background(shellColor)
             .padding(6.dp),
     ) {
         if (title != null || description != null || legend != null) {
@@ -85,12 +91,16 @@ fun SurauWidget(
                         CompositionLocalProvider(
                             LocalContentColor provides MaterialTheme.colorScheme.onSurface,
                         ) {
-                            ProvideTextStyle(MaterialTheme.typography.titleSmall, title)
+                            // Uniform widget heading: ~20sp (medium), description 14sp.
+                            ProvideTextStyle(
+                                MaterialTheme.typography.titleSmall.copy(fontSize = 20.sp, lineHeight = 26.sp),
+                                title,
+                            )
                         }
                     }
                     if (description != null) {
                         CompositionLocalProvider(LocalContentColor provides colors.muted) {
-                            ProvideTextStyle(MaterialTheme.typography.bodySmall, description)
+                            ProvideTextStyle(MaterialTheme.typography.bodyMedium, description)
                         }
                     }
                 }
@@ -106,7 +116,7 @@ fun SurauWidget(
 
         SurauSurface(
             modifier = Modifier.fillMaxWidth(),
-            variant = SurauSurfaceVariant.Default,
+            variant = containerVariant,
             shape = RoundedCornerShape(12.dp),
         ) {
             Column(content = content)

@@ -16,8 +16,11 @@
 
 package org.surau.app
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -27,6 +30,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,15 +49,26 @@ import org.surau.app.core.analytics.AnalyticsHelper
 import org.surau.app.core.analytics.LocalAnalyticsHelper
 import org.surau.app.core.data.util.NetworkMonitor
 import org.surau.app.core.data.util.TimeZoneMonitor
+import org.surau.app.core.designsystem.theme.HeroPalette
+import org.surau.app.core.designsystem.theme.SeedPaletteStyle
 import org.surau.app.core.designsystem.theme.SurauTheme
+import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
+import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.ui.LocalTimeZone
 import org.surau.app.ui.SurauApp
 import org.surau.app.ui.rememberSurauAppState
+import org.surau.app.util.AppLanguage
 import org.surau.app.util.isSystemInDarkTheme
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        // Applies the persisted per-app language on API < 33 (no-op on 33+).
+        super.attachBaseContext(AppLanguage.wrap(newBase))
+    }
 
     /**
      * Lazily inject [JankStats], which is used to track jank throughout the app.
@@ -90,6 +105,11 @@ class MainActivity : ComponentActivity() {
             ThemeSettings(
                 darkTheme = resources.configuration.isSystemInDarkTheme,
                 disableDynamicTheming = Loading.shouldDisableDynamicTheming,
+                seedColorArgb = Loading.seedColorArgb,
+                themeStyle = Loading.themeStyle,
+                themeContrast = Loading.themeContrast,
+                themePalette = Loading.themePalette,
+                useMeshGradient = Loading.useMeshGradient,
             ),
         )
 
@@ -103,6 +123,11 @@ class MainActivity : ComponentActivity() {
                     ThemeSettings(
                         darkTheme = uiState.shouldUseDarkTheme(systemDark),
                         disableDynamicTheming = uiState.shouldDisableDynamicTheming,
+                        seedColorArgb = uiState.seedColorArgb,
+                        themeStyle = uiState.themeStyle,
+                        themeContrast = uiState.themeContrast,
+                        themePalette = uiState.themePalette,
+                        useMeshGradient = uiState.useMeshGradient && meshRuntimeAllowed(),
                     )
                 }
                     .onEach { themeSettings = it }
@@ -151,6 +176,14 @@ class MainActivity : ComponentActivity() {
                 SurauTheme(
                     darkTheme = themeSettings.darkTheme,
                     disableDynamicTheming = themeSettings.disableDynamicTheming,
+                    seedColor = themeSettings.seedColorArgb
+                        .takeIf { it != 0L }
+                        ?.let { Color(it) }
+                        ?: Color.Unspecified,
+                    seedStyle = themeSettings.themeStyle.toSeedPaletteStyle(),
+                    seedContrast = themeSettings.themeContrast.toContrastLevel(),
+                    heroPalette = themeSettings.themePalette.toHeroPalette(),
+                    meshGradientEnabled = themeSettings.useMeshGradient,
                 ) {
                     SurauApp(
                         appState = appState,
@@ -177,6 +210,21 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         extractResetToken(intent)?.let { deepLinkResetToken = it }
+    }
+
+    /**
+     * Runtime gates for the decorative mesh gradient: suppressed under battery saver or when the user
+     * has turned animations off (reduced motion), regardless of the stored preference.
+     */
+    private fun meshRuntimeAllowed(): Boolean {
+        val powerManager = getSystemService(PowerManager::class.java)
+        if (powerManager?.isPowerSaveMode == true) return false
+        val animatorScale = Settings.Global.getFloat(
+            contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f,
+        )
+        return animatorScale != 0f
     }
 }
 
@@ -211,4 +259,31 @@ private val darkScrim = android.graphics.Color.argb(0x80, 0x1b, 0x1b, 0x1b)
 data class ThemeSettings(
     val darkTheme: Boolean,
     val disableDynamicTheming: Boolean,
+    val seedColorArgb: Long = 0L,
+    val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
+    val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
+    val themePalette: ThemePalette = ThemePalette.DEFAULT,
+    val useMeshGradient: Boolean = false,
 )
+
+/** Maps the persisted domain [ThemePalette] to the design-system's HeroUI palette. */
+private fun ThemePalette.toHeroPalette(): HeroPalette = when (this) {
+    ThemePalette.DEFAULT -> HeroPalette.DEFAULT
+    ThemePalette.MOUVE -> HeroPalette.MOUVE
+    ThemePalette.SKY -> HeroPalette.SKY
+}
+
+/** Maps the persisted domain [ThemeStyle] to the design-system's generator style. */
+private fun ThemeStyle.toSeedPaletteStyle(): SeedPaletteStyle = when (this) {
+    ThemeStyle.TONAL_SPOT -> SeedPaletteStyle.TONAL_SPOT
+    ThemeStyle.VIBRANT -> SeedPaletteStyle.VIBRANT
+    ThemeStyle.EXPRESSIVE -> SeedPaletteStyle.EXPRESSIVE
+    ThemeStyle.NEUTRAL -> SeedPaletteStyle.NEUTRAL
+}
+
+/** Maps the persisted domain [ThemeContrast] to the generator's 0f..1f contrast level. */
+private fun ThemeContrast.toContrastLevel(): Float = when (this) {
+    ThemeContrast.STANDARD -> 0f
+    ThemeContrast.MEDIUM -> 0.5f
+    ThemeContrast.HIGH -> 1f
+}

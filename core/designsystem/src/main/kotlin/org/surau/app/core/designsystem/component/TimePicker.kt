@@ -108,7 +108,7 @@ fun SurauTimePickerField(
     value: LocalTime?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Pilih masa",
+    placeholder: String = "Pilih waktu",
     enabled: Boolean = true,
     isError: Boolean = false,
     format: SurauTimeFormat = SurauTimeFormat.Hour12,
