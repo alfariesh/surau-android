@@ -23,10 +23,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -35,82 +33,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 /**
- * Light Surau color scheme — HeroUI Pro neutral sage palette with an olive-green accent.
+ * The app's baseline light/dark color schemes — the hand-tuned HeroUI **Default** palette (balanced
+ * neutral grey with a blue accent). Defined in HeroPalettes.kt; alternative palettes (Mouve, Sky)
+ * live alongside it and are selectable via [HeroPalette].
  */
 @VisibleForTesting
-val LightSurauColorScheme = lightColorScheme(
-    primary = HeroLightAccent,
-    onPrimary = Color.White,
-    primaryContainer = HeroLightPrimaryContainer,
-    onPrimaryContainer = HeroLightOnPrimaryContainer,
-    secondary = HeroLightSecondary,
-    onSecondary = Color.White,
-    secondaryContainer = HeroLightSecondaryContainer,
-    onSecondaryContainer = HeroLightOnSecondaryContainer,
-    tertiary = HeroLightTertiary,
-    onTertiary = Color.White,
-    tertiaryContainer = HeroLightTertiaryContainer,
-    onTertiaryContainer = HeroLightOnTertiaryContainer,
-    error = Red40,
-    onError = Color.White,
-    errorContainer = Red90,
-    onErrorContainer = Red10,
-    background = HeroLightBackground,
-    onBackground = HeroLightForeground,
-    surface = HeroLightSurface,
-    onSurface = HeroLightForeground,
-    surfaceVariant = HeroLightSurfaceSecondary,
-    onSurfaceVariant = HeroLightMuted,
-    surfaceContainerLowest = Color.White,
-    surfaceContainerLow = HeroLightBackground,
-    surfaceContainer = HeroLightSurfaceSecondary,
-    surfaceContainerHigh = HeroLightSurfaceTertiary,
-    surfaceContainerHighest = HeroLightSeparator,
-    inverseSurface = HeroDarkBackground,
-    inverseOnSurface = HeroLightBackground,
-    inversePrimary = HeroDarkAccent,
-    outline = HeroLightBorder,
-    outlineVariant = HeroLightSeparator,
-)
+val LightSurauColorScheme = DefaultLightColorScheme
 
-/**
- * Dark Surau color scheme — HeroUI Pro dark-olive palette with a lime-green accent.
- */
 @VisibleForTesting
-val DarkSurauColorScheme = darkColorScheme(
-    primary = HeroDarkAccent,
-    onPrimary = HeroDarkOnAccent,
-    primaryContainer = HeroDarkPrimaryContainer,
-    onPrimaryContainer = HeroDarkOnPrimaryContainer,
-    secondary = HeroDarkSecondary,
-    onSecondary = Color(0xFF26301E),
-    secondaryContainer = HeroDarkSecondaryContainer,
-    onSecondaryContainer = HeroDarkOnSecondaryContainer,
-    tertiary = HeroDarkTertiary,
-    onTertiary = Color(0xFF0E3438),
-    tertiaryContainer = HeroDarkTertiaryContainer,
-    onTertiaryContainer = HeroDarkOnTertiaryContainer,
-    error = Red80,
-    onError = Red20,
-    errorContainer = Red30,
-    onErrorContainer = Red90,
-    background = HeroDarkBackground,
-    onBackground = HeroDarkForeground,
-    surface = HeroDarkSurface,
-    onSurface = HeroDarkForeground,
-    surfaceVariant = HeroDarkSurfaceSecondary,
-    onSurfaceVariant = HeroDarkMuted,
-    surfaceContainerLowest = HeroDarkBackground,
-    surfaceContainerLow = HeroDarkSurface,
-    surfaceContainer = HeroDarkSurfaceSecondary,
-    surfaceContainerHigh = HeroDarkSurfaceTertiary,
-    surfaceContainerHighest = HeroDarkSegment,
-    inverseSurface = HeroLightBackground,
-    inverseOnSurface = HeroDarkSurface,
-    inversePrimary = HeroLightAccent,
-    outline = HeroDarkBorder,
-    outlineVariant = HeroDarkSeparator,
-)
+val DarkSurauColorScheme = DefaultDarkColorScheme
 
 /**
  * Surau theme.
