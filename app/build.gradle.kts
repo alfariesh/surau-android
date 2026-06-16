@@ -46,8 +46,10 @@ val releaseStoreFilePath = signingProperty("RELEASE_STORE_FILE")
 android {
     defaultConfig {
         applicationId = "org.surau.app"
-        versionCode = 1
-        versionName = "0.1.0" // X.Y.Z; X = Major, Y = minor, Z = Patch level
+        // versionCode = epoch-day (hari sejak 1970-01-01): auto-monoton, satu kode per hari.
+        // Tiap rilis, hitung ulang: `date -ju -f "%Y-%m-%d %H:%M:%S" "<tgl> 00:00:00" +%s` / 86400.
+        versionCode = 20620 // 2026-06-16
+        versionName = "1.0.0" // X.Y.Z; X = Major, Y = minor, Z = Patch level
 
         // Custom test runner to set up Hilt dependency graph
         testInstrumentationRunner = "org.surau.app.core.testing.SurauTestRunner"
