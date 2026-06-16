@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.surau.app.feature.settings.impl
+package org.surau.app.ui.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.surau.app.R
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauTextButton
 import org.surau.app.core.designsystem.theme.SeedPaletteStyle

@@ -94,8 +94,6 @@ import org.surau.app.feature.quran.impl.navigation.quranBookmarksEntry
 import org.surau.app.feature.quran.impl.navigation.quranHomeEntry
 import org.surau.app.feature.quran.impl.navigation.quranSearchEntry
 import org.surau.app.feature.quran.impl.navigation.surahReaderEntry
-import org.surau.app.feature.settings.api.navigation.navigateToSettings
-import org.surau.app.feature.settings.impl.navigation.settingsEntry
 import org.surau.app.navigation.HadithNavKey
 import org.surau.app.navigation.HomeNavKey
 import org.surau.app.navigation.KitabsNavKey
@@ -259,7 +257,7 @@ fun SurauApp(
                     }
                     quranHomeEntry(
                         navigator = navigator,
-                        onSettingsClick = navigator::navigateToSettings,
+                        onSettingsClick = { navigator.navigate(ProfileNavKey) },
                     )
                     surahReaderEntry(
                         navigator = navigator,
@@ -302,8 +300,9 @@ fun SurauApp(
                         ProfileScreen(
                             appVersionName = appVersionName,
                             onManageAccount = navigator::navigateToManageAccount,
-                            onSettings = navigator::navigateToSettings,
                             onSignIn = navigator::navigateToLogin,
+                            currentLanguageTag = AppLanguage.current(context),
+                            onChangeLanguage = { tag -> AppLanguage.apply(context, tag) },
                         )
                     }
                     authEntries(
@@ -313,14 +312,6 @@ fun SurauApp(
                     accountEntries(
                         navigator = navigator,
                         onSignedOut = { navigator.navigate(WelcomeNavKey) },
-                    )
-                    settingsEntry(
-                        navigator = navigator,
-                        onSignInClick = navigator::navigateToLogin,
-                        onManageAccountClick = navigator::navigateToManageAccount,
-                        appVersionName = appVersionName,
-                        currentLanguageTag = AppLanguage.current(context),
-                        onChangeLanguage = { tag -> AppLanguage.apply(context, tag) },
                     )
                 }
 

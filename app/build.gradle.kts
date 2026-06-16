@@ -105,7 +105,6 @@ dependencies {
     implementation(projects.feature.auth.impl)
     implementation(projects.feature.quran.api)
     implementation(projects.feature.quran.impl)
-    implementation(projects.feature.settings.impl)
 
     implementation(projects.core.common)
     implementation(projects.core.ui)
