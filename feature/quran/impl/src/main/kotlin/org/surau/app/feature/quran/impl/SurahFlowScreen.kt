@@ -82,7 +82,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
@@ -414,22 +413,6 @@ private fun FlowSuccess(
             }
         }
 
-        // Fade the top and bottom edges so the centre ayah is the focus.
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(FADE_HEIGHT)
-                .align(Alignment.TopCenter)
-                .background(Brush.verticalGradient(listOf(surface, Color.Transparent))),
-        )
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(FADE_HEIGHT)
-                .align(Alignment.BottomCenter)
-                .background(Brush.verticalGradient(listOf(Color.Transparent, surface))),
-        )
-
         AnimatedVisibility(
             visible = chromeVisible,
             modifier = Modifier.align(Alignment.TopCenter),
@@ -596,7 +579,11 @@ private fun FlowTopBar(
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
-    Surface(color = MaterialTheme.colorScheme.surface) {
+    // Transparent so the mesh flows behind the header (battery/signal area included) — no opaque bar.
+    Surface(
+        color = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -658,7 +645,11 @@ private fun FlowBottomBar(
     onSetSleepTimer: (SleepTimerOption) -> Unit,
     onInteraction: () -> Unit,
 ) {
-    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
+    // Transparent so the mesh flows behind the controls all the way down — no opaque player bar.
+    Surface(
+        color = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -984,7 +975,6 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
-private val FADE_HEIGHT = 120.dp
 private const val CHROME_IDLE_MS = 3_000L
 
 /** Per-frame user-drag delta (px) past which a scroll reveals/hides the immersive chrome. */
