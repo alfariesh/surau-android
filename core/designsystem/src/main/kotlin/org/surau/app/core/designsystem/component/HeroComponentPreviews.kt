@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.surau.app.core.designsystem.theme.LocalSurauColors
 import org.surau.app.core.designsystem.theme.SurauTheme
+import java.time.LocalDate
 import java.time.LocalTime
 
 /**
@@ -172,6 +173,20 @@ fun SurauWheelPickerPreview() {
                 selectedIndex = 3,
                 onSelectedIndexChange = {},
                 modifier = Modifier.width(96.dp).padding(16.dp),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauWheelDatePickerPreview() {
+    SurauTheme {
+        SurauBackground {
+            SurauWheelDatePicker(
+                value = LocalDate.of(2026, 6, 14),
+                onValueChange = {},
+                modifier = Modifier.width(300.dp).padding(16.dp),
             )
         }
     }

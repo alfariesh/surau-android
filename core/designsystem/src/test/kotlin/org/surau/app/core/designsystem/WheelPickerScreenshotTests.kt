@@ -31,10 +31,13 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.annotation.LooperMode
+import org.surau.app.core.designsystem.component.SurauDatePickerField
 import org.surau.app.core.designsystem.component.SurauTimePickerField
+import org.surau.app.core.designsystem.component.SurauWheelDatePicker
 import org.surau.app.core.designsystem.component.SurauWheelPicker
 import org.surau.app.core.designsystem.component.SurauWheelTimePicker
 import org.surau.app.core.testing.util.captureMultiTheme
+import java.time.LocalDate
 import java.time.LocalTime
 
 @RunWith(RobolectricTestRunner::class)
@@ -79,6 +82,32 @@ class WheelPickerScreenshotTests {
             Surface {
                 SurauTimePickerField(
                     value = LocalTime.of(9, 30),
+                    onClick = {},
+                    modifier = Modifier.width(240.dp).padding(16.dp),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun wheelDatePicker_multipleThemes() {
+        composeTestRule.captureMultiTheme("WheelDatePicker") {
+            Surface {
+                SurauWheelDatePicker(
+                    value = LocalDate.of(2026, 6, 14),
+                    onValueChange = {},
+                    modifier = Modifier.width(300.dp).padding(8.dp),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun datePickerField_multipleThemes() {
+        composeTestRule.captureMultiTheme("DatePickerField") {
+            Surface {
+                SurauDatePickerField(
+                    value = LocalDate.of(2026, 6, 14),
                     onClick = {},
                     modifier = Modifier.width(240.dp).padding(16.dp),
                 )

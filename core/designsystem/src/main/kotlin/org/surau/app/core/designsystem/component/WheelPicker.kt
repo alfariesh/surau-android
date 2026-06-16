@@ -179,6 +179,11 @@ internal fun <T> WheelColumn(
 
     val safeSelected = selectedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
     val state = rememberLazyListState(initialFirstVisibleItemIndex = safeSelected)
+    // The report effect below is keyed only on (state, items.size), so a column whose size is
+    // constant across selections (e.g. day-within-month, hours, minutes) never restarts it. Read the
+    // live selected index through rememberUpdatedState so the long-lived collector — and the
+    // derivedStateOf fallback — compare against the current value, not the one captured at launch.
+    val currentSelected by rememberUpdatedState(safeSelected)
 
     // The index whose centre is nearest the viewport centre.
     val centredIndex by remember(state, items) {
@@ -188,7 +193,7 @@ internal fun <T> WheelColumn(
             info.visibleItemsInfo
                 .minByOrNull { abs((it.offset + it.size / 2f) - viewportCentre) }
                 ?.index
-                ?: safeSelected
+                ?: currentSelected
         }
     }
 
@@ -199,7 +204,7 @@ internal fun <T> WheelColumn(
             .distinctUntilChanged()
             .filter { it in items.indices }
             .collect { idx ->
-                if (idx != selectedIndex) {
+                if (idx != currentSelected) {
                     if (hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onChange.value(idx)
                 }
