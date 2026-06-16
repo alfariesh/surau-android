@@ -24,6 +24,7 @@ import org.junit.Test
 import org.surau.app.core.data.test.repository.FakeActivityRepository
 import org.surau.app.core.data.test.repository.FakeAuthRepository
 import org.surau.app.core.data.test.repository.FakeKhatamRepository
+import org.surau.app.core.data.test.repository.FakeQuranRepository
 import org.surau.app.core.model.data.quran.KhatamCycle
 import org.surau.app.core.testing.util.MainDispatcherRule
 import kotlin.test.assertEquals
@@ -39,11 +40,13 @@ class ActivityViewModelTest {
 
     private val khatamRepository = FakeKhatamRepository()
     private val activityRepository = FakeActivityRepository()
+    private val quranRepository = FakeQuranRepository()
     private val authRepository = FakeAuthRepository()
 
     private fun viewModel() = ActivityViewModel(
         khatamRepository = khatamRepository,
         activityRepository = activityRepository,
+        quranRepository = quranRepository,
         authRepository = authRepository,
     )
 

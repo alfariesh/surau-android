@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,13 +35,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -69,21 +70,34 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import org.surau.app.core.designsystem.component.SurauBarChart
+import org.surau.app.core.designsystem.component.SurauBarEntry
 import org.surau.app.core.designsystem.component.SurauButton
+import org.surau.app.core.designsystem.component.SurauLineChart
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
+import org.surau.app.core.designsystem.component.SurauProgressRing
+import org.surau.app.core.designsystem.component.SurauSegmentSize
+import org.surau.app.core.designsystem.component.SurauSegmentedControl
 import org.surau.app.core.designsystem.component.SurauTextButton
 import org.surau.app.core.designsystem.component.SurauTextField
+import org.surau.app.core.designsystem.component.SurauWidget
 import org.surau.app.core.designsystem.icon.SurauIcons
+import org.surau.app.core.designsystem.theme.LocalSurauColors
 import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.model.data.activity.ReadingActivity
 import org.surau.app.core.model.data.activity.ReadingActivityDay
 import org.surau.app.core.model.data.activity.ReadingStreak
 import org.surau.app.core.model.data.quran.KhatamCycle
+import org.surau.app.core.model.data.quran.RevelationType
+import org.surau.app.core.model.data.quran.Surah
 import org.surau.app.core.ui.TrackScreenViewEvent
+import kotlin.math.roundToInt
 
 @Composable
 fun ActivityScreen(
@@ -200,7 +214,11 @@ private fun ActivityContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item { StreakHeader(streak = state.streak) }
+        item { DailyReadingSection(today = state.today, activity = state.activity) }
         item { ActivityHeatmapCard(today = state.today, activity = state.activity) }
+        if (state.surahProgress.isNotEmpty()) {
+            item { SurahProgressSection(items = state.surahProgress) }
+        }
         item {
             KhatamSection(
                 khatam = state.khatam,
@@ -465,6 +483,113 @@ private fun heatmapLevelColor(level: Int): Color = when (level) {
     else -> MaterialTheme.colorScheme.primary
 }
 
+/**
+ * Daily reading activity charted from the per-day Quran ayah deltas (zero-filled). A segmented
+ * control switches between a 7-day bar chart and a 30-day trend line; both roll up client-side from
+ * the sparse `days[]` series the API returns.
+ */
+@Composable
+private fun DailyReadingSection(today: LocalDate, activity: ReadingActivity) {
+    var rangeIndex by remember { mutableStateOf(0) }
+    val days = if (rangeIndex == 0) 7 else 30
+    val series = remember(today, activity, days) {
+        dailySeries(today, activity.quranAyahsByDate, days)
+    }
+    val months = stringArrayResource(R.array.feature_activity_impl_month_abbrev)
+    SurauWidget(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("activity:daily"),
+        title = { Text(stringResource(R.string.feature_activity_impl_daily_title)) },
+        description = { Text(stringResource(R.string.feature_activity_impl_daily_subtitle)) },
+    ) {
+        SurauSegmentedControl(
+            options = listOf(
+                stringResource(R.string.feature_activity_impl_range_7),
+                stringResource(R.string.feature_activity_impl_range_30),
+            ),
+            selectedIndex = rangeIndex,
+            onSelectedIndexChange = { rangeIndex = it },
+            size = SurauSegmentSize.Sm,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        if (rangeIndex == 0) {
+            SurauBarChart(
+                entries = series.map { (date, count) ->
+                    SurauBarEntry(value = count.toFloat(), label = date.dayOfMonth.toString())
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        } else {
+            // ~4 evenly-spaced date markers across the 30-day trend.
+            val markers = 4
+            val labels = (0 until markers).map { k ->
+                val index = k * series.lastIndex / (markers - 1)
+                series[index].first.formatShort(months)
+            }
+            SurauLineChart(
+                values = series.map { it.second.toFloat() },
+                labels = labels,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+/** Surahs the user has started, each with a thin accent progress bar. */
+@Composable
+private fun SurahProgressSection(items: List<SurahReadProgress>) {
+    val colors = LocalSurauColors.current
+    SurauWidget(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("activity:surahProgress"),
+        title = { Text(stringResource(R.string.feature_activity_impl_surah_progress_title)) },
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            items.forEach { item ->
+                val percent = (item.fraction * 100).roundToInt().coerceIn(0, 100)
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = item.surah.nameLatin,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.feature_activity_impl_surah_progress_percent,
+                                percent,
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(CircleShape)
+                            .background(colors.default),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(item.fraction.coerceIn(0f, 1f))
+                                .fillMaxHeight()
+                                .clip(CircleShape)
+                                .background(colors.accent),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun KhatamSection(
     khatam: KhatamCycle?,
@@ -535,19 +660,41 @@ private fun KhatamActive(
     onUnmarkJuz: (Int) -> Unit,
     onCompleteKhatam: () -> Unit,
 ) {
-    Text(
-        text = stringResource(
-            R.string.feature_activity_impl_khatam_progress,
-            khatam.completedJuz.size,
-            KhatamCycle.TOTAL_JUZ,
-        ),
-        style = MaterialTheme.typography.bodyLarge,
-    )
-    Spacer(modifier = Modifier.height(8.dp))
-    LinearProgressIndicator(
-        progress = { (khatam.percent / 100.0).toFloat().coerceIn(0f, 1f) },
-        modifier = Modifier.fillMaxWidth(),
-    )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        SurauProgressRing(
+            progress = (khatam.percent / 100.0).toFloat().coerceIn(0f, 1f),
+            ringSize = 96.dp,
+            strokeWidth = 10.dp,
+        ) {
+            Text(
+                text = "${khatam.completedJuz.size}/${KhatamCycle.TOTAL_JUZ}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = stringResource(
+                    R.string.feature_activity_impl_khatam_percent,
+                    khatam.percent.roundToInt(),
+                ),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = stringResource(
+                    R.string.feature_activity_impl_khatam_progress,
+                    khatam.completedJuz.size,
+                    KhatamCycle.TOTAL_JUZ,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
     Spacer(modifier = Modifier.height(16.dp))
     JuzGrid(
         completedJuz = khatam.completedJuz,
@@ -799,6 +946,16 @@ private fun LocalDate.formatShort(months: Array<String>): String = "$dayOfMonth 
 private fun LocalDate.monthAbbrev(months: Array<String>): String =
     months.getOrElse(monthNumber - 1) { monthNumber.toString() }
 
+/** The last [days] days ending at [today] (oldest first), with ayah counts zero-filled. */
+private fun dailySeries(
+    today: LocalDate,
+    countsByDate: Map<LocalDate, Int>,
+    days: Int,
+): List<Pair<LocalDate, Int>> = (days - 1 downTo 0).map { offset ->
+    val date = today.minus(offset, DateTimeUnit.DAY)
+    date to (countsByDate[date] ?: 0)
+}
+
 private const val JUZ_COLUMNS = 5
 private val CELL_SIZE = 28.dp
 private val CELL_GAP = 4.dp
@@ -849,6 +1006,16 @@ private fun ActivitySuccessPreview() {
                     percent = 5 * 100.0 / 30,
                 ),
                 history = emptyList(),
+                surahProgress = listOf(
+                    SurahReadProgress(
+                        Surah(2, "البقرة", "Al-Baqarah", "Sapi Betina", RevelationType.MADANIYAH, 286),
+                        0.45f,
+                    ),
+                    SurahReadProgress(
+                        Surah(36, "يس", "Yasin", "Yasin", RevelationType.MAKKIYAH, 83),
+                        0.8f,
+                    ),
+                ),
             ),
             onBackClick = {},
             onLoginClick = {},

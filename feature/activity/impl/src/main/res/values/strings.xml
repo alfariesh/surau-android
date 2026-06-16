@@ -56,9 +56,20 @@
         <item>Des</item>
     </string-array>
 
+    <!-- Daily reading chart -->
+    <string name="feature_activity_impl_daily_title">Aktivitas bacaan</string>
+    <string name="feature_activity_impl_daily_subtitle">Ayat per hari</string>
+    <string name="feature_activity_impl_range_7">7 hari</string>
+    <string name="feature_activity_impl_range_30">30 hari</string>
+
+    <!-- Surah progress -->
+    <string name="feature_activity_impl_surah_progress_title">Kemajuan surah</string>
+    <string name="feature_activity_impl_surah_progress_percent">%1$d%%</string>
+
     <!-- Khatam -->
     <string name="feature_activity_impl_khatam_title">Khatam Al-Qur\'an</string>
     <string name="feature_activity_impl_khatam_progress">%1$d / %2$d juz</string>
+    <string name="feature_activity_impl_khatam_percent">%1$d%% selesai</string>
     <string name="feature_activity_impl_juz_number">Juz %1$d</string>
     <string name="feature_activity_impl_khatam_start">Mulai khatam</string>
     <string name="feature_activity_impl_khatam_complete">Tandai selesai</string>

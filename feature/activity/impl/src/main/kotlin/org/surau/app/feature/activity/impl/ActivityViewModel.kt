@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -41,10 +42,12 @@ import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.data.repository.ActivityRepository
 import org.surau.app.core.data.repository.AuthRepository
 import org.surau.app.core.data.repository.KhatamRepository
+import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.model.data.activity.ReadingActivity
 import org.surau.app.core.model.data.activity.ReadingStreak
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.KhatamCycle
+import org.surau.app.core.model.data.quran.Surah
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -52,6 +55,7 @@ import kotlin.coroutines.cancellation.CancellationException
 class ActivityViewModel @Inject constructor(
     private val khatamRepository: KhatamRepository,
     private val activityRepository: ActivityRepository,
+    private val quranRepository: QuranRepository,
     authRepository: AuthRepository,
 ) : ViewModel() {
 
@@ -102,12 +106,18 @@ class ActivityViewModel @Inject constructor(
                         runCatchingExceptCancellation { khatamRepository.history() }
                             .getOrDefault(emptyList())
                     }
+                    // Per-surah reading progress (name + fraction) — also non-essential.
+                    val surahProgress = async {
+                        runCatchingExceptCancellation { loadSurahProgress() }
+                            .getOrDefault(emptyList())
+                    }
                     ActivityUiState.Success(
                         today = today,
                         streak = streak.await(),
                         activity = activity.await(),
                         khatam = khatam.await(),
                         history = history.await(),
+                        surahProgress = surahProgress.await(),
                     )
                 }
             } catch (e: CancellationException) {
@@ -211,11 +221,31 @@ class ActivityViewModel @Inject constructor(
         percent = completed.size * 100.0 / KhatamCycle.TOTAL_JUZ,
     )
 
+    /** Surahs the user has started, with name + completion fraction, most-progressed first. */
+    private suspend fun loadSurahProgress(): List<SurahReadProgress> {
+        val surahs = quranRepository.observeSurahs().first()
+        if (surahs.isEmpty()) return emptyList()
+        val progress = activityRepository.observeSurahProgress().first()
+        return surahs
+            .mapNotNull { surah ->
+                val fraction = progress[surah.surahId] ?: 0f
+                if (fraction > 0f) SurahReadProgress(surah, fraction) else null
+            }
+            .sortedByDescending { it.fraction }
+            .take(SURAH_PROGRESS_LIMIT)
+    }
+
     private companion object {
         // Fetch six weeks of activity; the heatmap displays the most recent five.
         const val FETCH_DAYS = 42
+
+        // Cap the "surah progress" list so the section stays compact.
+        const val SURAH_PROGRESS_LIMIT = 6
     }
 }
+
+/** A surah the user has read, with its display info and completion fraction (0f..1f). */
+data class SurahReadProgress(val surah: Surah, val fraction: Float)
 
 sealed interface ActivityUiState {
     data object Loading : ActivityUiState
@@ -231,6 +261,7 @@ sealed interface ActivityUiState {
         val activity: ReadingActivity,
         val khatam: KhatamCycle?,
         val history: List<KhatamCycle>,
+        val surahProgress: List<SurahReadProgress> = emptyList(),
         val juzInFlight: Set<Int> = emptySet(),
         val completing: Boolean = false,
     ) : ActivityUiState

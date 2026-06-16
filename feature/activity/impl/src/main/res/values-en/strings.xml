@@ -56,9 +56,20 @@
         <item>Dec</item>
     </string-array>
 
+    <!-- Daily reading chart -->
+    <string name="feature_activity_impl_daily_title">Reading activity</string>
+    <string name="feature_activity_impl_daily_subtitle">Verses per day</string>
+    <string name="feature_activity_impl_range_7">7 days</string>
+    <string name="feature_activity_impl_range_30">30 days</string>
+
+    <!-- Surah progress -->
+    <string name="feature_activity_impl_surah_progress_title">Surah progress</string>
+    <string name="feature_activity_impl_surah_progress_percent">%1$d%%</string>
+
     <!-- Khatam -->
     <string name="feature_activity_impl_khatam_title">Qur\'an khatam</string>
     <string name="feature_activity_impl_khatam_progress">%1$d / %2$d juz</string>
+    <string name="feature_activity_impl_khatam_percent">%1$d%% complete</string>
     <string name="feature_activity_impl_juz_number">Juz %1$d</string>
     <string name="feature_activity_impl_khatam_start">Start khatam</string>
     <string name="feature_activity_impl_khatam_complete">Mark complete</string>

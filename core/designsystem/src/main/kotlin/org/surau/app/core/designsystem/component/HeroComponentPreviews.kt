@@ -314,3 +314,46 @@ fun SurauDropdownMenuContentPreview() {
         }
     }
 }
+
+@ThemePreviews
+@Composable
+fun SurauProgressRingPreview() {
+    SurauTheme {
+        SurauBackground {
+            Box(modifier = Modifier.padding(16.dp)) {
+                SurauProgressRing(progress = 0.57f) {
+                    Text("57%", style = MaterialTheme.typography.titleLarge)
+                }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauBarChartPreview() {
+    SurauTheme {
+        SurauBackground {
+            SurauBarChart(
+                entries = listOf(3f, 8f, 2f, 12f, 6f, 0f, 9f).mapIndexed { i, v ->
+                    SurauBarEntry(value = v, label = (i + 1).toString())
+                },
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+fun SurauLineChartPreview() {
+    SurauTheme {
+        SurauBackground {
+            SurauLineChart(
+                values = listOf(2f, 5f, 3f, 8f, 6f, 11f, 7f, 9f, 4f, 12f),
+                labels = listOf("1", "", "", "5", "", "", "", "", "", "10"),
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+    }
+}
