@@ -104,6 +104,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import org.surau.app.core.designsystem.component.AyahText
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
+import org.surau.app.core.designsystem.component.SurauMeshGradient
 import org.surau.app.core.designsystem.component.SurauSwitch
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.media.PlayerUiState
@@ -276,6 +277,7 @@ private fun FlowSuccess(
     modifier: Modifier,
 ) {
     val surface = MaterialTheme.colorScheme.surface
+    val flowMesh = flowMeshColors()
     val listState = rememberLazyListState()
     val inspection = LocalInspectionMode.current
 
@@ -367,6 +369,17 @@ private fun FlowSuccess(
             }
             .testTag("flow:screen"),
     ) {
+        // Vibrant themed Catmull-Rom mesh behind the ayahs — the Flow player's backdrop. A warped 3×3
+        // grid of accent colors, low-alpha so the centred ayah stays high-contrast; the normal reader
+        // page stays flat (this is the player, a deliberate exception).
+        SurauMeshGradient(
+            gridWidth = 3,
+            gridHeight = 3,
+            points = FlowMeshPoints,
+            colors = flowMesh,
+            modifier = Modifier.fillMaxSize(),
+            subdivisions = 14,
+        )
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             // Half-viewport top/bottom padding lets any ayah scroll to the centre.
             val halfViewport = maxHeight / 2
@@ -466,6 +479,30 @@ private fun FlowSuccess(
         )
     }
 }
+
+/**
+ * The 9 colors of the Flow backdrop's 3×3 mesh, derived from the active (themed) scheme. Mixing
+ * primary / secondary / tertiary across the grid gives the mesh real hue variety (so it reads as a
+ * mesh, not one flat tint), while the low alpha keeps the recited ayah's onSurface ink legible.
+ */
+@Composable
+private fun flowMeshColors(): List<Color> {
+    val cs = MaterialTheme.colorScheme
+    val dark = cs.surface.luminance() < 0.5f
+    val a = if (dark) 0.24f else 0.32f
+    return listOf(
+        cs.primary.copy(alpha = a), cs.tertiary.copy(alpha = a), cs.secondary.copy(alpha = a),
+        cs.secondary.copy(alpha = a), cs.primaryContainer.copy(alpha = a * 0.9f), cs.primary.copy(alpha = a),
+        cs.tertiary.copy(alpha = a), cs.primary.copy(alpha = a), cs.secondary.copy(alpha = a),
+    )
+}
+
+/** A 3×3 control grid with interior/edge points nudged off-axis so the mesh flows organically. */
+private val FlowMeshPoints = listOf(
+    Offset(0f, 0f), Offset(0.55f, 0f), Offset(1f, 0f),
+    Offset(0f, 0.45f), Offset(0.62f, 0.5f), Offset(1f, 0.55f),
+    Offset(0f, 1f), Offset(0.45f, 1f), Offset(1f, 1f),
+)
 
 @Composable
 private fun FlowAyah(
