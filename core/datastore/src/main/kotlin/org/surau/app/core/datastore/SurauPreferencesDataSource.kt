@@ -101,6 +101,7 @@ class SurauPreferencesDataSource @Inject constructor(
                     ThemeContrastProto.THEME_CONTRAST_MEDIUM -> ThemeContrast.MEDIUM
                     ThemeContrastProto.THEME_CONTRAST_HIGH -> ThemeContrast.HIGH
                 },
+                useMeshGradient = it.useMeshGradient,
             )
         }
 
@@ -243,6 +244,12 @@ class SurauPreferencesDataSource @Inject constructor(
                     ThemeContrast.HIGH -> ThemeContrastProto.THEME_CONTRAST_HIGH
                 }
             }
+        }
+    }
+
+    suspend fun setMeshGradientPreference(useMeshGradient: Boolean) {
+        userPreferences.updateData {
+            it.copy { this.useMeshGradient = useMeshGradient }
         }
     }
 }

@@ -57,6 +57,10 @@ class FakeUserDataRepository @Inject constructor(
         surauPreferencesDataSource.setThemeContrast(themeContrast)
     }
 
+    override suspend fun setMeshGradientPreference(useMeshGradient: Boolean) {
+        surauPreferencesDataSource.setMeshGradientPreference(useMeshGradient)
+    }
+
     override suspend fun setReaderMode(readerMode: ReaderMode) {
         surauPreferencesDataSource.setReaderMode(readerMode)
     }

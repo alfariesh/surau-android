@@ -108,6 +108,7 @@ fun SettingsScreen(
         onChangeThemeSeed = viewModel::updateThemeSeed,
         onChangeThemeStyle = viewModel::updateThemeStyle,
         onChangeThemeContrast = viewModel::updateThemeContrast,
+        onChangeMeshGradient = viewModel::updateMeshGradient,
         onChangeReaderMode = viewModel::updateReaderMode,
         onChangeTranslationSource = viewModel::updateTranslationSource,
         onChangeRecitation = viewModel::updateRecitation,
@@ -140,6 +141,7 @@ internal fun SettingsScreen(
     onChangeThemeSeed: (Long) -> Unit = {},
     onChangeThemeStyle: (ThemeStyle) -> Unit = {},
     onChangeThemeContrast: (ThemeContrast) -> Unit = {},
+    onChangeMeshGradient: (Boolean) -> Unit = {},
     onChangeRecitation: (String) -> Unit = {},
     onChangeShowTransliteration: (Boolean) -> Unit = {},
     onChangeShowTranslation: (Boolean) -> Unit = {},
@@ -211,6 +213,7 @@ internal fun SettingsScreen(
                     onChangeThemeSeed = onChangeThemeSeed,
                     onChangeThemeStyle = onChangeThemeStyle,
                     onChangeThemeContrast = onChangeThemeContrast,
+                    onChangeMeshGradient = onChangeMeshGradient,
                 )
 
                 SectionTitle(stringResource(R.string.feature_settings_impl_section_language))
@@ -443,6 +446,7 @@ private fun ThemeColorChooser(
     onChangeThemeSeed: (Long) -> Unit,
     onChangeThemeStyle: (ThemeStyle) -> Unit,
     onChangeThemeContrast: (ThemeContrast) -> Unit,
+    onChangeMeshGradient: (Boolean) -> Unit,
 ) {
     Text(
         text = stringResource(R.string.feature_settings_impl_theme_color),
@@ -548,6 +552,17 @@ private fun ThemeColorChooser(
             Text(stringResource(R.string.feature_settings_impl_theme_reset))
         }
     }
+
+    SettingsSwitchRow(
+        text = stringResource(R.string.feature_settings_impl_theme_mesh),
+        checked = settings.useMeshGradient,
+        onCheckedChange = onChangeMeshGradient,
+    )
+    Text(
+        text = stringResource(R.string.feature_settings_impl_theme_mesh_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable

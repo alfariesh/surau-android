@@ -72,6 +72,8 @@ message UserPreferences {
     ThemeStyleProto theme_style = 36;
     // Minimum text contrast enforced on the generated scheme.
     ThemeContrastProto theme_contrast = 37;
+    // Whether the decorative mesh gradient is enabled on chrome (default unset = false = off).
+    bool use_mesh_gradient = 38;
 
-    // NEXT AVAILABLE ID: 38
+    // NEXT AVAILABLE ID: 39
 }

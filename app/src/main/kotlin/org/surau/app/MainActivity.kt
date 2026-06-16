@@ -19,6 +19,8 @@ package org.surau.app
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -104,6 +106,7 @@ class MainActivity : ComponentActivity() {
                 seedColorArgb = Loading.seedColorArgb,
                 themeStyle = Loading.themeStyle,
                 themeContrast = Loading.themeContrast,
+                useMeshGradient = Loading.useMeshGradient,
             ),
         )
 
@@ -120,6 +123,7 @@ class MainActivity : ComponentActivity() {
                         seedColorArgb = uiState.seedColorArgb,
                         themeStyle = uiState.themeStyle,
                         themeContrast = uiState.themeContrast,
+                        useMeshGradient = uiState.useMeshGradient && meshRuntimeAllowed(),
                     )
                 }
                     .onEach { themeSettings = it }
@@ -174,6 +178,7 @@ class MainActivity : ComponentActivity() {
                         ?: Color.Unspecified,
                     seedStyle = themeSettings.themeStyle.toSeedPaletteStyle(),
                     seedContrast = themeSettings.themeContrast.toContrastLevel(),
+                    meshGradientEnabled = themeSettings.useMeshGradient,
                 ) {
                     SurauApp(
                         appState = appState,
@@ -200,6 +205,21 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         extractResetToken(intent)?.let { deepLinkResetToken = it }
+    }
+
+    /**
+     * Runtime gates for the decorative mesh gradient: suppressed under battery saver or when the user
+     * has turned animations off (reduced motion), regardless of the stored preference.
+     */
+    private fun meshRuntimeAllowed(): Boolean {
+        val powerManager = getSystemService(PowerManager::class.java)
+        if (powerManager?.isPowerSaveMode == true) return false
+        val animatorScale = Settings.Global.getFloat(
+            contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f,
+        )
+        return animatorScale != 0f
     }
 }
 
@@ -237,6 +257,7 @@ data class ThemeSettings(
     val seedColorArgb: Long = 0L,
     val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
     val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
+    val useMeshGradient: Boolean = false,
 )
 
 /** Maps the persisted domain [ThemeStyle] to the design-system's generator style. */

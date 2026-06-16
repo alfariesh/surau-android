@@ -57,6 +57,11 @@ interface UserDataRepository {
     suspend fun setThemeContrast(themeContrast: ThemeContrast)
 
     /**
+     * Sets whether the decorative mesh gradient is enabled on chrome. Local-only.
+     */
+    suspend fun setMeshGradientPreference(useMeshGradient: Boolean)
+
+    /**
      * Sets how the Quran reader lays out ayahs.
      */
     suspend fun setReaderMode(readerMode: ReaderMode)

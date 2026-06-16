@@ -78,6 +78,12 @@ class TestUserDataRepository : UserDataRepository {
         }
     }
 
+    override suspend fun setMeshGradientPreference(useMeshGradient: Boolean) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(useMeshGradient = useMeshGradient))
+        }
+    }
+
     override suspend fun setReaderMode(readerMode: ReaderMode) {
         currentUserData.let { current ->
             _userData.tryEmit(current.copy(readerMode = readerMode))

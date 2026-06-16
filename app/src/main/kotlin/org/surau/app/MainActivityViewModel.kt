@@ -59,6 +59,8 @@ sealed interface MainActivityUiState {
 
         override val themeContrast = userData.themeContrast
 
+        override val useMeshGradient = userData.useMeshGradient
+
         override fun shouldUseDarkTheme(isSystemDarkTheme: Boolean) =
             when (userData.darkThemeConfig) {
                 DarkThemeConfig.FOLLOW_SYSTEM -> isSystemDarkTheme
@@ -96,6 +98,11 @@ sealed interface MainActivityUiState {
      * The minimum contrast enforced on the generated custom scheme.
      */
     val themeContrast: ThemeContrast get() = ThemeContrast.STANDARD
+
+    /**
+     * Whether the user has enabled the decorative mesh gradient (runtime gates applied separately).
+     */
+    val useMeshGradient: Boolean get() = false
 
     /**
      * Returns `true` if dark theme should be used.

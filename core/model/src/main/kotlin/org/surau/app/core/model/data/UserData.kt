@@ -39,6 +39,8 @@ data class UserData(
     val seedColorArgb: Long = 0L,
     val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
     val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
+    /** Decorative mesh gradient on chrome. Off by default; battery-saver may still suppress it. */
+    val useMeshGradient: Boolean = false,
     val flowArabicFontScale: Float = DEFAULT_ARABIC_FONT_SCALE,
     val flowShowTranslation: Boolean = false,
     val flowAutoContinue: Boolean = true,

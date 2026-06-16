@@ -59,6 +59,8 @@
     <string name="feature_settings_impl_theme_grade_aa">AA</string>
     <string name="feature_settings_impl_theme_grade_low">Kurang</string>
     <string name="feature_settings_impl_theme_adjusted">Warna disesuaikan agar teks tetap terbaca.</string>
+    <string name="feature_settings_impl_theme_mesh">Latar bergradien</string>
+    <string name="feature_settings_impl_theme_mesh_hint">Mati otomatis saat hemat baterai atau animasi dimatikan.</string>
     <string name="feature_settings_impl_section_language">Bahasa</string>
     <string name="feature_settings_impl_language_system">Ikuti sistem</string>
     <string name="feature_settings_impl_language_id">Bahasa Indonesia</string>

@@ -59,6 +59,8 @@
     <string name="feature_settings_impl_theme_grade_aa">AA</string>
     <string name="feature_settings_impl_theme_grade_low">Low</string>
     <string name="feature_settings_impl_theme_adjusted">Color adjusted to keep text legible.</string>
+    <string name="feature_settings_impl_theme_mesh">Gradient background</string>
+    <string name="feature_settings_impl_theme_mesh_hint">Turns off automatically in battery saver or when animations are off.</string>
     <string name="feature_settings_impl_section_language">Language</string>
     <string name="feature_settings_impl_language_system">Follow system</string>
     <string name="feature_settings_impl_language_id">Bahasa Indonesia</string>

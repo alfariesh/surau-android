@@ -68,6 +68,7 @@ class SettingsViewModel @Inject constructor(
                     seedColorArgb = userData.seedColorArgb,
                     themeStyle = userData.themeStyle,
                     themeContrast = userData.themeContrast,
+                    useMeshGradient = userData.useMeshGradient,
                     readerMode = userData.readerMode,
                     translationSourceId = userData.translationSourceId,
                     recitationId = userData.recitationId,
@@ -124,6 +125,12 @@ class SettingsViewModel @Inject constructor(
     fun updateThemeContrast(themeContrast: ThemeContrast) {
         viewModelScope.launch {
             userDataRepository.setThemeContrast(themeContrast)
+        }
+    }
+
+    fun updateMeshGradient(useMeshGradient: Boolean) {
+        viewModelScope.launch {
+            userDataRepository.setMeshGradientPreference(useMeshGradient)
         }
     }
 
@@ -197,6 +204,7 @@ data class UserEditableSettings(
     val seedColorArgb: Long = 0L,
     val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
     val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
+    val useMeshGradient: Boolean = false,
     val recitationId: String? = null,
     val showTransliteration: Boolean = false,
     val showTranslation: Boolean = true,

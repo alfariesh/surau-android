@@ -125,6 +125,8 @@ val DarkSurauColorScheme = darkColorScheme(
  *        HeroUI Pro (Zamrud) scheme so existing call sites and goldens are unaffected.
  * @param seedStyle How vivid the generated scheme's accents are.
  * @param seedContrast Extra contrast floor for the generated scheme (0f = standard, 1f = high).
+ * @param meshGradientEnabled Whether the decorative mesh gradient should render on chrome. Resolved
+ *        by the caller from the user preference and runtime gates (battery saver, reduced motion).
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -134,6 +136,7 @@ fun SurauTheme(
     seedColor: Color = Color.Unspecified,
     seedStyle: SeedPaletteStyle = SeedPaletteStyle.TONAL_SPOT,
     seedContrast: Float = 0f,
+    meshGradientEnabled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val useDynamic = !disableDynamicTheming && supportsDynamicTheming()
@@ -175,9 +178,25 @@ fun SurauTheme(
         useDynamic || useSeed -> surauSemanticColorsFromScheme(colorScheme, darkTheme)
         else -> if (darkTheme) DarkSurauSemanticColors else LightSurauSemanticColors
     }
+    // Decorative mesh corners: a top band of primary→tertiary containers fading to transparent,
+    // alpha-capped so it stays a subtle wash. Empty on the wallpaper-dynamic path (Material You owns
+    // its own look there).
+    val meshAlpha = if (darkTheme) 0.08f else 0.12f
+    val meshGradientColors = if (useDynamic) {
+        MeshGradientColors()
+    } else {
+        MeshGradientColors(
+            topStart = colorScheme.primaryContainer.copy(alpha = meshAlpha),
+            topEnd = colorScheme.tertiaryContainer.copy(alpha = meshAlpha),
+            bottomStart = Color.Unspecified,
+            bottomEnd = Color.Unspecified,
+        )
+    }
     // Composition locals
     CompositionLocalProvider(
         LocalGradientColors provides gradientColors,
+        LocalMeshGradientColors provides meshGradientColors,
+        LocalMeshGradientEnabled provides meshGradientEnabled,
         LocalBackgroundTheme provides backgroundTheme,
         LocalTintTheme provides tintTheme,
         LocalSurauColors provides semanticColors,
