@@ -67,6 +67,7 @@ fun SurauTheme(
     seedColor: Color = Color.Unspecified,
     seedStyle: SeedPaletteStyle = SeedPaletteStyle.TONAL_SPOT,
     seedContrast: Float = 0f,
+    heroPalette: HeroPalette = HeroPalette.DEFAULT,
     meshGradientEnabled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -81,7 +82,7 @@ fun SurauTheme(
 
         useSeed -> colorSchemeFromSeed(seedColor, darkTheme, seedStyle, seedContrast)
 
-        else -> if (darkTheme) DarkSurauColorScheme else LightSurauColorScheme
+        else -> paletteColorScheme(heroPalette, darkTheme)
     }
     // Gradient colors
     val emptyGradientColors = GradientColors(container = colorScheme.surfaceColorAtElevation(2.dp))
@@ -107,7 +108,7 @@ fun SurauTheme(
     // dynamic (wallpaper) and the user-seed paths so every component follows the chosen color.
     val semanticColors = when {
         useDynamic || useSeed -> surauSemanticColorsFromScheme(colorScheme, darkTheme)
-        else -> if (darkTheme) DarkSurauSemanticColors else LightSurauSemanticColors
+        else -> paletteSemanticColors(heroPalette, darkTheme)
     }
     // Decorative mesh corners: a top band of primary→tertiary containers fading to transparent,
     // alpha-capped so it stays a subtle wash. Empty on the wallpaper-dynamic path (Material You owns

@@ -20,6 +20,7 @@ import androidx.datastore.core.DataStore
 import kotlinx.coroutines.flow.map
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.UserData
 import org.surau.app.core.model.data.quran.ReaderMode
@@ -102,6 +103,15 @@ class SurauPreferencesDataSource @Inject constructor(
                     ThemeContrastProto.THEME_CONTRAST_HIGH -> ThemeContrast.HIGH
                 },
                 useMeshGradient = it.useMeshGradient,
+                themePalette = when (it.themePalette) {
+                    null,
+                    ThemePaletteProto.THEME_PALETTE_UNSPECIFIED,
+                    ThemePaletteProto.UNRECOGNIZED,
+                    ThemePaletteProto.THEME_PALETTE_DEFAULT,
+                    -> ThemePalette.DEFAULT
+                    ThemePaletteProto.THEME_PALETTE_MOUVE -> ThemePalette.MOUVE
+                    ThemePaletteProto.THEME_PALETTE_SKY -> ThemePalette.SKY
+                },
             )
         }
 
@@ -250,6 +260,18 @@ class SurauPreferencesDataSource @Inject constructor(
     suspend fun setMeshGradientPreference(useMeshGradient: Boolean) {
         userPreferences.updateData {
             it.copy { this.useMeshGradient = useMeshGradient }
+        }
+    }
+
+    suspend fun setThemePalette(themePalette: ThemePalette) {
+        userPreferences.updateData {
+            it.copy {
+                this.themePalette = when (themePalette) {
+                    ThemePalette.DEFAULT -> ThemePaletteProto.THEME_PALETTE_DEFAULT
+                    ThemePalette.MOUVE -> ThemePaletteProto.THEME_PALETTE_MOUVE
+                    ThemePalette.SKY -> ThemePaletteProto.THEME_PALETTE_SKY
+                }
+            }
         }
     }
 }

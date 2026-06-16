@@ -19,6 +19,7 @@ package org.surau.app.core.data.repository
 import kotlinx.coroutines.flow.Flow
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.UserData
 import org.surau.app.core.model.data.quran.ReaderMode
@@ -60,6 +61,11 @@ interface UserDataRepository {
      * Sets whether the decorative mesh gradient is enabled on chrome. Local-only.
      */
     suspend fun setMeshGradientPreference(useMeshGradient: Boolean)
+
+    /**
+     * Sets the named HeroUI palette for the static scheme. Local-only.
+     */
+    suspend fun setThemePalette(themePalette: ThemePalette)
 
     /**
      * Sets how the Quran reader lays out ayahs.

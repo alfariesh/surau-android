@@ -21,6 +21,7 @@ import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.datastore.SurauPreferencesDataSource
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.UserData
 import org.surau.app.core.model.data.quran.ReaderMode
@@ -59,6 +60,10 @@ class FakeUserDataRepository @Inject constructor(
 
     override suspend fun setMeshGradientPreference(useMeshGradient: Boolean) {
         surauPreferencesDataSource.setMeshGradientPreference(useMeshGradient)
+    }
+
+    override suspend fun setThemePalette(themePalette: ThemePalette) {
+        surauPreferencesDataSource.setThemePalette(themePalette)
     }
 
     override suspend fun setReaderMode(readerMode: ReaderMode) {

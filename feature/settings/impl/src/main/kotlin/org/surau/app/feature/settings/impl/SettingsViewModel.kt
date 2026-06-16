@@ -33,6 +33,7 @@ import org.surau.app.core.data.util.QuranDownloadManager
 import org.surau.app.core.data.util.QuranDownloadState
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.ReaderMode
@@ -68,6 +69,7 @@ class SettingsViewModel @Inject constructor(
                     seedColorArgb = userData.seedColorArgb,
                     themeStyle = userData.themeStyle,
                     themeContrast = userData.themeContrast,
+                    themePalette = userData.themePalette,
                     useMeshGradient = userData.useMeshGradient,
                     readerMode = userData.readerMode,
                     translationSourceId = userData.translationSourceId,
@@ -131,6 +133,14 @@ class SettingsViewModel @Inject constructor(
     fun updateMeshGradient(useMeshGradient: Boolean) {
         viewModelScope.launch {
             userDataRepository.setMeshGradientPreference(useMeshGradient)
+        }
+    }
+
+    /** Applies a named HeroUI palette, clearing any custom seed so the palette takes effect. */
+    fun updateThemePalette(themePalette: ThemePalette) {
+        viewModelScope.launch {
+            userDataRepository.setThemePalette(themePalette)
+            userDataRepository.setSeedColor(0L)
         }
     }
 
@@ -204,6 +214,7 @@ data class UserEditableSettings(
     val seedColorArgb: Long = 0L,
     val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
     val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
+    val themePalette: ThemePalette = ThemePalette.DEFAULT,
     val useMeshGradient: Boolean = false,
     val recitationId: String? = null,
     val showTransliteration: Boolean = false,

@@ -49,9 +49,11 @@ import org.surau.app.core.analytics.AnalyticsHelper
 import org.surau.app.core.analytics.LocalAnalyticsHelper
 import org.surau.app.core.data.util.NetworkMonitor
 import org.surau.app.core.data.util.TimeZoneMonitor
+import org.surau.app.core.designsystem.theme.HeroPalette
 import org.surau.app.core.designsystem.theme.SeedPaletteStyle
 import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.ui.LocalTimeZone
 import org.surau.app.ui.SurauApp
@@ -106,6 +108,7 @@ class MainActivity : ComponentActivity() {
                 seedColorArgb = Loading.seedColorArgb,
                 themeStyle = Loading.themeStyle,
                 themeContrast = Loading.themeContrast,
+                themePalette = Loading.themePalette,
                 useMeshGradient = Loading.useMeshGradient,
             ),
         )
@@ -123,6 +126,7 @@ class MainActivity : ComponentActivity() {
                         seedColorArgb = uiState.seedColorArgb,
                         themeStyle = uiState.themeStyle,
                         themeContrast = uiState.themeContrast,
+                        themePalette = uiState.themePalette,
                         useMeshGradient = uiState.useMeshGradient && meshRuntimeAllowed(),
                     )
                 }
@@ -178,6 +182,7 @@ class MainActivity : ComponentActivity() {
                         ?: Color.Unspecified,
                     seedStyle = themeSettings.themeStyle.toSeedPaletteStyle(),
                     seedContrast = themeSettings.themeContrast.toContrastLevel(),
+                    heroPalette = themeSettings.themePalette.toHeroPalette(),
                     meshGradientEnabled = themeSettings.useMeshGradient,
                 ) {
                     SurauApp(
@@ -257,8 +262,16 @@ data class ThemeSettings(
     val seedColorArgb: Long = 0L,
     val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
     val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
+    val themePalette: ThemePalette = ThemePalette.DEFAULT,
     val useMeshGradient: Boolean = false,
 )
+
+/** Maps the persisted domain [ThemePalette] to the design-system's HeroUI palette. */
+private fun ThemePalette.toHeroPalette(): HeroPalette = when (this) {
+    ThemePalette.DEFAULT -> HeroPalette.DEFAULT
+    ThemePalette.MOUVE -> HeroPalette.MOUVE
+    ThemePalette.SKY -> HeroPalette.SKY
+}
 
 /** Maps the persisted domain [ThemeStyle] to the design-system's generator style. */
 private fun ThemeStyle.toSeedPaletteStyle(): SeedPaletteStyle = when (this) {

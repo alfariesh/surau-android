@@ -28,6 +28,7 @@ import org.surau.app.MainActivityUiState.Success
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.UserData
 import javax.inject.Inject
@@ -58,6 +59,8 @@ sealed interface MainActivityUiState {
         override val themeStyle = userData.themeStyle
 
         override val themeContrast = userData.themeContrast
+
+        override val themePalette = userData.themePalette
 
         override val useMeshGradient = userData.useMeshGradient
 
@@ -103,6 +106,11 @@ sealed interface MainActivityUiState {
      * Whether the user has enabled the decorative mesh gradient (runtime gates applied separately).
      */
     val useMeshGradient: Boolean get() = false
+
+    /**
+     * The chosen named HeroUI palette for the static scheme.
+     */
+    val themePalette: ThemePalette get() = ThemePalette.DEFAULT
 
     /**
      * Returns `true` if dark theme should be used.

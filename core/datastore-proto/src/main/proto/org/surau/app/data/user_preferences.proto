@@ -20,6 +20,7 @@ import "org/surau/app/data/dark_theme_config.proto";
 import "org/surau/app/data/reader_mode.proto";
 import "org/surau/app/data/theme_style.proto";
 import "org/surau/app/data/theme_contrast.proto";
+import "org/surau/app/data/theme_palette.proto";
 
 option java_package = "org.surau.app.core.datastore";
 option java_multiple_files = true;
@@ -74,6 +75,8 @@ message UserPreferences {
     ThemeContrastProto theme_contrast = 37;
     // Whether the decorative mesh gradient is enabled on chrome (default unset = false = off).
     bool use_mesh_gradient = 38;
+    // The chosen named HeroUI palette for the static scheme (default unset = DEFAULT). Local-only.
+    ThemePaletteProto theme_palette = 39;
 
-    // NEXT AVAILABLE ID: 39
+    // NEXT AVAILABLE ID: 40
 }

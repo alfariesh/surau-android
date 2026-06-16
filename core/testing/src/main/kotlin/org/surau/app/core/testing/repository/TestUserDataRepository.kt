@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.UserData
 import org.surau.app.core.model.data.quran.ReaderMode
@@ -81,6 +82,12 @@ class TestUserDataRepository : UserDataRepository {
     override suspend fun setMeshGradientPreference(useMeshGradient: Boolean) {
         currentUserData.let { current ->
             _userData.tryEmit(current.copy(useMeshGradient = useMeshGradient))
+        }
+    }
+
+    override suspend fun setThemePalette(themePalette: ThemePalette) {
+        currentUserData.let { current ->
+            _userData.tryEmit(current.copy(themePalette = themePalette))
         }
     }
 

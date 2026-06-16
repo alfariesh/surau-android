@@ -73,6 +73,7 @@ import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.designsystem.theme.supportsDynamicTheming
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.ReaderMode
@@ -105,6 +106,7 @@ fun SettingsScreen(
         onLogout = viewModel::logout,
         onChangeDynamicColorPreference = viewModel::updateDynamicColorPreference,
         onChangeDarkThemeConfig = viewModel::updateDarkThemeConfig,
+        onChangeThemePalette = viewModel::updateThemePalette,
         onChangeThemeSeed = viewModel::updateThemeSeed,
         onChangeThemeStyle = viewModel::updateThemeStyle,
         onChangeThemeContrast = viewModel::updateThemeContrast,
@@ -138,6 +140,7 @@ internal fun SettingsScreen(
     onChangeTranslationSource: (String) -> Unit,
     onChangeArabicFontScale: (Float) -> Unit,
     modifier: Modifier = Modifier,
+    onChangeThemePalette: (ThemePalette) -> Unit = {},
     onChangeThemeSeed: (Long) -> Unit = {},
     onChangeThemeStyle: (ThemeStyle) -> Unit = {},
     onChangeThemeContrast: (ThemeContrast) -> Unit = {},
@@ -210,6 +213,7 @@ internal fun SettingsScreen(
                 }
                 ThemeColorChooser(
                     settings = uiState.settings,
+                    onChangeThemePalette = onChangeThemePalette,
                     onChangeThemeSeed = onChangeThemeSeed,
                     onChangeThemeStyle = onChangeThemeStyle,
                     onChangeThemeContrast = onChangeThemeContrast,
@@ -419,30 +423,25 @@ private fun DynamicColorChooser(
     }
 }
 
-private data class ThemePreset(
+private data class PaletteOption(
+    val palette: ThemePalette,
     val name: String,
-    /** Packed ARGB seed, or 0 for the default (Zamrud) scheme. */
-    val argb: Long,
-    /** The color shown on the swatch chip. */
+    /** The accent color shown on the swatch chip. */
     val swatch: Color,
 )
 
-// Curated, spiritually-named presets. Zamrud (argb 0) keeps the default hardcoded HeroUI scheme; the
-// rest drive the generated scheme. Display names are brand proper-nouns, identical across locales.
-private val themePresets = listOf(
-    ThemePreset("Zamrud", 0L, Color(0xFF006D4AL)),
-    ThemePreset("Mihrab", 0xFF0E7C86L, Color(0xFF0E7C86L)),
-    ThemePreset("Lazuardi", 0xFF2D5BD0L, Color(0xFF2D5BD0L)),
-    ThemePreset("Senja", 0xFFC2562EL, Color(0xFFC2562EL)),
-    ThemePreset("Kurma", 0xFF8A5A2BL, Color(0xFF8A5A2BL)),
-    ThemePreset("Nila", 0xFF3B3F8FL, Color(0xFF3B3F8FL)),
-    ThemePreset("Salju", 0xFF5B6B61L, Color(0xFF5B6B61L)),
-    ThemePreset("Monokrom", 0xFF3A3A3AL, Color(0xFF3A3A3AL)),
+// The named, hand-tuned HeroUI palettes (see HeroPalettes.kt). Names are brand proper-nouns, the
+// same across locales; the swatch shows each palette's accent.
+private val paletteOptions = listOf(
+    PaletteOption(ThemePalette.DEFAULT, "Default", Color(0xFF0485F7)),
+    PaletteOption(ThemePalette.MOUVE, "Mouve", Color(0xFFAE84F2)),
+    PaletteOption(ThemePalette.SKY, "Sky", Color(0xFF7DD3FC)),
 )
 
 @Composable
 private fun ThemeColorChooser(
     settings: UserEditableSettings,
+    onChangeThemePalette: (ThemePalette) -> Unit,
     onChangeThemeSeed: (Long) -> Unit,
     onChangeThemeStyle: (ThemeStyle) -> Unit,
     onChangeThemeContrast: (ThemeContrast) -> Unit,
@@ -454,11 +453,15 @@ private fun ThemeColorChooser(
         modifier = Modifier.padding(top = 12.dp),
     )
 
-    // The preview uses the currently-applied theme, which re-skins instantly when a preset is tapped.
+    // The preview uses the currently-applied theme, which re-skins instantly when a palette is tapped.
     ThemePreviewCard()
 
-    // Choosing a preset is mutually exclusive with wallpaper dynamic color.
-    val activeSeed = if (settings.useDynamicColor) -1L else settings.seedColorArgb
+    // A named palette is "active" only when neither a custom seed nor wallpaper dynamic color overrides it.
+    val activePalette = if (settings.useDynamicColor || settings.seedColorArgb != 0L) {
+        null
+    } else {
+        settings.themePalette
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -466,11 +469,12 @@ private fun ThemeColorChooser(
             .padding(top = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        themePresets.forEach { preset ->
+        paletteOptions.forEach { option ->
             ThemeSwatch(
-                preset = preset,
-                selected = preset.argb == activeSeed,
-                onClick = { onChangeThemeSeed(preset.argb) },
+                name = option.name,
+                swatch = option.swatch,
+                selected = option.palette == activePalette,
+                onClick = { onChangeThemePalette(option.palette) },
             )
         }
     }
@@ -602,7 +606,8 @@ private fun ThemePreviewCard() {
 
 @Composable
 private fun ThemeSwatch(
-    preset: ThemePreset,
+    name: String,
+    swatch: Color,
     selected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -616,7 +621,7 @@ private fun ThemeSwatch(
             modifier = Modifier
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(preset.swatch)
+                .background(swatch)
                 .then(
                     if (selected) {
                         Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
@@ -627,7 +632,7 @@ private fun ThemeSwatch(
         )
         Spacer(Modifier.size(6.dp))
         Text(
-            text = preset.name,
+            text = name,
             style = MaterialTheme.typography.labelSmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
