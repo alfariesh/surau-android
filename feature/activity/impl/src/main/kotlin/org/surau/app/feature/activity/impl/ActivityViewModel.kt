@@ -236,8 +236,8 @@ class ActivityViewModel @Inject constructor(
     }
 
     private companion object {
-        // Fetch six weeks of activity; the heatmap displays the most recent five.
-        const val FETCH_DAYS = 42
+        // Fetch ten weeks of activity; the heatmap displays the most recent nine (~two months).
+        const val FETCH_DAYS = 70
 
         // Cap the "surah progress" list so the section stays compact.
         const val SURAH_PROGRESS_LIMIT = 6

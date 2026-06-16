@@ -23,8 +23,6 @@
     <!-- Streak -->
     <string name="feature_activity_impl_streak_unit">hari beruntun</string>
     <string name="feature_activity_impl_streak_longest">Terpanjang: %1$d hari</string>
-    <string name="feature_activity_impl_streak_active_today">Sudah membaca hari ini</string>
-    <string name="feature_activity_impl_streak_inactive_today">Belum membaca hari ini</string>
 
     <!-- Heatmap -->
     <string name="feature_activity_impl_heatmap_title">Aktivitas membaca</string>
@@ -61,7 +59,6 @@
     <!-- Khatam -->
     <string name="feature_activity_impl_khatam_title">Khatam Al-Qur\'an</string>
     <string name="feature_activity_impl_khatam_progress">%1$d / %2$d juz</string>
-    <string name="feature_activity_impl_khatam_percent">%1$d%% selesai</string>
     <string name="feature_activity_impl_juz_number">Juz %1$d</string>
     <string name="feature_activity_impl_khatam_start">Mulai khatam</string>
     <string name="feature_activity_impl_khatam_complete">Tandai selesai</string>
@@ -79,4 +76,15 @@
     <!-- Error -->
     <string name="feature_activity_impl_error_title">Gagal memuat</string>
     <string name="feature_activity_impl_error_desc">Periksa koneksi internet lalu coba lagi.</string>
+
+    <!-- Inisial hari (Sen..Min) untuk baris streak mingguan -->
+    <string-array name="feature_activity_impl_weekday_initials">
+        <item>S</item>
+        <item>S</item>
+        <item>R</item>
+        <item>K</item>
+        <item>J</item>
+        <item>S</item>
+        <item>M</item>
+    </string-array>
 </resources>

@@ -23,8 +23,6 @@
     <!-- Streak -->
     <string name="feature_activity_impl_streak_unit">day streak</string>
     <string name="feature_activity_impl_streak_longest">Longest: %1$d days</string>
-    <string name="feature_activity_impl_streak_active_today">You\'ve read today</string>
-    <string name="feature_activity_impl_streak_inactive_today">You haven\'t read today</string>
 
     <!-- Heatmap -->
     <string name="feature_activity_impl_heatmap_title">Reading activity</string>
@@ -61,7 +59,6 @@
     <!-- Khatam -->
     <string name="feature_activity_impl_khatam_title">Qur\'an khatam</string>
     <string name="feature_activity_impl_khatam_progress">%1$d / %2$d juz</string>
-    <string name="feature_activity_impl_khatam_percent">%1$d%% complete</string>
     <string name="feature_activity_impl_juz_number">Juz %1$d</string>
     <string name="feature_activity_impl_khatam_start">Start khatam</string>
     <string name="feature_activity_impl_khatam_complete">Mark complete</string>
@@ -79,4 +76,15 @@
     <!-- Error -->
     <string name="feature_activity_impl_error_title">Couldn\'t load</string>
     <string name="feature_activity_impl_error_desc">Check your internet connection and try again.</string>
+
+    <!-- Weekday initials (Mon..Sun) for the streak week row -->
+    <string-array name="feature_activity_impl_weekday_initials">
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+        <item>S</item>
+    </string-array>
 </resources>

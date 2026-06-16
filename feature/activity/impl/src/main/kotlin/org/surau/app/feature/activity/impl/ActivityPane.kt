@@ -21,6 +21,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -38,8 +39,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -67,12 +66,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauChromeBackground
@@ -200,7 +203,7 @@ private fun LazyListScope.activitySuccessItems(
     onUnmarkJuz: (Int) -> Unit,
     onCompleteKhatam: () -> Unit,
 ) {
-    item { StreakHeader(streak = state.streak) }
+    item { StreakHeader(streak = state.streak, today = state.today, activity = state.activity) }
     item { ActivityHeatmapSection(today = state.today, activity = state.activity) }
     if (state.surahProgress.isNotEmpty()) {
         item { SurahProgressSection(items = state.surahProgress) }
@@ -228,62 +231,92 @@ private fun LazyListScope.activitySuccessItems(
 }
 
 @Composable
-private fun StreakHeader(streak: ReadingStreak) {
-    Card(
+private fun StreakHeader(streak: ReadingStreak, today: LocalDate, activity: ReadingActivity) {
+    SurauWidget(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("activity:streak"),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-    ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Icon(
-                imageVector = SurauIcons.Streak,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = if (streak.activeToday) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                },
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                // Number and unit on one baseline so a short streak never wraps awkwardly.
-                Row(verticalAlignment = Alignment.Bottom) {
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    imageVector = SurauIcons.Streak,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = if (streak.activeToday) {
+                        LocalSurauColors.current.accent
+                    } else {
+                        LocalSurauColors.current.muted
+                    },
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    // Number + unit on one baseline so a short streak never wraps awkwardly; both
+                    // inherit the uniform ~20sp widget-heading size, the number bolded.
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = streak.currentStreakDays.toString(),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = stringResource(R.string.feature_activity_impl_streak_unit),
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                     Text(
-                        text = streak.currentStreakDays.toString(),
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stringResource(R.string.feature_activity_impl_streak_unit),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 4.dp),
+                        text = stringResource(
+                            R.string.feature_activity_impl_streak_longest,
+                            streak.longestStreakDays,
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = LocalSurauColors.current.muted,
                     )
                 }
-                Text(
-                    text = stringResource(
-                        R.string.feature_activity_impl_streak_longest,
-                        streak.longestStreakDays,
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
+            }
+        },
+    ) {
+        StreakWeekRow(today = today, countsByDate = activity.quranAyahsByDate)
+    }
+}
+
+/**
+ * The last seven days as flames — lit (accent) on days with Quran reads, dim otherwise, with the
+ * weekday initial beneath (today emphasised). A tangible "this week" companion to the streak count.
+ */
+@Composable
+private fun StreakWeekRow(today: LocalDate, countsByDate: Map<LocalDate, Int>) {
+    val colors = LocalSurauColors.current
+    val initials = stringArrayResource(R.array.feature_activity_impl_weekday_initials)
+    val days = remember(today, countsByDate) {
+        (HEATMAP_DAYS_PER_WEEK - 1 downTo 0).map { offset ->
+            val date = today.minus(offset, DateTimeUnit.DAY)
+            date to ((countsByDate[date] ?: 0) > 0)
+        }
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        days.forEach { (date, active) ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(
+                    imageVector = SurauIcons.Streak,
+                    contentDescription = null,
+                    modifier = Modifier.size(30.dp),
+                    tint = if (active) colors.accent else colors.default,
                 )
                 Text(
-                    text = stringResource(
-                        if (streak.activeToday) {
-                            R.string.feature_activity_impl_streak_active_today
-                        } else {
-                            R.string.feature_activity_impl_streak_inactive_today
-                        },
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
+                    text = initials.getOrElse(date.dayOfWeek.isoDayNumber - 1) { "" },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (date == today) colors.accent else colors.muted,
+                    fontWeight = if (date == today) FontWeight.Bold else FontWeight.Normal,
                 )
             }
         }
@@ -334,36 +367,44 @@ private fun ActivityHeatmap(
     val monthNames = stringArrayResource(R.array.feature_activity_impl_month_abbrev)
 
     Column {
-        Row {
-            Column(verticalArrangement = Arrangement.spacedBy(CELL_GAP)) {
-                WEEKDAY_LABELS.forEach { labelRes ->
-                    Box(
-                        modifier = Modifier
-                            .height(CELL_SIZE)
-                            .width(28.dp),
-                        contentAlignment = Alignment.CenterStart,
-                    ) {
-                        if (labelRes != 0) {
-                            Text(
-                                text = stringResource(labelRes),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+        BoxWithConstraints {
+            // Square cells sized to exactly fill the width left of the weekday-label gutter, so the
+            // grid always spans the widget with no empty gap on the right, balanced on any screen.
+            val cols = columns.size
+            val cellSize = ((maxWidth - WEEKDAY_LABEL_WIDTH - LABEL_GAP - CELL_GAP * (cols - 1)) / cols)
+                .coerceAtLeast(1.dp)
+            Row {
+                Column(verticalArrangement = Arrangement.spacedBy(CELL_GAP)) {
+                    WEEKDAY_LABELS.forEach { labelRes ->
+                        Box(
+                            modifier = Modifier
+                                .height(cellSize)
+                                .width(WEEKDAY_LABEL_WIDTH),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            if (labelRes != 0) {
+                                Text(
+                                    text = stringResource(labelRes),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(CELL_GAP)) {
-                columns.forEach { week ->
-                    Column(verticalArrangement = Arrangement.spacedBy(CELL_GAP)) {
-                        week.forEach { cell ->
-                            HeatmapCellBox(
-                                cell = cell,
-                                selected = cell == selected,
-                                onClick = { selected = cell },
-                                monthNames = monthNames,
-                            )
+                Spacer(modifier = Modifier.width(LABEL_GAP))
+                Row(horizontalArrangement = Arrangement.spacedBy(CELL_GAP)) {
+                    columns.forEach { week ->
+                        Column(verticalArrangement = Arrangement.spacedBy(CELL_GAP)) {
+                            week.forEach { cell ->
+                                HeatmapCellBox(
+                                    cell = cell,
+                                    selected = cell == selected,
+                                    onClick = { selected = cell },
+                                    monthNames = monthNames,
+                                    size = cellSize,
+                                )
+                            }
                         }
                     }
                 }
@@ -392,6 +433,7 @@ private fun HeatmapCellBox(
     selected: Boolean,
     onClick: () -> Unit,
     monthNames: Array<String>,
+    size: Dp,
 ) {
     val color = if (cell.isFuture) Color.Transparent else heatmapLevelColor(cell.level)
     val description = if (cell.isFuture) {
@@ -405,7 +447,7 @@ private fun HeatmapCellBox(
     }
     Box(
         modifier = Modifier
-            .size(CELL_SIZE)
+            .size(size)
             .clip(MaterialTheme.shapes.extraSmall)
             .background(color)
             .then(
@@ -533,18 +575,75 @@ private fun KhatamSection(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("activity:khatam"),
-        title = { Text(stringResource(R.string.feature_activity_impl_khatam_title)) },
+        title = {
+            if (khatam == null) {
+                Text(stringResource(R.string.feature_activity_impl_khatam_title))
+            } else {
+                KhatamHeader(khatam)
+            }
+        },
+        footer = if (khatam != null) {
+            {
+                KhatamCompleteButton(
+                    khatam = khatam,
+                    completing = completing,
+                    onCompleteKhatam = onCompleteKhatam,
+                )
+            }
+        } else {
+            null
+        },
     ) {
         if (khatam == null) {
             KhatamEmpty(onStartKhatam = onStartKhatam)
         } else {
-            KhatamActive(
-                khatam = khatam,
+            JuzGrid(
+                completedJuz = khatam.completedJuz,
                 juzInFlight = juzInFlight,
-                completing = completing,
                 onMarkJuz = onMarkJuz,
                 onUnmarkJuz = onUnmarkJuz,
-                onCompleteKhatam = onCompleteKhatam,
+            )
+        }
+    }
+}
+
+/**
+ * Khatam widget header: a progress ring (centre = percent) on the left, with the title and the
+ * juz-count description on the right.
+ */
+@Composable
+private fun KhatamHeader(khatam: KhatamCycle) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        SurauProgressRing(
+            progress = (khatam.percent / 100.0).toFloat().coerceIn(0f, 1f),
+            ringSize = 52.dp,
+            strokeWidth = 6.dp,
+        ) {
+            Text(
+                text = "${khatam.percent.roundToInt()}%",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.feature_activity_impl_khatam_title),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = stringResource(
+                    R.string.feature_activity_impl_khatam_progress,
+                    khatam.completedJuz.size,
+                    KhatamCycle.TOTAL_JUZ,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = LocalSurauColors.current.muted,
             )
         }
     }
@@ -579,57 +678,11 @@ private fun KhatamEmpty(onStartKhatam: (String?) -> Unit) {
 }
 
 @Composable
-private fun KhatamActive(
+private fun KhatamCompleteButton(
     khatam: KhatamCycle,
-    juzInFlight: Set<Int>,
     completing: Boolean,
-    onMarkJuz: (Int) -> Unit,
-    onUnmarkJuz: (Int) -> Unit,
     onCompleteKhatam: () -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-    ) {
-        SurauProgressRing(
-            progress = (khatam.percent / 100.0).toFloat().coerceIn(0f, 1f),
-            ringSize = 96.dp,
-            strokeWidth = 10.dp,
-        ) {
-            Text(
-                text = "${khatam.completedJuz.size}/${KhatamCycle.TOTAL_JUZ}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(
-                    R.string.feature_activity_impl_khatam_percent,
-                    khatam.percent.roundToInt(),
-                ),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = stringResource(
-                    R.string.feature_activity_impl_khatam_progress,
-                    khatam.completedJuz.size,
-                    KhatamCycle.TOTAL_JUZ,
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-    Spacer(modifier = Modifier.height(16.dp))
-    JuzGrid(
-        completedJuz = khatam.completedJuz,
-        juzInFlight = juzInFlight,
-        onMarkJuz = onMarkJuz,
-        onUnmarkJuz = onUnmarkJuz,
-    )
-    Spacer(modifier = Modifier.height(16.dp))
     SurauButton(
         onClick = onCompleteKhatam,
         enabled = khatam.isCompletable && !completing,
@@ -870,8 +923,9 @@ private fun LocalDate.monthAbbrev(months: Array<String>): String =
     months.getOrElse(monthNumber - 1) { monthNumber.toString() }
 
 private const val JUZ_COLUMNS = 5
-private val CELL_SIZE = 28.dp
 private val CELL_GAP = 4.dp
+private val WEEKDAY_LABEL_WIDTH = 28.dp
+private val LABEL_GAP = 4.dp
 
 // Weekday labels for a Sunday-first column (Sen/Rab/Jum shown, like common heatmaps); 0 = blank.
 private val WEEKDAY_LABELS = listOf(

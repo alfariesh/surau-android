@@ -62,8 +62,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauLoadingWheel
-import org.surau.app.core.designsystem.component.SurauTab
-import org.surau.app.core.designsystem.component.SurauTabRow
+import org.surau.app.core.designsystem.component.SurauSegmentedControl
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.designsystem.theme.SurahNameFontFamily
 import org.surau.app.core.designsystem.theme.SurauTheme
@@ -180,20 +179,20 @@ private fun QuranHomeContent(
     onSurahClick: (surahId: Int, ayahNumber: Int?) -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    val tabs = listOf(
+        stringResource(R.string.feature_quran_impl_tab_surah),
+        stringResource(R.string.feature_quran_impl_tab_juz),
+    )
 
     Column {
-        SurauTabRow(selectedTabIndex = selectedTab) {
-            SurauTab(
-                selected = selectedTab == 0,
-                onClick = { selectedTab = 0 },
-                text = { Text(stringResource(R.string.feature_quran_impl_tab_surah)) },
-            )
-            SurauTab(
-                selected = selectedTab == 1,
-                onClick = { selectedTab = 1 },
-                text = { Text(stringResource(R.string.feature_quran_impl_tab_juz)) },
-            )
-        }
+        SurauSegmentedControl(
+            options = tabs,
+            selectedIndex = selectedTab,
+            onSelectedIndexChange = { selectedTab = it },
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        )
 
         if (selectedTab == 0) {
             LazyColumn(

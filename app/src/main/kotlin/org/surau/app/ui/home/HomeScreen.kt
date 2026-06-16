@@ -16,33 +16,36 @@
 
 package org.surau.app.ui.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.surau.app.R
+import org.surau.app.core.designsystem.component.GeistBook
+import org.surau.app.core.designsystem.component.GeistBookRatio
+import org.surau.app.core.designsystem.component.GeistBookVariant
 import org.surau.app.core.designsystem.component.SurauButton
 import org.surau.app.core.designsystem.component.SurauSurface
-import org.surau.app.core.designsystem.icon.SurauIcons
+import org.surau.app.core.designsystem.theme.SurahNameFontFamily
 import org.surau.app.core.designsystem.theme.SurauTheme
+import org.surau.app.core.designsystem.theme.surahNameGlyphCode
 import org.surau.app.core.ui.TrackScreenViewEvent
 import org.surau.app.feature.activity.impl.ActivityPane
 
@@ -105,7 +108,28 @@ private fun ContinueReadingCard(
         contentPadding = PaddingValues(20.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconBadge(SurauIcons.MenuBook)
+            // A GeistBook cover (as in the "coming soon" coverflow) whose face carries the surah
+            // name in its calligraphic glyph (the SurahName font renders each name as a `surahNNN`
+            // ligature); the Latin name stays beside it and as the spoken description.
+            GeistBook(
+                title = "",
+                color = MaterialTheme.colorScheme.primary,
+                textColor = BookFaceColor,
+                variant = GeistBookVariant.Simple,
+                ratio = GeistBookRatio.Geist,
+                width = 64.dp,
+                rtl = true,
+                illustration = {
+                    Text(
+                        text = surahNameGlyphCode(resume.surahId),
+                        fontFamily = SurahNameFontFamily,
+                        fontSize = 20.sp,
+                        color = BookFaceColor,
+                        maxLines = 1,
+                        modifier = Modifier.semantics { contentDescription = resume.surahName },
+                    )
+                },
+            )
             Spacer(Modifier.size(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -115,7 +139,7 @@ private fun ContinueReadingCard(
                 )
                 Text(
                     text = resume.surahName,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
@@ -129,19 +153,5 @@ private fun ContinueReadingCard(
     }
 }
 
-@Composable
-private fun IconBadge(icon: ImageVector) {
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .background(SurauTheme.colors.accentSoft, CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = SurauTheme.colors.accent,
-            modifier = Modifier.size(24.dp),
-        )
-    }
-}
+/** Cream face colour for the continue-reading book cover (legible on the primary-coloured spine). */
+private val BookFaceColor = Color(0xFFF8FAFC)

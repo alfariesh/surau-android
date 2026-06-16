@@ -23,7 +23,7 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 
 /** Heatmap layout constants. Weeks are Sunday-first to match the local calendar convention. */
-internal const val HEATMAP_WEEKS = 5
+internal const val HEATMAP_WEEKS = 9
 internal const val HEATMAP_DAYS_PER_WEEK = 7
 
 /** Highest intensity level (0 = none … [HEATMAP_MAX_LEVEL] = most). */
