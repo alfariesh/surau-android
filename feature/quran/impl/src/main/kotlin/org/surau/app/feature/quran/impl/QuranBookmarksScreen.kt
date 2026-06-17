@@ -75,6 +75,22 @@ import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.model.data.quran.AyahKey
 import org.surau.app.core.ui.TrackScreenViewEvent
 
+/**
+ * Canonical, locale-independent slugs for the preset collections, stored as the tag value so a
+ * collection stays the same across device languages (and matches the backend's lower-cased tags).
+ * The visible label is resolved per-locale from [R.array.feature_quran_impl_bookmark_collections],
+ * which must stay index-aligned with this list.
+ */
+internal val PRESET_TAG_SLUGS = listOf("hafalan", "doa", "favorit", "renungan", "tadabbur")
+
+/** The localized display label for a tag: the preset's translated name, else the tag verbatim. */
+@Composable
+private fun bookmarkTagLabel(tag: String): String {
+    val labels = stringArrayResource(R.array.feature_quran_impl_bookmark_collections)
+    val index = PRESET_TAG_SLUGS.indexOf(tag.trim().lowercase())
+    return if (index in labels.indices) labels[index] else tag
+}
+
 @Composable
 fun QuranBookmarksScreen(
     onBackClick: () -> Unit,
@@ -210,7 +226,7 @@ private fun BookmarksList(
                 FilterChip(
                     selected = uiState.activeTag == tag,
                     onClick = { onSelectTag(if (uiState.activeTag == tag) null else tag) },
-                    label = { Text(tag) },
+                    label = { Text(bookmarkTagLabel(tag)) },
                     leadingIcon = { TagDot(tag) },
                     modifier = Modifier.testTag("bookmarks:filter:$tag"),
                 )
@@ -315,7 +331,7 @@ private fun BookmarkRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item.tags.forEach { tag -> TagChip(label = tag) }
+                item.tags.forEach { tag -> TagChip(label = bookmarkTagLabel(tag)) }
             }
         }
     }
@@ -367,26 +383,34 @@ internal fun BookmarkEditorContent(
                 .testTag("bookmarks:editor:note"),
         )
 
-        // Quick-pick preset collections. The preset name is stored verbatim as the tag value, so
-        // these stay plain strings on the backend while gaining a consistent colour in the UI.
+        // Quick-pick preset collections. A locale-independent slug is stored as the tag value, so a
+        // collection stays the same (and keeps its colour) regardless of the device language; the
+        // chip shows the translated label. Matching is case-insensitive to tolerate legacy data.
         Spacer(modifier = Modifier.size(16.dp))
         Text(
             text = stringResource(R.string.feature_quran_impl_bookmarks_collections),
             style = MaterialTheme.typography.titleSmall,
         )
         Spacer(modifier = Modifier.size(8.dp))
+        val presetLabels = stringArrayResource(R.array.feature_quran_impl_bookmark_collections)
         FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("bookmarks:editor:collections"),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            stringArrayResource(R.array.feature_quran_impl_bookmark_collections).forEach { preset ->
-                val selected = preset in tags
+            PRESET_TAG_SLUGS.forEachIndexed { index, slug ->
+                val selected = tags.any { it.equals(slug, ignoreCase = true) }
                 FilterChip(
                     selected = selected,
-                    onClick = { if (selected) tags.remove(preset) else tags.add(preset) },
-                    label = { Text(preset) },
+                    onClick = {
+                        if (selected) {
+                            tags.removeAll { it.equals(slug, ignoreCase = true) }
+                        } else {
+                            tags.add(slug)
+                        }
+                    },
+                    label = { Text(presetLabels.getOrElse(index) { slug }) },
                     leadingIcon = {
                         if (selected) {
                             Icon(
@@ -395,7 +419,7 @@ internal fun BookmarkEditorContent(
                                 modifier = Modifier.size(FilterChipDefaults.IconSize),
                             )
                         } else {
-                            TagDot(preset)
+                            TagDot(slug)
                         }
                     },
                 )
@@ -434,7 +458,7 @@ internal fun BookmarkEditorContent(
                     InputChip(
                         selected = false,
                         onClick = { tags.remove(tag) },
-                        label = { Text(tag) },
+                        label = { Text(bookmarkTagLabel(tag)) },
                         leadingIcon = { TagDot(tag) },
                         trailingIcon = {
                             Icon(

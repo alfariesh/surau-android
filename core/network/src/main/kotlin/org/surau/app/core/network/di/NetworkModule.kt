@@ -56,6 +56,11 @@ internal object NetworkModule {
     @Singleton
     fun providesNetworkJson(): Json = Json {
         ignoreUnknownKeys = true
+        // Pinned explicitly (these match the kotlinx defaults) because the saved-items contract
+        // depends on both: CreateSavedItem omits null fields (encodeDefaults off) so the server keeps
+        // stored values, while PatchSavedItem emits explicit nulls (explicitNulls on) to clear one.
+        encodeDefaults = false
+        explicitNulls = true
     }
 
     private fun loggingInterceptor() = HttpLoggingInterceptor()

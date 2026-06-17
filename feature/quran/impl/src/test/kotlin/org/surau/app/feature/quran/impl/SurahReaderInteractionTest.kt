@@ -70,16 +70,16 @@ class SurahReaderInteractionTest {
         composeTestRule.onNodeWithTag("reader:menu:1").performClick()
         composeTestRule.onNodeWithTag("reader:menu:note:1").performClick()
 
-        // Pick a preset collection (resolved from resources so it works in any locale), then save.
-        val preset = composeTestRule.activity.resources
+        // The chip shows its localized label but stores the locale-independent slug.
+        val presetLabel = composeTestRule.activity.resources
             .getStringArray(R.array.feature_quran_impl_bookmark_collections)
             .first()
-        composeTestRule.onNodeWithText(preset).performClick()
+        composeTestRule.onNodeWithText(presetLabel).performClick()
         composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
 
         assertEquals(1, saved?.first)
         assertEquals(null, saved?.second)
-        assertEquals(listOf(preset), saved?.third)
+        assertEquals(listOf(PRESET_TAG_SLUGS.first()), saved?.third)
     }
 
     @Composable

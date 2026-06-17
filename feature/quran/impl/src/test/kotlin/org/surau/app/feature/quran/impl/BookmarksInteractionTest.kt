@@ -116,15 +116,15 @@ class BookmarksInteractionTest {
             }
         }
 
-        // Tapping a preset collection chip adds it as a tag without typing. Resolve the label from
-        // resources so the assertion holds in whatever locale the test renders.
-        val preset = composeTestRule.activity.resources
+        // The chip shows its localized label but stores the locale-independent slug, so it's found
+        // by label while the saved tag is the slug.
+        val presetLabel = composeTestRule.activity.resources
             .getStringArray(R.array.feature_quran_impl_bookmark_collections)
             .first()
-        composeTestRule.onNodeWithText(preset).performClick()
+        composeTestRule.onNodeWithText(presetLabel).performClick()
         composeTestRule.onNodeWithTag("bookmarks:editor:save").performScrollTo().performClick()
 
-        assertEquals(listOf(preset), saved?.second)
+        assertEquals(listOf(PRESET_TAG_SLUGS.first()), saved?.second)
     }
 
     @Test

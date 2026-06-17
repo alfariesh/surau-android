@@ -58,8 +58,12 @@ private class FakeBookmarkApi : SurauMeApi {
     val patched = mutableListOf<Pair<String, PatchSavedItemRequestDto>>()
     val deleted = mutableListOf<String>()
     var listThrows404 = false
+
     /** When true, deleteSavedItem fails as if offline (before recording), so a tombstone survives. */
     var deleteThrows = false
+
+    /** When true, createSavedItem fails with a terminal 400 (validation rejection). */
+    var createThrows400 = false
     private var nextId = 1
 
     fun seed(dto: SavedItemDto) {
@@ -84,6 +88,7 @@ private class FakeBookmarkApi : SurauMeApi {
 
     override suspend fun createSavedItem(body: CreateSavedItemRequestDto): SavedItemDto {
         created += body
+        if (createThrows400) throw http400()
         // Upsert by target: reuse the existing id for the same ayah, else mint a new one.
         val existing = store.values.firstOrNull { it.ayahKey == body.ayahKey }
         val id = existing?.id ?: "server-${nextId++}"
@@ -134,6 +139,10 @@ private class FakeBookmarkApi : SurauMeApi {
 
     private fun http404() = HttpException(
         Response.error<Any>(404, ResponseBody.create(null, """{"code":"NOT_FOUND"}""")),
+    )
+
+    private fun http400() = HttpException(
+        Response.error<Any>(400, ResponseBody.create(null, """{"code":"INVALID_SAVED_ITEM"}""")),
     )
 }
 
@@ -325,23 +334,21 @@ class OfflineFirstBookmarkRepositoryTest {
     }
 
     @Test
-    fun reconcile_localTombstone_resurrectedByStrictlyNewerRemote() = runTest {
+    fun reconcile_localTombstone_winsEvenOverStrictlyNewerRemote_optionB() = runTest {
         signIn()
         subject.addBookmark(AyahKey("73:4")) // creates server-1, synced
         meApi.deleteThrows = true
         subject.removeBookmark(AyahKey("73:4"))
         meApi.deleteThrows = false
-        // Remote copy was edited elsewhere AFTER the local delete → last-write-wins resurrects it.
+        // Even though the remote copy is strictly NEWER, an explicit local delete still wins
+        // (Option B): the tombstone is kept and the server item is deleted, never resurrected.
         meApi.store["server-1"] =
             seededDto("server-1", "73:4", note = "edited elsewhere", updatedAt = future())
 
         subject.reconcile()
 
-        val revived = subject.observeBookmark(AyahKey("73:4")).first()
-        assertEquals("edited elsewhere", revived?.note)
-        assertEquals("server-1", revived?.serverId)
-        assertFalse(revived!!.pendingSync)
-        assertFalse(meApi.deleted.contains("server-1")) // resurrected, not deleted
+        assertNull(subject.observeBookmark(AyahKey("73:4")).first())
+        assertTrue(meApi.deleted.contains("server-1"))
     }
 
     @Test
@@ -363,6 +370,33 @@ class OfflineFirstBookmarkRepositoryTest {
         subject.addBookmark(AyahKey("2:255"), tags = listOf("a", "c"))
 
         assertEquals(listOf("a", "b", "c"), subject.observeTags().first())
+    }
+
+    @Test
+    fun addBookmark_clampsNoteLength_andNormalizesTags() = runTest {
+        subject.addBookmark(
+            AyahKey("73:4"),
+            note = "a".repeat(3000),
+            tags = listOf(" Tafsir ", "tafsir", "", "B", "B"),
+        )
+
+        val bookmark = subject.observeBookmark(AyahKey("73:4")).first()!!
+        assertEquals(2000, bookmark.note!!.length) // capped to the backend's max note length
+        assertEquals(listOf("tafsir", "b"), bookmark.tags) // trimmed + lower-cased + de-duped
+    }
+
+    @Test
+    fun pushUpsert_validationRejection400_stopsRetrying() = runTest {
+        signIn()
+        meApi.createThrows400 = true
+
+        subject.addBookmark(AyahKey("73:4"), note = "x") // create -> terminal 400
+
+        // The bookmark stays locally but is no longer pending, so it can't wedge the queue forever.
+        assertFalse(subject.observeBookmark(AyahKey("73:4")).first()!!.pendingSync)
+        meApi.created.clear()
+        subject.pushPending()
+        assertTrue(meApi.created.isEmpty()) // not re-attempted
     }
 
     private fun future(): Instant = Clock.System.now() + kotlin.time.Duration.parse("1h")

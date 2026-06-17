@@ -16,6 +16,8 @@
 
 package org.surau.app.core.data.repository
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -25,6 +27,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.surau.app.core.data.util.NetworkMonitor
 import org.surau.app.core.datastore.AuthSession
 import org.surau.app.core.datastore.AuthSessionDataSource
 import org.surau.app.core.datastore.test.InMemoryDataStore
@@ -61,7 +64,11 @@ class DefaultActivityRepositoryTest {
     fun setup() {
         api = FakeActivityApi()
         authSession = AuthSessionDataSource(InMemoryDataStore(AuthSession.getDefaultInstance()))
-        subject = DefaultActivityRepository(meApi = api, authSessionDataSource = authSession)
+        subject = DefaultActivityRepository(
+            meApi = api,
+            authSessionDataSource = authSession,
+            networkMonitor = FakeNetworkMonitor(online = true),
+        )
     }
 
     private suspend fun signIn() {
@@ -150,6 +157,19 @@ class DefaultActivityRepositoryTest {
     }
 
     @Test
+    fun observeSurahProgress_offline_emitsOnlyPlaceholder_withoutFetching() = runTest {
+        signIn()
+        api.surahProgressResult = { error("must not fetch while offline") }
+        val offline = DefaultActivityRepository(
+            meApi = api,
+            authSessionDataSource = authSession,
+            networkMonitor = FakeNetworkMonitor(online = false),
+        )
+
+        assertEquals(listOf(emptyMap<Int, Float>()), offline.observeSurahProgress().toList())
+    }
+
+    @Test
     fun observeSurahProgress_authed_emitsPlaceholderThenRealMap() = runTest {
         signIn()
         api.surahProgressResult = {
@@ -201,6 +221,10 @@ private class FakeActivityApi : SurauMeApi {
     override suspend fun unmarkKhatamJuz(juz: Int) = throw notUsed()
     override suspend fun completeKhatam() = throw notUsed()
     override suspend fun khatamHistory(limit: Int, offset: Int) = throw notUsed()
+}
+
+private class FakeNetworkMonitor(online: Boolean) : NetworkMonitor {
+    override val isOnline: Flow<Boolean> = flowOf(online)
 }
 
 private fun http(status: Int) = HttpException(
