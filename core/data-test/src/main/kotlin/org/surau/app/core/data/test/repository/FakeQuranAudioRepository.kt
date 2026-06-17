@@ -16,6 +16,7 @@
 
 package org.surau.app.core.data.test.repository
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.surau.app.core.data.repository.QuranAudioRepository
@@ -38,6 +39,9 @@ class FakeQuranAudioRepository @Inject constructor() : QuranAudioRepository {
     /** When non-null, [audioManifest] throws this instead of returning [manifest]. */
     var manifestError: Exception? = null
 
+    /** Optional suspension before [audioManifest] returns, to exercise load-cancellation races. */
+    var manifestDelayMs: Long = 0
+
     /** Records the surahId of every [audioManifest] call, in order. */
     val audioManifestCalls = mutableListOf<Int>()
 
@@ -57,6 +61,7 @@ class FakeQuranAudioRepository @Inject constructor() : QuranAudioRepository {
 
     override suspend fun audioManifest(surahId: Int, recitationId: String?): SurahAudioManifest {
         audioManifestCalls += surahId
+        if (manifestDelayMs > 0) delay(manifestDelayMs)
         manifestError?.let { throw it }
         return manifest
     }

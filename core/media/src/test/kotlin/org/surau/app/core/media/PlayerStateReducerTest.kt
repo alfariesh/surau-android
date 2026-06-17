@@ -62,6 +62,71 @@ class PlayerStateReducerTest {
     }
 
     @Test
+    fun surahModeMediaId_yieldsNullAyah() {
+        // Surah mode uses a single MediaItem whose id has no trailing ayah; the controller fills the
+        // ayah in afterwards from the timeline, so the reducer itself must report null here.
+        val extras = Bundle().apply { putInt(KEY_SURAH_ID, 1) }
+        val item = MediaItem.Builder()
+            .setMediaId("surah:1:full")
+            .setMediaMetadata(MediaMetadata.Builder().setExtras(extras).build())
+            .build()
+
+        val state = reducePlayerState(
+            base = PlayerUiState(),
+            isPlaying = true,
+            currentItem = item,
+            durationMs = 95_000L,
+        )
+
+        assertEquals(1, state.surahId)
+        assertNull(state.currentAyahNumber)
+    }
+
+    @Test
+    fun surahIdZero_isTreatedAsUnset() {
+        val extras = Bundle().apply { putInt(KEY_SURAH_ID, 0) }
+        val item = MediaItem.Builder()
+            .setMediaId("0:0")
+            .setMediaMetadata(MediaMetadata.Builder().setExtras(extras).build())
+            .build()
+
+        val state = reducePlayerState(
+            base = PlayerUiState(),
+            isPlaying = false,
+            currentItem = item,
+            durationMs = 0L,
+        )
+
+        assertNull(state.surahId)
+    }
+
+    @Test
+    fun preservesPollAndRepeatSleepFieldsFromBase() {
+        val base = PlayerUiState(
+            positionMs = 4_321L,
+            speed = 1.25f,
+            repeatScope = RepeatScope.SURAH,
+            repeatCount = 3,
+            sleepTimerRemainingMs = 60_000L,
+            stopAtSurahEnd = true,
+        )
+
+        val state = reducePlayerState(
+            base = base,
+            isPlaying = true,
+            currentItem = mediaItem(surahId = 1, ayah = 1),
+            durationMs = 3_000L,
+        )
+
+        assertEquals(4_321L, state.positionMs)
+        assertEquals(1.25f, state.speed)
+        assertEquals(RepeatScope.SURAH, state.repeatScope)
+        assertEquals(3, state.repeatCount)
+        assertEquals(60_000L, state.sleepTimerRemainingMs)
+        assertTrue(state.stopAtSurahEnd)
+    }
+
+    @Test
     fun unsetDuration_isCoercedToZero() {
         val state = reducePlayerState(
             base = PlayerUiState(),

@@ -49,6 +49,7 @@ class OfflineFirstUserDataRepositoryTest {
         subject = OfflineFirstUserDataRepository(
             surauPreferencesDataSource = surauPreferencesDataSource,
             analyticsHelper,
+            scope = testScope.backgroundScope,
         )
     }
 

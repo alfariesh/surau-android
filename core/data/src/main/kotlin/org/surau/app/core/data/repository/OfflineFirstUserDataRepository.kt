@@ -16,8 +16,12 @@
 
 package org.surau.app.core.data.repository
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.shareIn
 import org.surau.app.core.analytics.AnalyticsHelper
+import org.surau.app.core.common.network.di.ApplicationScope
 import org.surau.app.core.datastore.SurauPreferencesDataSource
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
@@ -30,10 +34,14 @@ import javax.inject.Inject
 internal class OfflineFirstUserDataRepository @Inject constructor(
     private val surauPreferencesDataSource: SurauPreferencesDataSource,
     private val analyticsHelper: AnalyticsHelper,
+    @ApplicationScope scope: CoroutineScope,
 ) : UserDataRepository {
 
+    // Share the proto->UserData mapping once across all collectors: DataStore re-emits the full
+    // proto on every write, so without sharing each collector would re-run the whole mapping.
     override val userData: Flow<UserData> =
         surauPreferencesDataSource.userData
+            .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
 
     override suspend fun setDarkThemeConfig(darkThemeConfig: DarkThemeConfig) {
         surauPreferencesDataSource.setDarkThemeConfig(darkThemeConfig)

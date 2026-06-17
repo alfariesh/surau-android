@@ -194,4 +194,20 @@ class SurahReaderViewModelTest {
 
         assertEquals("abdul-basit-murattal", userDataRepository.userData.first().recitationId)
     }
+
+    @Test
+    fun setRecitation_rapidSwitch_onlyLatestLoadPlays() = runTest {
+        // A slow manifest fetch keeps the first switch in flight when the second arrives.
+        audioRepository.manifestDelayMs = 1_000
+        playerController.playerState.value =
+            PlayerUiState(surahId = 1, currentAyahNumber = 2, isPlaying = true)
+        val viewModel = viewModel(SurahReaderNavKey(surahId = 1))
+
+        viewModel.setRecitation("qari-a")
+        viewModel.setRecitation("qari-b")
+        advanceUntilIdle()
+
+        // The first load is cancelled before its manifest resolves; only the latest reciter plays.
+        assertEquals(1, playerController.playCalls.size)
+    }
 }

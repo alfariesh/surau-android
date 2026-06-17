@@ -19,9 +19,12 @@ package org.surau.app.core.media
 import androidx.media3.common.MediaItem
 
 /**
- * Pure derivation of [PlayerUiState] from a player snapshot. The surah/ayah identity comes from the
- * current [MediaItem] (extras + `mediaId`). [PlayerUiState.positionMs] is tracked separately by a
- * polling loop, so it is preserved from [base] here.
+ * Pure derivation of [PlayerUiState] from a player snapshot. The surah id, name and reciter come
+ * from the current [MediaItem]; the ayah number is parsed from an ayah-mode `mediaId`
+ * ("surahId:ayah") and is therefore **null in surah mode** — there a single MediaItem covers the
+ * whole surah, so the active ayah is supplied afterwards by the controller
+ * (`DefaultSurauPlayerController.syncState`) from the timeline. [PlayerUiState.positionMs] is tracked
+ * separately by a polling loop, so it (and the repeat/sleep/speed fields) are preserved from [base].
  */
 internal fun reducePlayerState(
     base: PlayerUiState,
