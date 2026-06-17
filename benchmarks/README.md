@@ -13,14 +13,8 @@ config:
 graph TB
   subgraph :feature
     direction TB
-    subgraph :feature:settings
-      direction TB
-      :feature:settings:api[api]:::android-library
-      :feature:settings:impl[impl]:::android-library
-    end
     subgraph :feature:activity
       direction TB
-      :feature:activity:api[api]:::android-library
       :feature:activity:impl[impl]:::android-library
     end
     subgraph :feature:auth
@@ -66,13 +60,11 @@ graph TB
   :app -.-> :core:model
   :app -.-> :core:navigation
   :app -.-> :core:ui
-  :app -.-> :feature:activity:api
   :app -.-> :feature:activity:impl
   :app -.-> :feature:auth:api
   :app -.-> :feature:auth:impl
   :app -.-> :feature:quran:api
   :app -.-> :feature:quran:impl
-  :app -.-> :feature:settings:impl
   :app -.-> :sync:work
   :benchmarks -.->|testedApks| :app
   :core:data -.-> :core:analytics
@@ -92,12 +84,10 @@ graph TB
   :core:ui --> :core:analytics
   :core:ui --> :core:designsystem
   :core:ui --> :core:model
-  :feature:activity:api --> :core:navigation
   :feature:activity:impl -.-> :core:data
   :feature:activity:impl -.-> :core:designsystem
   :feature:activity:impl -.-> :core:model
   :feature:activity:impl -.-> :core:ui
-  :feature:activity:impl --> :feature:activity:api
   :feature:auth:api --> :core:navigation
   :feature:auth:impl -.-> :core:data
   :feature:auth:impl -.-> :core:designsystem
@@ -113,12 +103,6 @@ graph TB
   :feature:quran:impl -.-> :core:model
   :feature:quran:impl -.-> :core:ui
   :feature:quran:impl --> :feature:quran:api
-  :feature:settings:api --> :core:navigation
-  :feature:settings:impl -.-> :core:data
-  :feature:settings:impl -.-> :core:designsystem
-  :feature:settings:impl -.-> :core:model
-  :feature:settings:impl -.-> :core:ui
-  :feature:settings:impl --> :feature:settings:api
   :sync:work -.-> :core:analytics
   :sync:work -.-> :core:data
 

@@ -33,6 +33,7 @@ import org.surau.app.core.data.util.QuranDownloadManager
 import org.surau.app.core.data.util.QuranDownloadState
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.ReaderMode
@@ -71,6 +72,7 @@ class ProfileViewModel @Inject constructor(
                     useDynamicColor = userData.useDynamicColor,
                     darkThemeConfig = userData.darkThemeConfig,
                     seedColorArgb = userData.seedColorArgb,
+                    themePalette = userData.themePalette,
                     themeStyle = userData.themeStyle,
                     themeContrast = userData.themeContrast,
                     useMeshGradient = userData.useMeshGradient,
@@ -130,6 +132,18 @@ class ProfileViewModel @Inject constructor(
     fun updateThemeContrast(themeContrast: ThemeContrast) {
         viewModelScope.launch {
             userDataRepository.setThemeContrast(themeContrast)
+        }
+    }
+
+    /**
+     * Applies a named static palette. Choosing one clears the custom seed and turns off wallpaper
+     * dynamic color so the selected design-token palette is visible immediately.
+     */
+    fun updateThemePalette(themePalette: ThemePalette) {
+        viewModelScope.launch {
+            userDataRepository.setThemePalette(themePalette)
+            userDataRepository.setSeedColor(0L)
+            userDataRepository.setDynamicColorPreference(false)
         }
     }
 
@@ -207,6 +221,7 @@ data class UserEditableSettings(
     val translationSourceId: String?,
     val arabicFontScale: Float,
     val seedColorArgb: Long = 0L,
+    val themePalette: ThemePalette = ThemePalette.SURAU_BASE,
     val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
     val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
     val useMeshGradient: Boolean = false,

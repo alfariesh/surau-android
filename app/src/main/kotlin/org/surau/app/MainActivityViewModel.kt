@@ -108,9 +108,9 @@ sealed interface MainActivityUiState {
     val useMeshGradient: Boolean get() = false
 
     /**
-     * The chosen named HeroUI palette for the static scheme.
+     * The chosen named Surau palette for the static scheme.
      */
-    val themePalette: ThemePalette get() = ThemePalette.DEFAULT
+    val themePalette: ThemePalette get() = ThemePalette.SURAU_BASE
 
     /**
      * Returns `true` if dark theme should be used.

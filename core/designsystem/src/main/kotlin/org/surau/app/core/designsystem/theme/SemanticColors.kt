@@ -67,14 +67,10 @@ data class SurauSemanticColors(
     val dangerContainer: Color,
 )
 
-/**
- * The app's baseline extended semantic colors — the hand-tuned HeroUI **Default** palette (balanced
- * neutral grey with a blue accent). Defined in HeroPalettes.kt; the seed/dynamic paths still derive
- * their own from the live scheme via [surauSemanticColorsFromScheme].
- */
-internal val LightSurauSemanticColors = DefaultLightSemanticColors
+/** The app's baseline extended semantic colors — the hand-tuned Surau Base design-token palette. */
+internal val LightSurauSemanticColors = SurauBaseLightSemanticColors
 
-internal val DarkSurauSemanticColors = DefaultDarkSemanticColors
+internal val DarkSurauSemanticColors = SurauBaseDarkSemanticColors
 
 /**
  * Derives [SurauSemanticColors] from a Material 3 [ColorScheme] so the extended tokens follow a

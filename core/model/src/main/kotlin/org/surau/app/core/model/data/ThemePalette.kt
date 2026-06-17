@@ -17,11 +17,16 @@
 package org.surau.app.core.model.data
 
 /**
- * A named, hand-tuned HeroUI design-token palette. Drives the app's static color scheme when no
- * custom seed color and no wallpaper-dynamic color is in effect. [DEFAULT] is the balanced baseline.
+ * A named, hand-tuned Surau design-token palette. Drives the app's static color scheme when no
+ * custom seed color and no wallpaper-dynamic color is in effect. [SURAU_BASE] is the baseline.
  */
 enum class ThemePalette {
+    SURAU_BASE,
     DEFAULT,
     MOUVE,
     SKY,
+    MINT,
+    DISCORD,
+    UBER,
+    AIRBNB,
 }

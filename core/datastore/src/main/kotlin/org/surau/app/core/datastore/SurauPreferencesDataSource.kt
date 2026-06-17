@@ -107,10 +107,15 @@ class SurauPreferencesDataSource @Inject constructor(
                     null,
                     ThemePaletteProto.THEME_PALETTE_UNSPECIFIED,
                     ThemePaletteProto.UNRECOGNIZED,
-                    ThemePaletteProto.THEME_PALETTE_DEFAULT,
-                    -> ThemePalette.DEFAULT
+                    ThemePaletteProto.THEME_PALETTE_SURAU_BASE,
+                    -> ThemePalette.SURAU_BASE
+                    ThemePaletteProto.THEME_PALETTE_DEFAULT -> ThemePalette.DEFAULT
                     ThemePaletteProto.THEME_PALETTE_MOUVE -> ThemePalette.MOUVE
                     ThemePaletteProto.THEME_PALETTE_SKY -> ThemePalette.SKY
+                    ThemePaletteProto.THEME_PALETTE_MINT -> ThemePalette.MINT
+                    ThemePaletteProto.THEME_PALETTE_DISCORD -> ThemePalette.DISCORD
+                    ThemePaletteProto.THEME_PALETTE_UBER -> ThemePalette.UBER
+                    ThemePaletteProto.THEME_PALETTE_AIRBNB -> ThemePalette.AIRBNB
                 },
             )
         }
@@ -267,9 +272,14 @@ class SurauPreferencesDataSource @Inject constructor(
         userPreferences.updateData {
             it.copy {
                 this.themePalette = when (themePalette) {
+                    ThemePalette.SURAU_BASE -> ThemePaletteProto.THEME_PALETTE_SURAU_BASE
                     ThemePalette.DEFAULT -> ThemePaletteProto.THEME_PALETTE_DEFAULT
                     ThemePalette.MOUVE -> ThemePaletteProto.THEME_PALETTE_MOUVE
                     ThemePalette.SKY -> ThemePaletteProto.THEME_PALETTE_SKY
+                    ThemePalette.MINT -> ThemePaletteProto.THEME_PALETTE_MINT
+                    ThemePalette.DISCORD -> ThemePaletteProto.THEME_PALETTE_DISCORD
+                    ThemePalette.UBER -> ThemePaletteProto.THEME_PALETTE_UBER
+                    ThemePalette.AIRBNB -> ThemePaletteProto.THEME_PALETTE_AIRBNB
                 }
             }
         }

@@ -262,15 +262,20 @@ data class ThemeSettings(
     val seedColorArgb: Long = 0L,
     val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
     val themeContrast: ThemeContrast = ThemeContrast.STANDARD,
-    val themePalette: ThemePalette = ThemePalette.DEFAULT,
+    val themePalette: ThemePalette = ThemePalette.SURAU_BASE,
     val useMeshGradient: Boolean = false,
 )
 
-/** Maps the persisted domain [ThemePalette] to the design-system's HeroUI palette. */
+/** Maps the persisted domain [ThemePalette] to the design-system palette. */
 private fun ThemePalette.toHeroPalette(): HeroPalette = when (this) {
+    ThemePalette.SURAU_BASE -> HeroPalette.SURAU_BASE
     ThemePalette.DEFAULT -> HeroPalette.DEFAULT
     ThemePalette.MOUVE -> HeroPalette.MOUVE
     ThemePalette.SKY -> HeroPalette.SKY
+    ThemePalette.MINT -> HeroPalette.MINT
+    ThemePalette.DISCORD -> HeroPalette.DISCORD
+    ThemePalette.UBER -> HeroPalette.UBER
+    ThemePalette.AIRBNB -> HeroPalette.AIRBNB
 }
 
 /** Maps the persisted domain [ThemeStyle] to the design-system's generator style. */
