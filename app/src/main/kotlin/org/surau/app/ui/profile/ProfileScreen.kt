@@ -56,7 +56,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -80,6 +79,7 @@ import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.designsystem.theme.supportsDynamicTheming
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
+import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.ThemeStyle
 import org.surau.app.core.model.data.auth.AuthState
 import org.surau.app.core.model.data.quran.ReaderMode
@@ -117,6 +117,7 @@ fun ProfileScreen(
         onChangeThemeSeed = viewModel::updateThemeSeed,
         onChangeThemeStyle = viewModel::updateThemeStyle,
         onChangeThemeContrast = viewModel::updateThemeContrast,
+        onChangeThemePalette = viewModel::updateThemePalette,
         onChangeMeshGradient = viewModel::updateMeshGradient,
         onChangeReaderMode = viewModel::updateReaderMode,
         onChangeTranslationSource = viewModel::updateTranslationSource,
@@ -150,6 +151,7 @@ internal fun ProfileScreen(
     onChangeThemeSeed: (Long) -> Unit = {},
     onChangeThemeStyle: (ThemeStyle) -> Unit = {},
     onChangeThemeContrast: (ThemeContrast) -> Unit = {},
+    onChangeThemePalette: (ThemePalette) -> Unit = {},
     onChangeMeshGradient: (Boolean) -> Unit = {},
     onChangeShowTransliteration: (Boolean) -> Unit = {},
     onChangeShowTranslation: (Boolean) -> Unit = {},
@@ -235,6 +237,7 @@ internal fun ProfileScreen(
                         onChangeThemeSeed = onChangeThemeSeed,
                         onChangeThemeStyle = onChangeThemeStyle,
                         onChangeThemeContrast = onChangeThemeContrast,
+                        onChangeThemePalette = onChangeThemePalette,
                         onChangeMeshGradient = onChangeMeshGradient,
                     )
                 }
@@ -475,24 +478,22 @@ private fun DynamicColorChooser(
 }
 
 private data class ThemePreset(
+    val palette: ThemePalette,
     val name: String,
-    /** Packed ARGB seed, or 0 for the default (Zamrud) scheme. */
-    val argb: Long,
     /** The color shown on the swatch chip. */
     val swatch: Color,
 )
 
-// Curated, spiritually-named presets. Zamrud (argb 0) keeps the default hardcoded HeroUI scheme; the
-// rest drive the generated scheme. Display names are brand proper-nouns, identical across locales.
+// Design-token palettes. Display names are token proper-nouns, identical across locales.
 private val themePresets = listOf(
-    ThemePreset("Zamrud", 0L, Color(0xFF006D4AL)),
-    ThemePreset("Mihrab", 0xFF0E7C86L, Color(0xFF0E7C86L)),
-    ThemePreset("Lazuardi", 0xFF2D5BD0L, Color(0xFF2D5BD0L)),
-    ThemePreset("Senja", 0xFFC2562EL, Color(0xFFC2562EL)),
-    ThemePreset("Kurma", 0xFF8A5A2BL, Color(0xFF8A5A2BL)),
-    ThemePreset("Nila", 0xFF3B3F8FL, Color(0xFF3B3F8FL)),
-    ThemePreset("Salju", 0xFF5B6B61L, Color(0xFF5B6B61L)),
-    ThemePreset("Monokrom", 0xFF3A3A3AL, Color(0xFF3A3A3AL)),
+    ThemePreset(ThemePalette.SURAU_BASE, "Surau Base", Color(0xFF4F772D)),
+    ThemePreset(ThemePalette.DEFAULT, "Default", Color(0xFF0485F7)),
+    ThemePreset(ThemePalette.MOUVE, "Mouve", Color(0xFF8451C9)),
+    ThemePreset(ThemePalette.SKY, "Sky", Color(0xFF7DD3FC)),
+    ThemePreset(ThemePalette.MINT, "Mint", Color(0xFF86EFAC)),
+    ThemePreset(ThemePalette.DISCORD, "Discord", Color(0xFF5865F2)),
+    ThemePreset(ThemePalette.UBER, "Uber", Color(0xFF000000)),
+    ThemePreset(ThemePalette.AIRBNB, "Airbnb", Color(0xFFFF385C)),
 )
 
 @Composable
@@ -501,6 +502,7 @@ private fun ThemeColorChooser(
     onChangeThemeSeed: (Long) -> Unit,
     onChangeThemeStyle: (ThemeStyle) -> Unit,
     onChangeThemeContrast: (ThemeContrast) -> Unit,
+    onChangeThemePalette: (ThemePalette) -> Unit,
     onChangeMeshGradient: (Boolean) -> Unit,
 ) {
     Text(
@@ -512,8 +514,8 @@ private fun ThemeColorChooser(
     // The preview uses the currently-applied theme, which re-skins instantly when a preset is tapped.
     ThemePreviewCard()
 
-    // Choosing a preset is mutually exclusive with wallpaper dynamic color.
-    val activeSeed = if (settings.useDynamicColor) -1L else settings.seedColorArgb
+    // Choosing a named palette is mutually exclusive with custom seed and wallpaper dynamic color.
+    val namedPaletteActive = !settings.useDynamicColor && settings.seedColorArgb == 0L
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -524,8 +526,8 @@ private fun ThemeColorChooser(
         themePresets.forEach { preset ->
             ThemeSwatch(
                 preset = preset,
-                selected = preset.argb == activeSeed,
-                onClick = { onChangeThemeSeed(preset.argb) },
+                selected = namedPaletteActive && preset.palette == settings.themePalette,
+                onClick = { onChangeThemePalette(preset.palette) },
             )
         }
     }
@@ -601,7 +603,7 @@ private fun ThemeColorChooser(
         )
 
         SurauTextButton(
-            onClick = { onChangeThemeSeed(0L) },
+            onClick = { onChangeThemePalette(ThemePalette.SURAU_BASE) },
             modifier = Modifier.padding(top = 4.dp),
         ) {
             Text(stringResource(R.string.feature_settings_impl_theme_reset))

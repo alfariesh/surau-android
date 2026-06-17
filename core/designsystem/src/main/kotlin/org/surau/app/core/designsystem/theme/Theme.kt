@@ -32,16 +32,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
-/**
- * The app's baseline light/dark color schemes — the hand-tuned HeroUI **Default** palette (balanced
- * neutral grey with a blue accent). Defined in HeroPalettes.kt; alternative palettes (Mouve, Sky)
- * live alongside it and are selectable via [HeroPalette].
- */
+/** The app's baseline light/dark color schemes — the hand-tuned Surau Base design-token palette. */
 @VisibleForTesting
-val LightSurauColorScheme = DefaultLightColorScheme
+val LightSurauColorScheme = SurauBaseLightColorScheme
 
 @VisibleForTesting
-val DarkSurauColorScheme = DefaultDarkColorScheme
+val DarkSurauColorScheme = SurauBaseDarkColorScheme
 
 /**
  * Surau theme.
@@ -52,8 +48,8 @@ val DarkSurauColorScheme = DefaultDarkColorScheme
  * @param disableDynamicTheming If `true`, disables the use of dynamic theming, even when it is
  *        supported.
  * @param seedColor A user-chosen seed color. When specified (and dynamic theming is off), the whole
- *        scheme is generated from it via [colorSchemeFromSeed]; [Color.Unspecified] keeps the default
- *        HeroUI Pro (Zamrud) scheme so existing call sites and goldens are unaffected.
+ *        scheme is generated from it via [colorSchemeFromSeed]; [Color.Unspecified] keeps the named
+ *        Surau palette selected by [heroPalette].
  * @param seedStyle How vivid the generated scheme's accents are.
  * @param seedContrast Extra contrast floor for the generated scheme (0f = standard, 1f = high).
  * @param meshGradientEnabled Whether the decorative mesh gradient should render on chrome. Resolved
@@ -67,7 +63,7 @@ fun SurauTheme(
     seedColor: Color = Color.Unspecified,
     seedStyle: SeedPaletteStyle = SeedPaletteStyle.TONAL_SPOT,
     seedContrast: Float = 0f,
-    heroPalette: HeroPalette = HeroPalette.DEFAULT,
+    heroPalette: HeroPalette = HeroPalette.SURAU_BASE,
     meshGradientEnabled: Boolean = false,
     content: @Composable () -> Unit,
 ) {

@@ -32,12 +32,12 @@ data class UserData(
     val recitationId: String?,
     val arabicFontScale: Float,
     val welcomeShown: Boolean,
+    /** The named Surau palette for the static scheme. Overridden by a custom seed or dynamic color. */
+    val themePalette: ThemePalette = ThemePalette.SURAU_BASE,
     /**
-     * Custom theme seed color as a packed ARGB int (alpha always 0xFF), or 0 to use the default
-     * HeroUI Pro (Zamrud) scheme. Local-only. Mutually exclusive with [useDynamicColor].
+     * Custom theme seed color as a packed ARGB int (alpha always 0xFF), or 0 to use the named
+     * [themePalette]. Local-only. Mutually exclusive with [useDynamicColor].
      */
-    /** The named HeroUI palette for the static scheme. Overridden by a custom seed or dynamic color. */
-    val themePalette: ThemePalette = ThemePalette.DEFAULT,
     val seedColorArgb: Long = 0L,
     val themeStyle: ThemeStyle = ThemeStyle.TONAL_SPOT,
     val themeContrast: ThemeContrast = ThemeContrast.STANDARD,

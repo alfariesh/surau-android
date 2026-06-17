@@ -19,11 +19,16 @@ syntax = "proto3";
 option java_package = "org.surau.app.core.datastore";
 option java_multiple_files = true;
 
-// A named, hand-tuned HeroUI design-token palette. The chosen palette drives the static (non-seed,
+// A named, hand-tuned Surau design-token palette. The chosen palette drives the static (non-seed,
 // non-dynamic) color scheme.
 enum ThemePaletteProto {
   THEME_PALETTE_UNSPECIFIED = 0;
   THEME_PALETTE_DEFAULT = 1;
   THEME_PALETTE_MOUVE = 2;
   THEME_PALETTE_SKY = 3;
+  THEME_PALETTE_SURAU_BASE = 4;
+  THEME_PALETTE_MINT = 5;
+  THEME_PALETTE_DISCORD = 6;
+  THEME_PALETTE_UBER = 7;
+  THEME_PALETTE_AIRBNB = 8;
 }

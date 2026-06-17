@@ -34,12 +34,17 @@ import org.robolectric.RobolectricTestRunner
 import org.surau.app.core.designsystem.theme.BackgroundTheme
 import org.surau.app.core.designsystem.theme.DarkSurauColorScheme
 import org.surau.app.core.designsystem.theme.GradientColors
+import org.surau.app.core.designsystem.theme.HeroPalette
 import org.surau.app.core.designsystem.theme.LightSurauColorScheme
 import org.surau.app.core.designsystem.theme.LocalBackgroundTheme
 import org.surau.app.core.designsystem.theme.LocalGradientColors
+import org.surau.app.core.designsystem.theme.LocalSurauColors
 import org.surau.app.core.designsystem.theme.LocalTintTheme
 import org.surau.app.core.designsystem.theme.SurauTheme
 import org.surau.app.core.designsystem.theme.TintTheme
+import org.surau.app.core.designsystem.theme.paletteColorScheme
+import org.surau.app.core.designsystem.theme.paletteName
+import org.surau.app.core.designsystem.theme.paletteSemanticColors
 import kotlin.test.assertEquals
 
 /**
@@ -132,6 +137,35 @@ class ThemeTest {
         }
     }
 
+    @Test
+    fun allStaticPalettes_resolveExpectedTokens() {
+        assertEquals(
+            listOf("Surau Base", "Default", "Mouve", "Sky", "Mint", "Discord", "Uber", "Airbnb"),
+            HeroPalette.entries.map(::paletteName),
+        )
+
+        composeTestRule.setContent {
+            HeroPalette.entries.forEach { palette ->
+                listOf(false, true).forEach { dark ->
+                    SurauTheme(
+                        darkTheme = dark,
+                        disableDynamicTheming = true,
+                        heroPalette = palette,
+                    ) {
+                        assertColorSchemesEqual(
+                            expectedColorScheme = paletteColorScheme(palette, dark),
+                            actualColorScheme = MaterialTheme.colorScheme,
+                        )
+                        assertEquals(
+                            paletteSemanticColors(palette, dark),
+                            LocalSurauColors.current,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     @Composable
     private fun dynamicLightColorSchemeWithFallback(): ColorScheme = when {
         SDK_INT >= VERSION_CODES.S -> dynamicLightColorScheme(LocalContext.current)
@@ -159,8 +193,8 @@ class ThemeTest {
     }
 
     private fun defaultBackgroundTheme(colorScheme: ColorScheme): BackgroundTheme = BackgroundTheme(
-        color = colorScheme.surface,
-        tonalElevation = 2.dp,
+        color = colorScheme.background,
+        tonalElevation = 0.dp,
     )
 
     private fun defaultTintTheme(): TintTheme = TintTheme()
@@ -202,8 +236,14 @@ class ThemeTest {
         assertEquals(expectedColorScheme.onSurface, actualColorScheme.onSurface)
         assertEquals(expectedColorScheme.surfaceVariant, actualColorScheme.surfaceVariant)
         assertEquals(expectedColorScheme.onSurfaceVariant, actualColorScheme.onSurfaceVariant)
+        assertEquals(expectedColorScheme.surfaceContainerLowest, actualColorScheme.surfaceContainerLowest)
+        assertEquals(expectedColorScheme.surfaceContainerLow, actualColorScheme.surfaceContainerLow)
+        assertEquals(expectedColorScheme.surfaceContainer, actualColorScheme.surfaceContainer)
+        assertEquals(expectedColorScheme.surfaceContainerHigh, actualColorScheme.surfaceContainerHigh)
+        assertEquals(expectedColorScheme.surfaceContainerHighest, actualColorScheme.surfaceContainerHighest)
         assertEquals(expectedColorScheme.inverseSurface, actualColorScheme.inverseSurface)
         assertEquals(expectedColorScheme.inverseOnSurface, actualColorScheme.inverseOnSurface)
         assertEquals(expectedColorScheme.outline, actualColorScheme.outline)
+        assertEquals(expectedColorScheme.outlineVariant, actualColorScheme.outlineVariant)
     }
 }
