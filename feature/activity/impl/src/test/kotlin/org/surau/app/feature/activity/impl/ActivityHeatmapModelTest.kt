@@ -16,8 +16,10 @@
 
 package org.surau.app.feature.activity.impl
 
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -41,6 +43,8 @@ class ActivityHeatmapModelTest {
         assertEquals(dates.sorted(), dates)
         // HEATMAP_WEEKS * 7 consecutive days, no gaps/dupes.
         assertEquals(dates.size, dates.toSet().size)
+        // Each cell is exactly one day after the previous — no gaps or jumps across week columns.
+        dates.zipWithNext().forEach { (a, b) -> assertEquals(a.plus(1, DateTimeUnit.DAY), b) }
     }
 
     @Test

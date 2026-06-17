@@ -18,6 +18,7 @@ package org.surau.app.feature.activity.impl
 
 import app.cash.turbine.test
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -129,6 +130,57 @@ class ActivityViewModelTest {
         // The optimistic unmark is reverted by re-adding only juz 2; the others are untouched.
         val state = success(vm)
         assertEquals(setOf(1, 2, 3), state.khatam?.completedJuz)
+        assertTrue(state.juzInFlight.isEmpty())
+    }
+
+    @Test
+    fun concurrentJuzToggles_failingOneRevertsOnlyItself_notTheOther() = runTest {
+        authRepository.login("a@b.com", "password")
+        khatamRepository.setActiveCycle(activeCycle(setOf(1)))
+        val gate = CompletableDeferred<Unit>()
+        khatamRepository.mutationGate = gate
+        khatamRepository.failJuz.add(2) // juz 2's server call fails AFTER the gate
+        val vm = viewModel()
+
+        vm.markJuz(2) // optimistic {1,2}, server in flight
+        vm.markJuz(3) // optimistic {1,2,3}, server in flight
+
+        // Both optimistic flips are visible while their server calls are gated.
+        assertEquals(setOf(1, 2, 3), success(vm).khatam?.completedJuz)
+        assertEquals(setOf(2, 3), success(vm).juzInFlight)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        // juz 2 reverts ONLY itself; juz 3 stays. A whole-cycle snapshot rollback would have
+        // clobbered juz 3 back to {1}.
+        val state = success(vm)
+        assertEquals(setOf(1, 3), state.khatam?.completedJuz)
+        assertTrue(state.juzInFlight.isEmpty())
+    }
+
+    @Test
+    fun markJuz_showsOptimisticGuessThenConfirmedServerResult() = runTest {
+        authRepository.login("a@b.com", "password")
+        khatamRepository.setActiveCycle(activeCycle(setOf(1)))
+        val gate = CompletableDeferred<Unit>()
+        khatamRepository.mutationGate = gate
+        // The server returns an authoritative set the optimistic guess ({1,2}) would never produce.
+        khatamRepository.nextMutationResult = activeCycle(setOf(1, 2, 5))
+        val vm = viewModel()
+
+        vm.markJuz(2)
+
+        // Optimistic phase: just the local delta, juz 2 in flight.
+        assertEquals(setOf(1, 2), success(vm).khatam?.completedJuz)
+        assertTrue(2 in success(vm).juzInFlight)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        // Confirmed phase: the server's set replaces the optimistic guess; nothing left in flight.
+        val state = success(vm)
+        assertEquals(setOf(1, 2, 5), state.khatam?.completedJuz)
         assertTrue(state.juzInFlight.isEmpty())
     }
 

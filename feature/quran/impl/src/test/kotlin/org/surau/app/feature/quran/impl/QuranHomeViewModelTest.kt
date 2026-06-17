@@ -29,6 +29,7 @@ import org.surau.app.core.domain.GetSurahListWithLastReadUseCase
 import org.surau.app.core.testing.util.MainDispatcherRule
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 /** Skips the conflatable Loading emission when the dispatcher races past it. */
 private suspend fun TurbineTestContext<QuranHomeUiState>.awaitNonLoading(): QuranHomeUiState {
@@ -61,6 +62,17 @@ class QuranHomeViewModelTest {
             val success = assertIs<QuranHomeUiState.Success>(awaitNonLoading())
             assertEquals(QuranTestData.surahs, success.surahs)
             assertEquals(QuranTestData.juz, success.juzList)
+        }
+    }
+
+    @Test
+    fun uiState_withoutProgress_stillShowsSurahs() = runTest {
+        // A guest (or a failed/empty progress fetch degraded to an empty map) must not break the
+        // surah list — it renders fully, just without progress badges.
+        viewModel().uiState.test {
+            val success = assertIs<QuranHomeUiState.Success>(awaitNonLoading())
+            assertEquals(QuranTestData.surahs, success.surahs)
+            assertTrue(success.progressBySurah.isEmpty())
         }
     }
 

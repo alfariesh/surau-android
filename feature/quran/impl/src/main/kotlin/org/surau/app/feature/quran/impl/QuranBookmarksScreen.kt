@@ -369,7 +369,8 @@ internal fun BookmarkEditorContent(
             .padding(horizontal = 24.dp, vertical = 8.dp),
     ) {
         Text(
-            text = "${item.surahName} : ${item.ayahNumber}",
+            text = "${item.surahName} · " +
+                stringResource(R.string.feature_quran_impl_ayah_number, item.ayahNumber),
             style = MaterialTheme.typography.titleMedium,
         )
 

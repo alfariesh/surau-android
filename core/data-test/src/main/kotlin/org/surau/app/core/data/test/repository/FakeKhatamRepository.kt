@@ -16,6 +16,7 @@
 
 package org.surau.app.core.data.test.repository
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.datetime.Clock
 import org.surau.app.core.data.repository.KhatamRepository
 import org.surau.app.core.model.data.quran.KhatamCycle
@@ -38,6 +39,16 @@ class FakeKhatamRepository @Inject constructor() : KhatamRepository {
 
     /** When true, [history] throws — to verify the screen tolerates a failed history load. */
     var failHistory: Boolean = false
+
+    /** Juz whose mark/unmark fails AFTER the gate — lets a test fail one of two concurrent toggles. */
+    val failJuz: MutableSet<Int> = mutableSetOf()
+
+    /** When set, mark/unmark suspends here before returning, so a test can observe the optimistic state. */
+    var mutationGate: CompletableDeferred<Unit>? = null
+
+    /** When non-null, the next mark/unmark returns this exact cycle (one-shot) instead of the computed
+     * one — lets a test prove the confirmed server result wins over the optimistic guess. */
+    var nextMutationResult: KhatamCycle? = null
 
     fun setActiveCycle(cycle: KhatamCycle?) {
         activeCycle = cycle
@@ -63,9 +74,9 @@ class FakeKhatamRepository @Inject constructor() : KhatamRepository {
         ).also { activeCycle = it }
     }
 
-    override suspend fun markJuz(juz: Int): KhatamCycle = mutateJuz { it + juz }
+    override suspend fun markJuz(juz: Int): KhatamCycle = mutateJuz(juz) { it + juz }
 
-    override suspend fun unmarkJuz(juz: Int): KhatamCycle = mutateJuz { it - juz }
+    override suspend fun unmarkJuz(juz: Int): KhatamCycle = mutateJuz(juz) { it - juz }
 
     override suspend fun complete(): KhatamCycle {
         maybeFail()
@@ -81,14 +92,21 @@ class FakeKhatamRepository @Inject constructor() : KhatamRepository {
         return historyCycles.toList()
     }
 
-    private inline fun mutateJuz(transform: (Set<Int>) -> Set<Int>): KhatamCycle {
+    private suspend fun mutateJuz(juz: Int, transform: (Set<Int>) -> Set<Int>): KhatamCycle {
         maybeFail()
+        mutationGate?.await()
+        if (failJuz.remove(juz)) throw IOException("fake juz failure")
+        nextMutationResult?.let { override ->
+            nextMutationResult = null
+            activeCycle = override
+            return override
+        }
         val current = activeCycle ?: error("no active cycle")
-        val juz = transform(current.completedJuz)
+        val updated = transform(current.completedJuz)
         return current.copy(
-            completedJuz = juz,
-            juzCount = juz.size,
-            percent = juz.size * 100.0 / KhatamCycle.TOTAL_JUZ,
+            completedJuz = updated,
+            juzCount = updated.size,
+            percent = updated.size * 100.0 / KhatamCycle.TOTAL_JUZ,
         ).also { activeCycle = it }
     }
 
