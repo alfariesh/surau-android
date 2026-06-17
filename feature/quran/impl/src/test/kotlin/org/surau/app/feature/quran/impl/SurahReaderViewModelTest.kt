@@ -154,6 +154,19 @@ class SurahReaderViewModelTest {
     }
 
     @Test
+    fun uiState_staysSuccess_whenCacheRefreshFailsButContentExists() = runTest {
+        // The best-effort refresh fails (offline), but the surah is already cached: the reader must
+        // keep showing content rather than collapsing to a full-screen error.
+        quranRepository.ensureSurahCachedError = IOException("offline")
+
+        viewModel(SurahReaderNavKey(surahId = 1)).uiState.test {
+            val success = assertIs<ReaderUiState.Success>(awaitNonLoading())
+            assertEquals(7, success.content.ayahs.size)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun playFromAyah_loadsManifestAndPlays() = runTest {
         val viewModel = viewModel(SurahReaderNavKey(surahId = 1))
 

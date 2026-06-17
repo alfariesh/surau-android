@@ -51,7 +51,12 @@ class FakeQuranRepository @Inject constructor() : QuranRepository {
     ): Flow<List<PopulatedAyah>> =
         MutableStateFlow(QuranTestData.ayahsBySurah[surahId].orEmpty())
 
-    override suspend fun ensureSurahCached(surahId: Int, translationSourceId: String) = Unit
+    /** When non-null, [ensureSurahCached] throws this to exercise the offline-refresh path. */
+    var ensureSurahCachedError: Exception? = null
+
+    override suspend fun ensureSurahCached(surahId: Int, translationSourceId: String) {
+        ensureSurahCachedError?.let { throw it }
+    }
 
     override suspend fun resolveTranslationSourceId(preferredId: String?): String =
         preferredId ?: QuranTestData.translationSources.first().id

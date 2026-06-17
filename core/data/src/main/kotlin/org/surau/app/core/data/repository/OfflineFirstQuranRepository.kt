@@ -200,7 +200,7 @@ internal class OfflineFirstQuranRepository @Inject constructor(
                         nameTranslation = dto.nameTranslation,
                         revelationType = dto.revelationType,
                         ayahCount = dto.ayahCount,
-                        info = dto.info,
+                        info = dto.info?.textHtml?.ifBlank { null },
                         fetchedAt = now,
                     )
                 },

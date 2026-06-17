@@ -68,6 +68,29 @@ class QuranDtoSerializationTest {
     }
 
     @Test
+    fun surah_decodesStructuredInfoObject() {
+        // The backend marshals `info` as an object when include_info is requested; decoding must not
+        // throw (it previously would have, when `info` was typed as String).
+        val surah = json.decodeFromString(
+            SurahDto.serializer(),
+            """
+            {
+              "surah_id": 1, "name_arabic": "الفاتحة", "name_latin": "Al-Fatihah",
+              "ayah_count": 7,
+              "info": {
+                "lang": "id", "surah_name": "Al-Fatihah",
+                "text_html": "<p>Surah pembuka.</p>", "source_name": "QUL",
+                "license_status": "needs_review"
+              }
+            }
+            """.trimIndent(),
+        )
+
+        assertEquals("<p>Surah pembuka.</p>", surah.info?.textHtml)
+        assertEquals("id", surah.info?.lang)
+    }
+
+    @Test
     fun ayah_readerMinimalView_decodesWithoutTranslationOrTransliteration() {
         val response = json.decodeFromString(
             PagedResponseDto.serializer(AyahDto.serializer()),

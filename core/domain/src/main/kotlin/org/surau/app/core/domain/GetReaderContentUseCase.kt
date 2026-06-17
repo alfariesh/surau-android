@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.model.data.quran.PopulatedAyah
@@ -61,8 +62,12 @@ class GetReaderContentUseCase @Inject constructor(
                 flow {
                     val sourceId =
                         quranRepository.resolveTranslationSourceId(prefs.translationSourceId)
-                    // Fetch (or revalidate) the surah content before observing the cache.
-                    quranRepository.ensureSurahCached(surahId, sourceId)
+                    // Best-effort refresh: a failure (e.g. offline, or switching to an uncached
+                    // source) must NOT terminate the flow and collapse the reader to a full-screen
+                    // error. The cache below still serves what it has; the ViewModel decides between
+                    // content and an empty/error state from the observed data, and the flow stays
+                    // alive so a later cache write recovers automatically.
+                    runCatchingExceptCancellation { quranRepository.ensureSurahCached(surahId, sourceId) }
                     emitAll(
                         combine(
                             quranRepository.observeSurah(surahId),
