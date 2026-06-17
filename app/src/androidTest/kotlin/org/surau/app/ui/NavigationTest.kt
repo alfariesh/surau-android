@@ -66,6 +66,10 @@ class NavigationTest {
         composeTestRule.onAllNodesWithTag("nav:QuranHomeNavKey").fetchSemanticsNodes().isNotEmpty()
     }
 
+    private fun awaitProfileSignIn() = composeTestRule.waitUntil(PROFILE_TIMEOUT_MS) {
+        composeTestRule.onAllNodesWithTag("profile:signIn").fetchSemanticsNodes().isNotEmpty()
+    }
+
     private fun goToQuranHome() {
         composeTestRule.apply {
             awaitWelcomeGuest()
@@ -122,9 +126,10 @@ class NavigationTest {
             goToQuranHome()
 
             onNodeWithTag("quranHome:settings").performClick()
-            onNodeWithTag("settings:signIn").assertIsDisplayed()
+            awaitProfileSignIn()
+            onNodeWithTag("profile:signIn").assertIsDisplayed()
 
-            onNodeWithTag("settings:signIn").performClick()
+            onNodeWithTag("profile:signIn").performClick()
             onNodeWithTag("login:submit").assertIsDisplayed()
         }
     }
@@ -133,5 +138,6 @@ class NavigationTest {
         const val WELCOME_TIMEOUT_MS = 5_000L
         const val QURAN_HOME_TIMEOUT_MS = 5_000L
         const val TOP_LEVEL_NAV_TIMEOUT_MS = 5_000L
+        const val PROFILE_TIMEOUT_MS = 5_000L
     }
 }
