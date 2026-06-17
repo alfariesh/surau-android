@@ -24,6 +24,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.database.dao.RecitationDao
 import org.surau.app.core.database.model.RecitationEntity
 import org.surau.app.core.database.model.asExternalModel
@@ -85,10 +86,11 @@ internal class OfflineFirstQuranAudioRepository @Inject constructor(
                 Instant.fromEpochMilliseconds(oldest) > Clock.System.now() - RECITATION_CACHE_TTL
             if (isFresh) return
 
-            val recitations = try {
+            val recitations = runCatchingExceptCancellation {
                 apiCall { quranApi.recitations() }.items
-            } catch (_: Exception) {
+            }.getOrElse {
                 // Offline-first: keep serving the cache (or an empty list on first launch).
+                // Cancellation is rethrown by the helper, not swallowed here.
                 return
             }
 

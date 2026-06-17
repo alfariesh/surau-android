@@ -22,12 +22,25 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SurahDto(
     @SerialName("surah_id") val surahId: Int,
-    @SerialName("name_arabic") val nameArabic: String,
-    @SerialName("name_latin") val nameLatin: String,
+    // Backend marshals these as `*string,omitempty`, so a NULL name omits the key entirely. They
+    // must be nullable with a default or kotlinx-serialization throws MissingFieldException and the
+    // whole surah-list response fails to decode.
+    @SerialName("name_arabic") val nameArabic: String? = null,
+    @SerialName("name_latin") val nameLatin: String? = null,
     @SerialName("name_translation") val nameTranslation: String = "",
     @SerialName("revelation_type") val revelationType: String = "makkiyah",
     @SerialName("ayah_count") val ayahCount: Int,
-    @SerialName("info") val info: String? = null,
+    // Present only when the request asks for it (include_info); the backend marshals it as a
+    // structured object, so it must be a nested DTO, not a String, or decoding throws.
+    @SerialName("info") val info: SurahInfoDto? = null,
+)
+
+@Serializable
+data class SurahInfoDto(
+    @SerialName("lang") val lang: String? = null,
+    @SerialName("surah_name") val surahName: String? = null,
+    @SerialName("text_html") val textHtml: String = "",
+    @SerialName("source_name") val sourceName: String? = null,
 )
 
 @Serializable

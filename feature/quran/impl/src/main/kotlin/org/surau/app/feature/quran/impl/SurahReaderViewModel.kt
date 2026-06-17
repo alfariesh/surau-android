@@ -23,6 +23,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -150,6 +151,9 @@ class SurahReaderViewModel @AssistedInject constructor(
 
     private val visibleAyah = MutableStateFlow<Int?>(null)
 
+    /** Serializes audio-load intents so a rapid reciter/ayah switch always lets the latest win. */
+    private var audioLoadJob: Job? = null
+
     val uiState: StateFlow<ReaderUiState> =
         getReaderContent(navKey.surahId)
             .asResult()
@@ -258,7 +262,8 @@ class SurahReaderViewModel @AssistedInject constructor(
 
     /** Plays from [ayahNumber]: seeks if this surah is already loaded, else fetches + plays. */
     fun playFromAyah(ayahNumber: Int) {
-        viewModelScope.launch {
+        audioLoadJob?.cancel()
+        audioLoadJob = viewModelScope.launch {
             val current = playerController.state.value
             if (current.surahId == navKey.surahId) {
                 playerController.seekToAyah(ayahNumber)
@@ -277,7 +282,8 @@ class SurahReaderViewModel @AssistedInject constructor(
 
     /** Switches the reciter, restarting the current ayah with the new manifest if playing. */
     fun setRecitation(recitationId: String) {
-        viewModelScope.launch {
+        audioLoadJob?.cancel()
+        audioLoadJob = viewModelScope.launch {
             userDataRepository.setRecitationId(recitationId)
             val current = playerController.state.value
             if (current.surahId == navKey.surahId) {

@@ -16,7 +16,6 @@
 
 package org.surau.app.feature.auth.impl
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -32,29 +31,27 @@ import org.surau.app.core.data.repository.AuthRepository
 class VerifyEmailViewModel @AssistedInject constructor(
     private val authRepository: AuthRepository,
     @Assisted val email: String,
-) : ViewModel() {
+) : AuthSubmitViewModel() {
 
     @AssistedFactory
     interface Factory {
         fun create(email: String): VerifyEmailViewModel
     }
 
-    private val _submitState = MutableStateFlow<AuthSubmitState>(AuthSubmitState.Idle)
-    val submitState: StateFlow<AuthSubmitState> = _submitState
-
     private val _resendCooldownSeconds = MutableStateFlow(0L)
     val resendCooldownSeconds: StateFlow<Long> = _resendCooldownSeconds
 
     fun verify(otp: String) {
-        if (_submitState.value is AuthSubmitState.Submitting) return
+        if (isSubmitting) return
 
         viewModelScope.launch {
-            _submitState.value = AuthSubmitState.Submitting
+            submitStateFlow.value = AuthSubmitState.Submitting
             try {
                 authRepository.verifyEmail(email, otp.trim())
-                _submitState.value = AuthSubmitState.Success
+                submitStateFlow.value = AuthSubmitState.Success
             } catch (exception: Exception) {
-                _submitState.value = exception.toAuthSubmitState()
+                // Code-entry step: a 400 means the OTP is wrong/expired.
+                handleFailure(exception, otpForm = true)
             }
         }
     }

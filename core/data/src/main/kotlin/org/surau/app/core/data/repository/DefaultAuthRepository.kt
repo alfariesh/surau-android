@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.data.util.TimeZoneMonitor
 import org.surau.app.core.datastore.AuthSessionDataSource
 import org.surau.app.core.model.data.auth.AccountSession
@@ -75,8 +76,9 @@ internal class DefaultAuthRepository @Inject constructor(
             expiresAtEpochSeconds = Clock.System.now().epochSeconds + pair.expiresInSeconds,
         )
 
-        // Best effort: enrich the stored identity. Failure here must not fail the login.
-        try {
+        // Best effort: enrich the stored identity. Failure here must not fail the login, but
+        // cancellation must still propagate (runCatchingExceptCancellation rethrows it).
+        runCatchingExceptCancellation {
             val identity = apiCall { userApi.introspect() }
             authSessionDataSource.setSession(
                 session = UserSession(
@@ -90,8 +92,6 @@ internal class DefaultAuthRepository @Inject constructor(
                 refreshToken = pair.refreshToken,
                 expiresAtEpochSeconds = Clock.System.now().epochSeconds + pair.expiresInSeconds,
             )
-        } catch (_: Exception) {
-            // Keep the minimal session; identity will refresh on the next profile fetch.
         }
     }
 
@@ -126,11 +126,13 @@ internal class DefaultAuthRepository @Inject constructor(
     override suspend fun logout() {
         val refreshToken = authSessionDataSource.currentRefreshToken()
         try {
-            if (refreshToken != null) {
-                apiCall { authApi.logout(LogoutRequestDto(refreshToken)) }
+            // Best effort — the local session is cleared regardless (finally). Cancellation still
+            // propagates so a cancelled logout doesn't look like a completed one.
+            runCatchingExceptCancellation {
+                if (refreshToken != null) {
+                    apiCall { authApi.logout(LogoutRequestDto(refreshToken)) }
+                }
             }
-        } catch (_: Exception) {
-            // Best effort — the local session is cleared regardless.
         } finally {
             authSessionDataSource.clear()
         }

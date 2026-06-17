@@ -19,6 +19,7 @@ package org.surau.app.core.datastore.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import dagger.Module
 import dagger.Provides
@@ -50,6 +51,10 @@ object DataStoreModule {
     ): DataStore<UserPreferences> =
         DataStoreFactory.create(
             serializer = userPreferencesSerializer,
+            // A truncated/corrupt prefs file resets to defaults instead of crash-looping on startup.
+            corruptionHandler = ReplaceFileCorruptionHandler {
+                UserPreferences.getDefaultInstance()
+            },
             scope = CoroutineScope(scope.coroutineContext + ioDispatcher),
         ) {
             context.dataStoreFile("user_preferences.pb")
@@ -65,6 +70,10 @@ object DataStoreModule {
     ): DataStore<AuthSession> =
         DataStoreFactory.create(
             serializer = authSessionSerializer,
+            // A corrupt session file resets to default (signed-out guest) rather than crash-looping.
+            corruptionHandler = ReplaceFileCorruptionHandler {
+                AuthSession.getDefaultInstance()
+            },
             scope = CoroutineScope(scope.coroutineContext + ioDispatcher),
         ) {
             // Excluded from Auto Backup via the app's backup/data extraction rules.

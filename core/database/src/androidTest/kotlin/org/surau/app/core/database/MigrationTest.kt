@@ -186,6 +186,55 @@ class MigrationTest {
         db.close()
     }
 
+    @Test
+    fun migrateAll_v1ToLatest_composesAndPreservesData() {
+        helper.createDatabase(TEST_DB, 1).apply {
+            execSQL(
+                "INSERT INTO translation_sources " +
+                    "(id, lang, name, translator, coverage_percent, is_default, fetched_at) " +
+                    "VALUES ('kemenag-id-translation', 'id', 'Kemenag', NULL, NULL, 1, 0)",
+            )
+            close()
+        }
+
+        // The realistic skip-several-versions upgrade: a user on an early v1 build jumps straight to
+        // the latest. Per-step tests can't catch a composition/ordering regression; this does.
+        val db = helper.runMigrationsAndValidate(
+            TEST_DB,
+            5,
+            true,
+            SurauDatabaseMigrations.MIGRATION_1_2,
+            SurauDatabaseMigrations.MIGRATION_2_3,
+            SurauDatabaseMigrations.MIGRATION_3_4,
+            SurauDatabaseMigrations.MIGRATION_4_5,
+        )
+
+        // Data seeded at v1 survives the full 1->5 chain.
+        db.query("SELECT name FROM translation_sources WHERE id = 'kemenag-id-translation'")
+            .use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("Kemenag", cursor.getString(0))
+            }
+        // Tables added across the chain all exist and are usable.
+        db.query("SELECT COUNT(*) FROM recitations").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(0, cursor.getInt(0))
+        }
+        db.query("SELECT COUNT(*) FROM bookmarks").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(0, cursor.getInt(0))
+        }
+        db.execSQL(
+            "INSERT INTO ayahs_fts (ayah_key, source_id, arabic, translation) " +
+                "VALUES ('1:1', 'kemenag-id-translation', 'a', 'Allah')",
+        )
+        db.query("SELECT ayah_key FROM ayahs_fts WHERE ayahs_fts MATCH 'Allah'").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals("1:1", cursor.getString(0))
+        }
+        db.close()
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }

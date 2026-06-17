@@ -133,6 +133,28 @@ class SurahFlowViewModelTest {
     }
 
     @Test
+    fun surahEnds_doesNotAdvance_whenNextManifestFetchFails() = runTest {
+        audioRepository.manifest = QuranTestData.fatihahSurahModeManifest
+        viewModel(SurahFlowNavKey(surahId = 1))
+        advanceUntilIdle() // init plays surah 1
+
+        // The next surah's manifest fails (offline): the advance must be rolled back.
+        audioRepository.manifestError = IOException("offline")
+        playerController.surahCompletionEvents.tryEmit(1)
+        advanceUntilIdle()
+
+        // Surah 2 was attempted but never played, and the shown surah did not advance.
+        assertEquals(listOf(1, 2), audioRepository.audioManifestCalls)
+        assertEquals(1, playerController.playCalls.size)
+
+        // Proof the shown surah is still 1: another completion(1) re-triggers the surah-2 attempt
+        // (it would be ignored if currentSurahId had wrongly advanced to 2).
+        playerController.surahCompletionEvents.tryEmit(1)
+        advanceUntilIdle()
+        assertEquals(listOf(1, 2, 2), audioRepository.audioManifestCalls)
+    }
+
+    @Test
     fun surahEnds_doesNotAdvance_whenAutoContinueOff() = runTest {
         userDataRepository.setFlowAutoContinue(false)
         viewModel(SurahFlowNavKey(surahId = 1))

@@ -24,6 +24,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.database.dao.AyahDao
 import org.surau.app.core.database.dao.JuzDao
 import org.surau.app.core.database.dao.PopulatedAyahRow
@@ -182,9 +183,9 @@ internal class OfflineFirstQuranRepository @Inject constructor(
                 Instant.fromEpochMilliseconds(oldest) > Clock.System.now() - SURAH_CACHE_TTL
             if (isFresh) return
 
-            val surahs = try {
+            val surahs = runCatchingExceptCancellation {
                 apiCall { quranApi.surahs() }.items
-            } catch (_: Exception) {
+            }.getOrElse {
                 // Offline-first: keep serving the cache (or an empty list on first launch).
                 return
             }
@@ -194,12 +195,12 @@ internal class OfflineFirstQuranRepository @Inject constructor(
                 surahs.map { dto ->
                     SurahEntity(
                         surahId = dto.surahId,
-                        nameArabic = dto.nameArabic,
-                        nameLatin = dto.nameLatin,
+                        nameArabic = dto.nameArabic.orEmpty(),
+                        nameLatin = dto.nameLatin ?: dto.nameArabic.orEmpty(),
                         nameTranslation = dto.nameTranslation,
                         revelationType = dto.revelationType,
                         ayahCount = dto.ayahCount,
-                        info = dto.info,
+                        info = dto.info?.textHtml?.ifBlank { null },
                         fetchedAt = now,
                     )
                 },
@@ -209,11 +210,9 @@ internal class OfflineFirstQuranRepository @Inject constructor(
 
     private suspend fun refreshJuzIfNeeded() {
         if (juzDao.count() > 0) return
-        val juz = try {
+        val juz = runCatchingExceptCancellation {
             apiCall { quranApi.juz() }.items
-        } catch (_: Exception) {
-            return
-        }
+        }.getOrElse { return }
         juzDao.upsertAll(
             juz.map { dto ->
                 JuzEntity(
@@ -232,11 +231,9 @@ internal class OfflineFirstQuranRepository @Inject constructor(
 
     private suspend fun refreshTranslationSourcesIfNeeded() {
         if (translationSourceDao.count() > 0) return
-        val sources = try {
+        val sources = runCatchingExceptCancellation {
             apiCall { quranApi.translationSources() }.items
-        } catch (_: Exception) {
-            return
-        }
+        }.getOrElse { return }
         val now = Clock.System.now()
         translationSourceDao.upsertAll(
             sources.map { dto ->
