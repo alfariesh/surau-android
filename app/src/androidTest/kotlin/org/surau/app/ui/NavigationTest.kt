@@ -58,14 +58,23 @@ class NavigationTest {
         composeTestRule.onAllNodesWithTag("welcome:guest").fetchSemanticsNodes().isNotEmpty()
     }
 
+    private fun awaitQuranHome() = composeTestRule.waitUntil(QURAN_HOME_TIMEOUT_MS) {
+        composeTestRule.onAllNodesWithTag("quranHome:surah:1").fetchSemanticsNodes().isNotEmpty()
+    }
+
+    private fun goToQuranHome() {
+        composeTestRule.apply {
+            awaitWelcomeGuest()
+            onNodeWithTag("welcome:guest").assertIsDisplayed()
+            onNodeWithTag("welcome:guest").performClick()
+            awaitQuranHome()
+        }
+    }
+
     @Test
     fun firstLaunch_showsWelcome_thenGuestLandsOnQuranHome() {
         composeTestRule.apply {
-            awaitWelcomeGuest()
-            // Fresh install: the welcome screen offers guest reading first.
-            onNodeWithTag("welcome:guest").assertIsDisplayed()
-
-            onNodeWithTag("welcome:guest").performClick()
+            goToQuranHome()
 
             // Quran home with the fake surah list.
             onNodeWithText("Al-Fatihah").assertIsDisplayed()
@@ -75,13 +84,13 @@ class NavigationTest {
     @Test
     fun quranHome_openSurah_readerShowsAyahs_backReturnsHome() {
         composeTestRule.apply {
-            awaitWelcomeGuest()
-            onNodeWithTag("welcome:guest").performClick()
+            goToQuranHome()
 
-            onNodeWithText("Al-Fatihah").performClick()
+            onNodeWithTag("quranHome:surah:1").performClick()
             onNodeWithTag("reader:ayahList").assertIsDisplayed()
 
             onNodeWithTag("reader:back").performClick()
+            awaitQuranHome()
             onNodeWithText("Al-Fatihah").assertIsDisplayed()
         }
     }
@@ -89,14 +98,14 @@ class NavigationTest {
     @Test
     fun quranHome_openBookmarks_thenBackReturnsHome() {
         composeTestRule.apply {
-            awaitWelcomeGuest()
-            onNodeWithTag("welcome:guest").performClick()
+            goToQuranHome()
 
             onNodeWithTag("quranHome:bookmarks").performClick()
             // The fake data layer has no bookmarks, so the Bookmarks screen shows its empty state.
             onNodeWithTag("bookmarks:back").assertIsDisplayed()
 
             onNodeWithTag("bookmarks:back").performClick()
+            awaitQuranHome()
             onNodeWithText("Al-Fatihah").assertIsDisplayed()
         }
     }
@@ -104,8 +113,7 @@ class NavigationTest {
     @Test
     fun quranHome_settings_showsAccountSection_signInOpensLogin() {
         composeTestRule.apply {
-            awaitWelcomeGuest()
-            onNodeWithTag("welcome:guest").performClick()
+            goToQuranHome()
 
             onNodeWithTag("quranHome:settings").performClick()
             onNodeWithTag("settings:signIn").assertIsDisplayed()
@@ -117,5 +125,6 @@ class NavigationTest {
 
     private companion object {
         const val WELCOME_TIMEOUT_MS = 5_000L
+        const val QURAN_HOME_TIMEOUT_MS = 5_000L
     }
 }
