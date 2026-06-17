@@ -61,6 +61,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -470,6 +471,7 @@ private fun SurauBottomBar(
             SurauNavigationBarItem(
                 selected = currentTopLevelKey == key,
                 onClick = { onTabSelected(key) },
+                modifier = Modifier.testTag("nav:${key::class.simpleName}"),
                 alwaysShowLabel = false,
                 icon = {
                     Icon(imageVector = item.unselectedIcon, contentDescription = label)

@@ -62,11 +62,17 @@ class NavigationTest {
         composeTestRule.onAllNodesWithTag("quranHome:surah:1").fetchSemanticsNodes().isNotEmpty()
     }
 
+    private fun awaitTopLevelNavigation() = composeTestRule.waitUntil(TOP_LEVEL_NAV_TIMEOUT_MS) {
+        composeTestRule.onAllNodesWithTag("nav:QuranHomeNavKey").fetchSemanticsNodes().isNotEmpty()
+    }
+
     private fun goToQuranHome() {
         composeTestRule.apply {
             awaitWelcomeGuest()
             onNodeWithTag("welcome:guest").assertIsDisplayed()
             onNodeWithTag("welcome:guest").performClick()
+            awaitTopLevelNavigation()
+            onNodeWithTag("nav:QuranHomeNavKey").performClick()
             awaitQuranHome()
         }
     }
@@ -126,5 +132,6 @@ class NavigationTest {
     private companion object {
         const val WELCOME_TIMEOUT_MS = 5_000L
         const val QURAN_HOME_TIMEOUT_MS = 5_000L
+        const val TOP_LEVEL_NAV_TIMEOUT_MS = 5_000L
     }
 }
