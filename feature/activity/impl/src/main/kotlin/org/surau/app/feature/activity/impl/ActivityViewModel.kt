@@ -225,7 +225,9 @@ class ActivityViewModel @Inject constructor(
     private suspend fun loadSurahProgress(): List<SurahReadProgress> {
         val surahs = quranRepository.observeSurahs().first()
         if (surahs.isEmpty()) return emptyList()
-        val progress = activityRepository.observeSurahProgress().first()
+        // One-shot read: observeSurahProgress() emits an empty placeholder first, so first() on it
+        // would always be empty. getSurahProgress() resolves to the fetched value.
+        val progress = activityRepository.getSurahProgress()
         return surahs
             .mapNotNull { surah ->
                 val fraction = progress[surah.surahId] ?: 0f

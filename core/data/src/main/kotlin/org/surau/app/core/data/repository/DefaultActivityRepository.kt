@@ -47,14 +47,19 @@ internal class DefaultActivityRepository @Inject constructor(
     override suspend fun getStreak(today: LocalDate): ReadingStreak =
         apiCall { meApi.streak(today = today.toString()) }.asExternalModel()
 
-    override fun observeSurahProgress(): Flow<Map<Int, Float>> = flow {
-        emit(emptyMap())
-        if (authSessionDataSource.authState.first() !is AuthState.Authenticated) return@flow
-        val map = runCatchingExceptCancellation { apiCall { meApi.surahProgress() } }
+    override suspend fun getSurahProgress(): Map<Int, Float> {
+        if (authSessionDataSource.authState.first() !is AuthState.Authenticated) return emptyMap()
+        return runCatchingExceptCancellation { apiCall { meApi.surahProgress() } }
             .getOrNull()
             ?.items
             ?.associate { it.surahId to ((it.positionPercent ?: 0.0) / 100.0).toFloat() }
-        if (map != null) emit(map)
+            ?: emptyMap()
+    }
+
+    override fun observeSurahProgress(): Flow<Map<Int, Float>> = flow {
+        emit(emptyMap())
+        val map = getSurahProgress()
+        if (map.isNotEmpty()) emit(map)
     }
 }
 

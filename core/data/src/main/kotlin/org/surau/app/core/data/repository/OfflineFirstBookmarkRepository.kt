@@ -37,6 +37,7 @@ import org.surau.app.core.network.model.me.PatchSavedItemRequestDto
 import org.surau.app.core.network.model.me.SavedItemDto
 import org.surau.app.core.network.retrofit.SurauMeApi
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 internal class OfflineFirstBookmarkRepository @Inject constructor(
     private val bookmarkDao: BookmarkDao,
@@ -126,6 +127,8 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
                 // Already gone server-side — reconcile the local tombstone away too.
                 if (exception.httpStatus == 404) bookmarkDao.deleteById(tombstone.id)
                 // Otherwise keep the tombstone; the next push retries.
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
                 // Connectivity — keep the tombstone.
             }
@@ -136,6 +139,8 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
         for (pending in bookmarkDao.pendingUpserts()) {
             try {
                 if (pending.serverId == null) pushCreate(pending) else pushEdit(pending)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
                 // Keep pending; the sync worker or next push retries.
             }
@@ -202,6 +207,8 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
                 pullAllSavedItems()
             } catch (exception: SurauApiException) {
                 if (exception.httpStatus == 404) emptyList() else return
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
                 return
             }

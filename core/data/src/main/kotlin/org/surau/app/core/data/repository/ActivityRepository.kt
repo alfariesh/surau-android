@@ -42,4 +42,12 @@ interface ActivityRepository {
      * degrade to empty rather than surfacing an error (the badges are non-essential).
      */
     fun observeSurahProgress(): Flow<Map<Int, Float>>
+
+    /**
+     * One-shot per-surah completion fraction (surahId → 0f..1f). Authenticated-only: returns an
+     * empty map for guests or when the fetch fails. Unlike [observeSurahProgress] this resolves to
+     * the fetched value directly, so callers that need a snapshot (not a live stream) must use this
+     * — collecting [observeSurahProgress] with `first()` would only ever see the placeholder.
+     */
+    suspend fun getSurahProgress(): Map<Int, Float>
 }

@@ -71,4 +71,6 @@ class FakeActivityRepository @Inject constructor() : ActivityRepository {
     }
 
     override fun observeSurahProgress(): Flow<Map<Int, Float>> = surahProgress
+
+    override suspend fun getSurahProgress(): Map<Int, Float> = surahProgress.value
 }

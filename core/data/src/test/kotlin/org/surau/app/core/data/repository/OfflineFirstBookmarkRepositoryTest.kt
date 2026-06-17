@@ -45,6 +45,7 @@ import org.surau.app.core.network.model.me.SavedItemsTagsResponseDto
 import org.surau.app.core.network.retrofit.SurauMeApi
 import retrofit2.HttpException
 import retrofit2.Response
+import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -57,6 +58,8 @@ private class FakeBookmarkApi : SurauMeApi {
     val patched = mutableListOf<Pair<String, PatchSavedItemRequestDto>>()
     val deleted = mutableListOf<String>()
     var listThrows404 = false
+    /** When true, deleteSavedItem fails as if offline (before recording), so a tombstone survives. */
+    var deleteThrows = false
     private var nextId = 1
 
     fun seed(dto: SavedItemDto) {
@@ -108,6 +111,7 @@ private class FakeBookmarkApi : SurauMeApi {
     }
 
     override suspend fun deleteSavedItem(id: String) {
+        if (deleteThrows) throw IOException("offline")
         deleted += id
         if (store.remove(id) == null) throw http404()
     }
@@ -300,6 +304,44 @@ class OfflineFirstBookmarkRepositoryTest {
         subject.reconcile()
 
         assertTrue(subject.observeBookmarks().first().isEmpty())
+    }
+
+    @Test
+    fun reconcile_localTombstone_winsOverOlderRemote_andDeletesServerItem() = runTest {
+        signIn()
+        subject.addBookmark(AyahKey("73:4")) // creates server-1, synced
+        // The delete push fails (offline), so the local tombstone survives and server-1 remains.
+        meApi.deleteThrows = true
+        subject.removeBookmark(AyahKey("73:4"))
+        meApi.deleteThrows = false
+        // Remote copy is OLDER than the local tombstone → the local delete must win.
+        meApi.store["server-1"] =
+            seededDto("server-1", "73:4", note = "stale", updatedAt = Instant.fromEpochSeconds(10))
+
+        subject.reconcile()
+
+        assertNull(subject.observeBookmark(AyahKey("73:4")).first())
+        assertTrue(meApi.deleted.contains("server-1"))
+    }
+
+    @Test
+    fun reconcile_localTombstone_resurrectedByStrictlyNewerRemote() = runTest {
+        signIn()
+        subject.addBookmark(AyahKey("73:4")) // creates server-1, synced
+        meApi.deleteThrows = true
+        subject.removeBookmark(AyahKey("73:4"))
+        meApi.deleteThrows = false
+        // Remote copy was edited elsewhere AFTER the local delete → last-write-wins resurrects it.
+        meApi.store["server-1"] =
+            seededDto("server-1", "73:4", note = "edited elsewhere", updatedAt = future())
+
+        subject.reconcile()
+
+        val revived = subject.observeBookmark(AyahKey("73:4")).first()
+        assertEquals("edited elsewhere", revived?.note)
+        assertEquals("server-1", revived?.serverId)
+        assertFalse(revived!!.pendingSync)
+        assertFalse(meApi.deleted.contains("server-1")) // resurrected, not deleted
     }
 
     @Test
