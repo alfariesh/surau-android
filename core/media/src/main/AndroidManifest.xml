@@ -19,6 +19,10 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Android 13+ requires this runtime permission to show the media notification / lock-screen
+         transport controls. The foreground-service media notification still appears during active
+         playback without it, but it must be declared (and requested) to be granted at all. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application>
         <service

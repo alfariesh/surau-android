@@ -17,6 +17,7 @@
 package org.surau.app.core.datastore
 
 import androidx.datastore.core.DataStore
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import org.surau.app.core.model.data.DarkThemeConfig
 import org.surau.app.core.model.data.ThemeContrast
@@ -119,6 +120,9 @@ class SurauPreferencesDataSource @Inject constructor(
                 },
             )
         }
+        // Coalesce duplicate emissions: DataStore re-emits the whole proto on every write, so an
+        // unrelated preference change should not wake every per-field collector.
+        .distinctUntilChanged()
 
     suspend fun setDynamicColorPreference(useDynamicColor: Boolean) {
         userPreferences.updateData {

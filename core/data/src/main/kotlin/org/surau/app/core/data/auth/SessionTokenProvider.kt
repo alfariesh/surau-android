@@ -21,9 +21,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 import org.surau.app.core.datastore.AuthSessionDataSource
 import org.surau.app.core.network.auth.AuthTokenProvider
+import org.surau.app.core.network.model.SurauApiException
+import org.surau.app.core.network.model.apiCall
 import org.surau.app.core.network.model.auth.RefreshRequestDto
 import org.surau.app.core.network.retrofit.SurauAuthApi
-import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,6 +44,9 @@ class SessionTokenProvider @Inject constructor(
 
     private val refreshMutex = Mutex()
 
+    /** Epoch-ms until which refreshing is paused after a 429, honouring the server's Retry-After. */
+    private var refreshBlockedUntilMs = 0L
+
     override suspend fun accessToken(): String? = authSessionDataSource.currentAccessToken()
 
     override suspend fun refreshTokens(failedAccessToken: String?): String? =
@@ -53,10 +57,15 @@ class SessionTokenProvider @Inject constructor(
                 return current
             }
 
+            // Respect a server-imposed rate-limit cool-down instead of hammering /auth/refresh.
+            if (Clock.System.now().toEpochMilliseconds() < refreshBlockedUntilMs) {
+                return null
+            }
+
             val refreshToken = authSessionDataSource.currentRefreshToken() ?: return null
 
             try {
-                val pair = authApi.refresh(RefreshRequestDto(refreshToken))
+                val pair = apiCall { authApi.refresh(RefreshRequestDto(refreshToken)) }
                 authSessionDataSource.updateTokens(
                     accessToken = pair.accessToken,
                     refreshToken = pair.refreshToken,
@@ -64,15 +73,31 @@ class SessionTokenProvider @Inject constructor(
                         pair.expiresInSeconds,
                 )
                 pair.accessToken
-            } catch (exception: HttpException) {
-                if (exception.code() in 400..403) {
+            } catch (exception: SurauApiException) {
+                when {
+                    // Rate-limited: keep the session and back off for the server's window.
+                    exception.isRateLimited -> {
+                        val backoffSeconds =
+                            exception.retryAfterSeconds ?: DEFAULT_REFRESH_BACKOFF_SECONDS
+                        refreshBlockedUntilMs = Clock.System.now().toEpochMilliseconds() +
+                            backoffSeconds * MILLIS_PER_SECOND
+                        null
+                    }
                     // The refresh token was rejected — the session is gone for good.
-                    authSessionDataSource.clear()
+                    exception.httpStatus in 400..403 -> {
+                        authSessionDataSource.clear()
+                        null
+                    }
+                    else -> null
                 }
-                null
             } catch (_: IOException) {
                 // Connectivity problem: keep the session, fail just this request.
                 null
             }
         }
+
+    private companion object {
+        const val DEFAULT_REFRESH_BACKOFF_SECONDS = 60L
+        const val MILLIS_PER_SECOND = 1_000L
+    }
 }

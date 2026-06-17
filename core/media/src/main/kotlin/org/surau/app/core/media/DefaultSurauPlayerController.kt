@@ -97,13 +97,19 @@ class DefaultSurauPlayerController @Inject constructor(
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
-                if (stopAtSurahEnd) {
-                    stopAtSurahEnd = false
-                    _state.update { it.copy(stopAtSurahEnd = false) }
-                    controller?.pause()
-                } else if (repeatRange == null) {
-                    // Natural end (not looping, not a sleep stop): signal for auto-advance.
-                    _state.value.surahId?.let { _surahCompletions.tryEmit(it) }
+                when {
+                    stopAtSurahEnd -> {
+                        stopAtSurahEnd = false
+                        _state.update { it.copy(stopAtSurahEnd = false) }
+                        controller?.pause()
+                    }
+
+                    repeatRange != null -> onLoopReachedEnd()
+
+                    else -> {
+                        // Natural end (not looping, not a sleep stop): signal for auto-advance.
+                        _state.value.surahId?.let { _surahCompletions.tryEmit(it) }
+                    }
                 }
             }
             syncState()
@@ -312,6 +318,9 @@ class DefaultSurauPlayerController @Inject constructor(
      * Loops the repeat range: seeks back when playback reaches its end. The "armed" latch flips true
      * once the position is safely before the boundary and back to false on the pass that triggers,
      * so each loop counts exactly once regardless of poll cadence or post-seek position lag.
+     *
+     * When the loop range extends to the end of the file, the player can hit [Player.STATE_ENDED]
+     * before a poll lands inside the boundary window; [onLoopReachedEnd] is the backstop for that.
      */
     private fun enforceRepeat(player: MediaController, position: Long) {
         val range = repeatRange ?: return
@@ -325,14 +334,38 @@ class DefaultSurauPlayerController @Inject constructor(
         }
         if (!repeatArmed) return
         repeatArmed = false
-        if (repeatTarget != 0) {
-            repeatPlaysDone++
-            if (repeatPlaysDone >= repeatTarget) {
-                clearRepeat()
-                return
-            }
-        }
+        if (registerRepeatPassReachedTarget()) return
         player.seekTo(timeline.startMsOf(range.first) ?: 0L)
+    }
+
+    /**
+     * Backstop for an end-of-file loop boundary the 250ms poll missed: when the player reports
+     * STATE_ENDED while a loop is active, restart the range here (or finish if the count is reached).
+     */
+    private fun onLoopReachedEnd() {
+        val range = repeatRange ?: return
+        repeatArmed = false
+        if (registerRepeatPassReachedTarget()) {
+            // Requested repeats done; the surah ended naturally, so allow auto-advance.
+            _state.value.surahId?.let { _surahCompletions.tryEmit(it) }
+            return
+        }
+        val startMs = ayahTimeline?.startMsOf(range.first) ?: 0L
+        controller?.run {
+            seekTo(startMs)
+            play()
+        }
+    }
+
+    /** Records one completed loop pass; returns true (and clears) once the requested count is hit. */
+    private fun registerRepeatPassReachedTarget(): Boolean {
+        if (repeatTarget == 0) return false // 0 = repeat forever
+        repeatPlaysDone++
+        if (repeatPlaysDone >= repeatTarget) {
+            clearRepeat()
+            return true
+        }
+        return false
     }
 
     private suspend fun fadeOutAndPause() {

@@ -135,7 +135,8 @@ class SurahFlowViewModel @AssistedInject constructor(
                 // Read the pref freshly — the shared StateFlow can be unsubscribed (stale) here.
                 val enabled = userDataRepository.userData.first().flowAutoContinue
                 if (endedSurahId == currentSurahId.value && enabled && endedSurahId < LAST_SURAH) {
-                    currentSurahId.value = endedSurahId + 1
+                    // loadAndPlay advances currentSurahId only once the next manifest is fetched, so
+                    // a failed fetch never leaves the UI on a surah the player isn't playing.
                     loadAndPlay(endedSurahId + 1, startAyah = 1)
                 }
             }
@@ -164,6 +165,8 @@ class SurahFlowViewModel @AssistedInject constructor(
             _audioError.tryEmit(Unit)
             return
         }
+        // Commit the shown surah only after a successful fetch so UI and player never diverge.
+        currentSurahId.value = surahId
         playerController.playSurah(manifest, surahName, startAyah)
     }
 

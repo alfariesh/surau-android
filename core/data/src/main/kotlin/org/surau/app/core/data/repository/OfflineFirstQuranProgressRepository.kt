@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
+import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.database.dao.ReadingProgressDao
 import org.surau.app.core.database.model.ReadingProgressEntity
 import org.surau.app.core.database.model.asExternalModel
@@ -57,7 +58,8 @@ internal class OfflineFirstQuranProgressRepository @Inject constructor(
         val local = readingProgressDao.progress() ?: return
         if (!local.pendingSync) return
 
-        try {
+        // Keep pending on failure (the sync worker or next push retries); cancellation propagates.
+        runCatchingExceptCancellation {
             apiCall {
                 meApi.putQuranProgress(
                     PutQuranProgressRequestDto(
@@ -67,44 +69,54 @@ internal class OfflineFirstQuranProgressRepository @Inject constructor(
                 )
             }
             readingProgressDao.markSynced(local.ayahKey)
-        } catch (_: Exception) {
-            // Keep pending; the sync worker or next push retries.
         }
     }
 
     override suspend fun reconcile() {
         if (!isAuthenticated()) return
 
-        val remote = try {
+        val remote = runCatchingExceptCancellation {
             apiCall { meApi.quranProgress() }
-        } catch (exception: SurauApiException) {
-            if (exception.httpStatus == 404) null else return
-        } catch (_: Exception) {
-            return
+        }.getOrElse { error ->
+            // 404 = no server-side progress yet → treat as "no remote". Other failures abort the
+            // reconcile (cancellation is rethrown by the helper, not swallowed).
+            if (error is SurauApiException && error.httpStatus == 404) null else return
         }
 
         val local = readingProgressDao.progress()
 
-        val remoteObservedAt = remote?.observedAt ?: remote?.updatedAt
+        if (remote == null) {
+            if (local != null) pushPendingPosition()
+            return
+        }
+
+        val remoteObservedAt = remote.observedAt ?: remote.updatedAt
+
+        suspend fun adoptRemote() {
+            readingProgressDao.upsert(
+                ReadingProgressEntity(
+                    ayahKey = remote.ayahKey,
+                    updatedAt = remoteObservedAt ?: Clock.System.now(),
+                    pendingSync = false,
+                ),
+            )
+        }
+
+        if (local == null) {
+            adoptRemote()
+            return
+        }
 
         when {
-            remote == null && local != null -> pushPendingPosition()
+            // Remote is strictly newer: adopt it.
+            remoteObservedAt != null && remoteObservedAt > local.updatedAt -> adoptRemote()
 
-            remote != null && (
-                local == null ||
-                    (remoteObservedAt != null && remoteObservedAt > local.updatedAt)
-                ) -> {
-                // Remote is newer (or there is no local position): adopt it.
-                readingProgressDao.upsert(
-                    ReadingProgressEntity(
-                        ayahKey = remote.ayahKey,
-                        updatedAt = remoteObservedAt ?: Clock.System.now(),
-                        pendingSync = false,
-                    ),
-                )
-            }
+            // We have unsynced local changes: push them (never clobbered by an un-timestamped remote).
+            local.pendingSync -> pushPendingPosition()
 
-            local != null && local.pendingSync -> pushPendingPosition()
+            // Remote present but not provably newer and local already synced: adopt the server
+            // position rather than silently ignoring it (the previous code fell through to a no-op).
+            remoteObservedAt == null -> adoptRemote()
         }
     }
 

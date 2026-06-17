@@ -352,7 +352,8 @@ fun VerifyEmailScreen(
                 showValidation = true
                 if (AuthValidators.isValidOtp(otp)) viewModel.verify(otp)
             },
-            enabled = submitState !is AuthSubmitState.Submitting,
+            enabled = submitState !is AuthSubmitState.Submitting &&
+                submitState !is AuthSubmitState.RateLimited,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("verify:submit"),
@@ -420,7 +421,8 @@ fun ForgotPasswordScreen(
                 showValidation = true
                 if (AuthValidators.isValidEmail(email)) viewModel.sendResetEmail(email)
             },
-            enabled = submitState !is AuthSubmitState.Submitting,
+            enabled = submitState !is AuthSubmitState.Submitting &&
+                submitState !is AuthSubmitState.RateLimited,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("forgot:submit"),
@@ -508,7 +510,8 @@ fun ResetPasswordScreen(
                     viewModel.resetPassword(token, password)
                 }
             },
-            enabled = submitState !is AuthSubmitState.Submitting,
+            enabled = submitState !is AuthSubmitState.Submitting &&
+                submitState !is AuthSubmitState.RateLimited,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("reset:submit"),
