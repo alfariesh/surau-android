@@ -112,6 +112,14 @@ class AuthSessionDataSource @Inject constructor(
     }
 
     /**
+     * Updates the stored email after a confirmed email change reached via the emailed link (where
+     * the new address is fetched from the server rather than supplied with the tokens).
+     */
+    suspend fun updateEmail(email: String) {
+        authSession.updateData { it.copy { this.email = email } }
+    }
+
+    /**
      * Updates the stored display name after a profile edit.
      */
     suspend fun updateDisplayName(displayName: String?) {

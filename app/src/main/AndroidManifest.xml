@@ -53,15 +53,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Password-reset deep link: https://surau.org/reset-password?token=… -->
+            <!-- Emailed auth deep links: https://surau.org/{verify-email|reset-password|change-email}?token=… -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="surau.org"
-                    android:pathPrefix="/reset-password" />
+                <data android:scheme="https" android:host="surau.org" />
+                <data android:pathPrefix="/verify-email" />
+                <data android:pathPrefix="/reset-password" />
+                <data android:pathPrefix="/change-email" />
             </intent-filter>
         </activity>
 

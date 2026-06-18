@@ -34,18 +34,19 @@ object LoginNavKey : NavKey
 object RegisterNavKey : NavKey
 
 /**
- * Email verification with a 6-digit OTP, reached after registration or a 403
- * AUTH_EMAIL_NOT_VERIFIED login.
+ * Email verification, reached after registration / a 403 AUTH_EMAIL_NOT_VERIFIED login (with
+ * [email] for the 6-digit OTP), or straight from the emailed verification link (with [token], which
+ * auto-verifies without an OTP).
  */
 @Serializable
-data class VerifyEmailNavKey(val email: String) : NavKey
+data class VerifyEmailNavKey(val email: String = "", val token: String? = null) : NavKey
 
 @Serializable
 object ForgotPasswordNavKey : NavKey
 
 /**
- * Password reset. [token] is prefilled when arriving via deep link (deferred); the user can also
- * paste the emailed token manually.
+ * Password reset, reached from the emailed reset link which carries the [token]; the user only
+ * enters a new password.
  */
 @Serializable
 data class ResetPasswordNavKey(val token: String? = null) : NavKey

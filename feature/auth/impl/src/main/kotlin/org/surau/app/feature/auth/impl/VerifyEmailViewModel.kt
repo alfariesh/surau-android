@@ -56,6 +56,21 @@ class VerifyEmailViewModel @AssistedInject constructor(
         }
     }
 
+    /** Auto-verifies straight from the emailed link's token (no OTP). Single-flight + once-only. */
+    fun verifyWithToken(token: String) {
+        if (isSubmitting || submitStateFlow.value is AuthSubmitState.Success) return
+
+        viewModelScope.launch {
+            submitStateFlow.value = AuthSubmitState.Submitting
+            try {
+                authRepository.verifyEmailWithToken(token)
+                submitStateFlow.value = AuthSubmitState.Success
+            } catch (exception: Exception) {
+                handleFailure(exception, otpForm = true)
+            }
+        }
+    }
+
     fun resend() {
         if (_resendCooldownSeconds.value > 0) return
 

@@ -172,6 +172,12 @@ class ChangeEmailViewModel @Inject constructor(
     fun verify(otp: String) =
         submit(otpForm = true) { authRepository.verifyEmailChange(_newEmail.value, otp.trim()) }
 
+    /** Auto-verifies straight from the emailed change-email link's token (requires an active session). */
+    fun verifyWithToken(token: String) {
+        if (submitState.value is AuthSubmitState.Success) return
+        submit(otpForm = true) { authRepository.verifyEmailChangeWithToken(token) }
+    }
+
     /** Returns from the OTP step to the request form (there is no resend — re-enter to restart). */
     fun restartEmailChange() {
         _awaitingOtp.value = false

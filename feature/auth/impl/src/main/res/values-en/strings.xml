@@ -46,16 +46,14 @@
     <string name="feature_auth_impl_resend_sent">A new code has been sent</string>
     <string name="feature_auth_impl_otp_invalid">The code must be 6 digits</string>
     <string name="feature_auth_impl_forgot_title">Reset password</string>
-    <string name="feature_auth_impl_forgot_subtitle">Enter your email. We\'ll send a link and a token to reset your password.</string>
+    <string name="feature_auth_impl_forgot_subtitle">Enter your email. We\'ll send a link to reset your password.</string>
     <string name="feature_auth_impl_send">Send</string>
-    <string name="feature_auth_impl_forgot_sent">Check your email. Once you have the token, continue below.</string>
-    <string name="feature_auth_impl_enter_token">I already have a token</string>
+    <string name="feature_auth_impl_forgot_sent">Check your email and tap the link to reset your password.</string>
+    <string name="feature_auth_impl_verifying">Verifying your email…</string>
     <string name="feature_auth_impl_reset_title">New password</string>
-    <string name="feature_auth_impl_reset_token">Token</string>
     <string name="feature_auth_impl_new_password">New password</string>
     <string name="feature_auth_impl_reset">Reset</string>
     <string name="feature_auth_impl_reset_done">Password changed. Please sign in.</string>
-    <string name="feature_auth_impl_token_required">Token is required</string>
     <string name="feature_auth_impl_back">Back</string>
     <string name="feature_auth_impl_show_password">Show password</string>
     <string name="feature_auth_impl_hide_password">Hide password</string>
@@ -91,6 +89,7 @@
     <string name="feature_auth_impl_account_email_subtitle">Enter your password and new email. We\'ll send a code to the new address.</string>
     <string name="feature_auth_impl_account_email_send_code">Send code</string>
     <string name="feature_auth_impl_account_email_done">Email changed to %1$s.</string>
+    <string name="feature_auth_impl_account_email_changed">Your email has been changed.</string>
 
     <string name="feature_auth_impl_account_sessions_title">Devices &amp; sessions</string>
     <string name="feature_auth_impl_account_sessions_subtitle">Sessions currently active on your account.</string>

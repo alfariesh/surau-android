@@ -40,7 +40,6 @@ import org.surau.app.feature.auth.api.navigation.navigateToEmailPreferences
 import org.surau.app.feature.auth.api.navigation.navigateToForgotPassword
 import org.surau.app.feature.auth.api.navigation.navigateToLogin
 import org.surau.app.feature.auth.api.navigation.navigateToRegister
-import org.surau.app.feature.auth.api.navigation.navigateToResetPassword
 import org.surau.app.feature.auth.api.navigation.navigateToSessions
 import org.surau.app.feature.auth.api.navigation.navigateToVerifyEmail
 import org.surau.app.feature.auth.impl.AccountScreen
@@ -95,6 +94,7 @@ fun EntryProviderScope<NavKey>.authEntries(
     entry<VerifyEmailNavKey> { navKey ->
         VerifyEmailScreen(
             email = navKey.email,
+            token = navKey.token,
             onBackClick = navigator::goBack,
             onVerified = navigator::navigateToLogin,
         )
@@ -103,7 +103,6 @@ fun EntryProviderScope<NavKey>.authEntries(
     entry<ForgotPasswordNavKey> {
         ForgotPasswordScreen(
             onBackClick = navigator::goBack,
-            onContinueToReset = navigator::navigateToResetPassword,
         )
     }
 
@@ -153,8 +152,9 @@ fun EntryProviderScope<NavKey>.accountEntries(
         )
     }
 
-    entry<ChangeEmailNavKey> {
+    entry<ChangeEmailNavKey> { navKey ->
         ChangeEmailScreen(
+            token = navKey.token,
             onBackClick = navigator::goBack,
             onDone = navigator::goBack,
         )

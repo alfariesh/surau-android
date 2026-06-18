@@ -75,6 +75,7 @@ import androidx.navigation3.ui.NavDisplay
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
+import org.surau.app.AuthDeepLink
 import org.surau.app.R
 import org.surau.app.core.designsystem.component.SurauBackground
 import org.surau.app.core.designsystem.component.SurauNavigationBar
@@ -82,7 +83,9 @@ import org.surau.app.core.designsystem.component.SurauNavigationBarItem
 import org.surau.app.core.designsystem.icon.SurauIcons
 import org.surau.app.core.navigation.Navigator
 import org.surau.app.core.navigation.toEntries
+import org.surau.app.feature.auth.api.navigation.ChangeEmailNavKey
 import org.surau.app.feature.auth.api.navigation.ResetPasswordNavKey
+import org.surau.app.feature.auth.api.navigation.VerifyEmailNavKey
 import org.surau.app.feature.auth.api.navigation.WelcomeNavKey
 import org.surau.app.feature.auth.api.navigation.navigateToLogin
 import org.surau.app.feature.auth.api.navigation.navigateToManageAccount
@@ -133,8 +136,8 @@ fun SurauApp(
     shouldShowWelcome: Boolean,
     appVersionName: String,
     modifier: Modifier = Modifier,
-    resetPasswordToken: String? = null,
-    onResetPasswordTokenConsumed: () -> Unit = {},
+    pendingAuthLink: AuthDeepLink? = null,
+    onAuthLinkConsumed: () -> Unit = {},
 ) {
     SurauBackground(modifier = modifier) {
         val snackbarHostState = remember { SnackbarHostState() }
@@ -155,10 +158,10 @@ fun SurauApp(
         val navigator = remember { Navigator(appState.navigationState) }
         val scope = rememberCoroutineScope()
 
-        // First launch: offer guest/sign-in once. Never blocks later launches. A pending
-        // reset-password deep link takes precedence and suppresses the welcome detour.
-        LaunchedEffect(shouldShowWelcome, resetPasswordToken) {
-            if (resetPasswordToken == null &&
+        // First launch: offer guest/sign-in once. Never blocks later launches. A pending auth deep
+        // link takes precedence and suppresses the welcome detour.
+        LaunchedEffect(shouldShowWelcome, pendingAuthLink) {
+            if (pendingAuthLink == null &&
                 shouldShowWelcome &&
                 appState.navigationState.currentKey == HomeNavKey
             ) {
@@ -166,16 +169,16 @@ fun SurauApp(
             }
         }
 
-        // Reset-password deep link: route straight to the reset screen with the emailed token.
-        LaunchedEffect(resetPasswordToken) {
-            if (resetPasswordToken != null &&
-                appState.navigationState.currentKey == HomeNavKey
-            ) {
-                navigator.navigate(ResetPasswordNavKey(resetPasswordToken))
-                // Consume the token so an activity recreation (e.g. a language switch) doesn't
-                // re-trigger this navigation with a stale token. The reset screen keeps its own copy.
-                onResetPasswordTokenConsumed()
+        // Emailed auth deep links (verify-email / reset-password / change-email): route straight to
+        // the matching screen with the token, then consume it so an activity recreation (e.g. a
+        // language switch) doesn't re-navigate with a stale link. The target screen keeps its copy.
+        LaunchedEffect(pendingAuthLink) {
+            when (val link = pendingAuthLink ?: return@LaunchedEffect) {
+                is AuthDeepLink.ResetPassword -> navigator.navigate(ResetPasswordNavKey(link.token))
+                is AuthDeepLink.VerifyEmail -> navigator.navigate(VerifyEmailNavKey(token = link.token))
+                is AuthDeepLink.ChangeEmail -> navigator.navigate(ChangeEmailNavKey(token = link.token))
             }
+            onAuthLinkConsumed()
         }
 
         // --- Expandable player state -------------------------------------------------------------

@@ -113,6 +113,11 @@ internal class DefaultAuthRepository @Inject constructor(
         apiCall { authApi.verifyEmail(VerifyEmailRequestDto(email = email, otp = otp)) }
     }
 
+    override suspend fun verifyEmailWithToken(token: String) {
+        // Token path: the backend ignores email/otp when a token is present.
+        apiCall { authApi.verifyEmail(VerifyEmailRequestDto(token = token)) }
+    }
+
     override suspend fun resendVerification(email: String) {
         apiCall { authApi.resendVerification(ResendVerificationRequestDto(email = email)) }
     }
@@ -185,6 +190,21 @@ internal class DefaultAuthRepository @Inject constructor(
             email = newEmail,
             sessionId = pair.sessionId.ifEmpty { null },
         )
+    }
+
+    override suspend fun verifyEmailChangeWithToken(token: String) {
+        val pair = apiCall {
+            accountApi.verifyEmailChange(ChangeEmailVerifyRequestDto(token = token))
+        }
+        // Install the rotated tokens first so the follow-up profile fetch uses the new session.
+        persistRotatedSession(pair)
+        // The new email isn't carried by the token — refresh the stored identity from the server.
+        // Best effort: the change already succeeded server-side; cancellation still propagates.
+        runCatchingExceptCancellation {
+            val account = apiCall { userApi.profile() }
+            authSessionDataSource.updateEmail(account.email)
+            authSessionDataSource.updateDisplayName(account.profile.displayName)
+        }
     }
 
     override suspend fun listSessions(): List<AccountSession> =

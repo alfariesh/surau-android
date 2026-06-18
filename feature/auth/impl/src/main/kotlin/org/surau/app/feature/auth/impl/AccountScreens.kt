@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -317,6 +318,7 @@ fun ChangeEmailScreen(
     onBackClick: () -> Unit,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
+    token: String? = null,
     viewModel: ChangeEmailViewModel = hiltViewModel(),
 ) {
     TrackScreenViewEvent(screenName = "ChangeEmail")
@@ -324,6 +326,34 @@ fun ChangeEmailScreen(
     val awaitingOtp by viewModel.awaitingOtp.collectAsStateWithLifecycle()
     val newEmail by viewModel.newEmail.collectAsStateWithLifecycle()
     SecureScreenEffect()
+
+    if (token != null) {
+        // Deep-link path: auto-verify the emailed token (uses the active session); no OTP entry.
+        LaunchedEffect(token) { viewModel.verifyWithToken(token) }
+        if (submitState is AuthSubmitState.Success) {
+            SuccessScreen(
+                title = stringResource(R.string.feature_auth_impl_account_email_title),
+                subtitle = stringResource(R.string.feature_auth_impl_account_email_changed),
+                onDone = onDone,
+                doneTestTag = "changeEmail:done",
+                modifier = modifier,
+            )
+            return
+        }
+        AuthScreenScaffold(
+            title = stringResource(R.string.feature_auth_impl_account_email_title),
+            onBackClick = onBackClick,
+            subtitle = stringResource(R.string.feature_auth_impl_verifying),
+            modifier = modifier,
+        ) {
+            AuthSubmitError(submitState)
+            if (submitState !is AuthSubmitState.Error) {
+                Spacer(modifier = Modifier.size(16.dp))
+                CircularProgressIndicator(modifier = Modifier.testTag("changeEmail:progress"))
+            }
+        }
+        return
+    }
 
     // Secrets (password, OTP) stay in plain `remember`; only the non-secret email is saveable.
     var currentPassword by remember { mutableStateOf("") }

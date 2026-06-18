@@ -77,6 +77,10 @@ class FakeAuthRepository @Inject constructor() : AuthRepository {
         }
     }
 
+    override suspend fun verifyEmailWithToken(token: String) = Unit
+
+    override suspend fun verifyEmailChangeWithToken(token: String) = Unit
+
     override suspend fun listSessions(): List<AccountSession> = emptyList()
 
     override suspend fun revokeSession(sessionId: String) = Unit

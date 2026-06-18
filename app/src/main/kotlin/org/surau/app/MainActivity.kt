@@ -93,10 +93,10 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
 
     /**
-     * Reset-password token captured from a `https://surau.org/reset-password?token=…` deep link.
-     * Tracked as Compose state so that a warm-start [onNewIntent] also routes into the reset flow.
+     * A pending auth deep link (verify-email / reset-password / change-email) captured from an
+     * emailed `https://surau.org/…?token=…` link. Compose state so a warm-start [onNewIntent] routes.
      */
-    private var deepLinkResetToken by mutableStateOf<String?>(null)
+    private var pendingAuthLink by mutableStateOf<AuthDeepLink?>(null)
 
     /** Requests the Android 13+ notification permission so media/lock-screen controls can show. */
     private val notificationPermissionLauncher =
@@ -117,7 +117,7 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        deepLinkResetToken = extractResetToken(intent)
+        pendingAuthLink = extractAuthDeepLink(intent)
         requestNotificationPermissionIfNeeded()
 
         // We keep this as a mutable state, so that we can track changes inside the composition.
@@ -209,8 +209,8 @@ class MainActivity : ComponentActivity() {
                     SurauApp(
                         appState = appState,
                         shouldShowWelcome = uiState.shouldShowWelcome,
-                        resetPasswordToken = deepLinkResetToken,
-                        onResetPasswordTokenConsumed = { deepLinkResetToken = null },
+                        pendingAuthLink = pendingAuthLink,
+                        onAuthLinkConsumed = { pendingAuthLink = null },
                         appVersionName = BuildConfig.VERSION_NAME,
                     )
                 }
@@ -231,7 +231,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        extractResetToken(intent)?.let { deepLinkResetToken = it }
+        extractAuthDeepLink(intent)?.let { pendingAuthLink = it }
     }
 
     /**
@@ -250,17 +250,30 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** A pending auth flow to route into, parsed from an emailed deep link. */
+sealed interface AuthDeepLink {
+    val token: String
+
+    data class ResetPassword(override val token: String) : AuthDeepLink
+    data class VerifyEmail(override val token: String) : AuthDeepLink
+    data class ChangeEmail(override val token: String) : AuthDeepLink
+}
+
 /**
- * Pulls the reset-password token out of a `VIEW` deep link such as
- * `https://surau.org/reset-password?token=abc`. Returns null for any other intent.
+ * Parses an emailed `https://surau.org/{verify-email|reset-password|change-email}?token=…` VIEW deep
+ * link into the matching [AuthDeepLink]. Returns null for any other intent or a missing token.
  */
-private fun extractResetToken(intent: Intent?): String? =
-    intent
-        ?.takeIf { it.action == Intent.ACTION_VIEW }
-        ?.data
-        ?.takeIf { it.path?.startsWith("/reset-password") == true }
-        ?.getQueryParameter("token")
-        ?.takeIf { it.isNotBlank() }
+private fun extractAuthDeepLink(intent: Intent?): AuthDeepLink? {
+    val uri = intent?.takeIf { it.action == Intent.ACTION_VIEW }?.data ?: return null
+    val token = uri.getQueryParameter("token")?.takeIf { it.isNotBlank() } ?: return null
+    val path = uri.path.orEmpty()
+    return when {
+        path.startsWith("/reset-password") -> AuthDeepLink.ResetPassword(token)
+        path.startsWith("/verify-email") -> AuthDeepLink.VerifyEmail(token)
+        path.startsWith("/change-email") -> AuthDeepLink.ChangeEmail(token)
+        else -> null
+    }
+}
 
 /**
  * The default light scrim, as defined by androidx and the platform:
