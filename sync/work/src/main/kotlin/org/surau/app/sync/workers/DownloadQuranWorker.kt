@@ -34,7 +34,7 @@ import org.surau.app.core.common.network.Dispatcher
 import org.surau.app.core.common.network.SurauDispatchers.IO
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.UserDataRepository
-import org.surau.app.sync.initializers.SyncConstraints
+import org.surau.app.sync.initializers.DownloadConstraints
 import org.surau.app.sync.initializers.downloadForegroundInfo
 import java.io.IOException
 
@@ -61,11 +61,14 @@ internal class DownloadQuranWorker @AssistedInject constructor(
             val sourceId = quranRepository.resolveTranslationSourceId(
                 userDataRepository.userData.first().translationSourceId,
             )
+            // Publish the target source up front so the UI can tell which translation source this
+            // download is for (and show "not downloaded" once the user switches to another source).
+            setProgress(workDataOf(PROGRESS_KEY to 0, SOURCE_KEY to sourceId))
 
             for (surahId in 1..SURAH_COUNT) {
                 if (isStopped) return@traceAsync Result.failure()
                 try {
-                    quranRepository.ensureSurahCached(surahId, sourceId)
+                    quranRepository.ensureSurahCached(surahId, sourceId, allowStaleOnError = false)
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (_: IOException) {
@@ -75,15 +78,22 @@ internal class DownloadQuranWorker @AssistedInject constructor(
                 } catch (_: Exception) {
                     return@traceAsync if (runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure()
                 }
-                setProgress(workDataOf(PROGRESS_KEY to (surahId * 100 / SURAH_COUNT)))
+                setProgress(workDataOf(PROGRESS_KEY to (surahId * 100 / SURAH_COUNT), SOURCE_KEY to sourceId))
             }
-            Result.success()
+            // Record the fully-downloaded source so a later source switch reads as "not downloaded".
+            Result.success(workDataOf(SOURCE_KEY to sourceId))
         }
     }
 
     companion object {
         /** Progress percent (0..100) published via [setProgress]; read by the download manager. */
         const val PROGRESS_KEY = "download_progress"
+
+        /**
+         * The translation source this download targets, published in both progress and the success
+         * output so the download manager can tell a finished download apart from the active source.
+         */
+        const val SOURCE_KEY = "download_source_id"
 
         /** The Qur'an always has 114 surahs. */
         private const val SURAH_COUNT = 114
@@ -92,7 +102,7 @@ internal class DownloadQuranWorker @AssistedInject constructor(
         private const val MAX_ATTEMPTS = 5
 
         fun downloadWork() = OneTimeWorkRequestBuilder<DelegatingWorker>()
-            .setConstraints(SyncConstraints)
+            .setConstraints(DownloadConstraints)
             .setInputData(DownloadQuranWorker::class.delegatedData())
             .build()
     }

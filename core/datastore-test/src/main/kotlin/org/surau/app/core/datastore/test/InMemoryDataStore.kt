@@ -18,11 +18,20 @@ package org.surau.app.core.datastore.test
 
 import androidx.datastore.core.DataStore
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.updateAndGet
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
+/**
+ * In-memory [DataStore] for tests. [updateData] is serialized under a [Mutex] and runs the transform
+ * exactly once per call, mirroring real DataStore's transactional read-modify-write — unlike a
+ * lock-free `updateAndGet`, which can re-run the transform under contention and hide concurrency bugs.
+ */
 class InMemoryDataStore<T>(initialValue: T) : DataStore<T> {
     override val data = MutableStateFlow(initialValue)
-    override suspend fun updateData(
-        transform: suspend (it: T) -> T,
-    ) = data.updateAndGet { transform(it) }
+    private val updateMutex = Mutex()
+
+    override suspend fun updateData(transform: suspend (it: T) -> T): T =
+        updateMutex.withLock {
+            transform(data.value).also { data.value = it }
+        }
 }

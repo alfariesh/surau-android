@@ -30,6 +30,9 @@ import org.surau.app.core.datastore.AuthSession
 import org.surau.app.core.datastore.AuthSessionDataSource
 import org.surau.app.core.datastore.test.InMemoryDataStore
 import org.surau.app.core.model.data.auth.AuthState
+import org.surau.app.core.model.data.quran.AyahKey
+import org.surau.app.core.model.data.quran.Bookmark
+import org.surau.app.core.model.data.quran.QuranReadingPosition
 import org.surau.app.core.network.model.SurauApiException
 import org.surau.app.core.network.model.auth.ChangeEmailRequestDto
 import org.surau.app.core.network.model.auth.ChangeEmailVerifyRequestDto
@@ -73,6 +76,8 @@ class DefaultAuthRepositoryTest {
     private lateinit var userApi: FakeSurauUserApi
     private lateinit var accountApi: FakeSurauAccountApi
     private lateinit var authSession: AuthSessionDataSource
+    private lateinit var bookmarks: RecordingBookmarkRepository
+    private lateinit var progress: RecordingQuranProgressRepository
     private lateinit var subject: DefaultAuthRepository
 
     @Before
@@ -81,7 +86,17 @@ class DefaultAuthRepositoryTest {
         userApi = FakeSurauUserApi()
         accountApi = FakeSurauAccountApi()
         authSession = AuthSessionDataSource(InMemoryDataStore(AuthSession.getDefaultInstance()))
-        subject = DefaultAuthRepository(authApi, userApi, accountApi, authSession, FakeTimeZoneMonitor())
+        bookmarks = RecordingBookmarkRepository()
+        progress = RecordingQuranProgressRepository()
+        subject = DefaultAuthRepository(
+            authApi,
+            userApi,
+            accountApi,
+            authSession,
+            FakeTimeZoneMonitor(),
+            bookmarks,
+            progress,
+        )
     }
 
     @Test
@@ -143,6 +158,9 @@ class DefaultAuthRepositoryTest {
         assertEquals(listOf("refresh"), authApi.loggedOutRefreshTokens)
         assertEquals(AuthState.Guest, subject.authState.first())
         assertNull(authSession.currentAccessToken())
+        // Identity-linked local data is wiped so the next user can't read or re-sync it.
+        assertEquals(1, bookmarks.clearCount)
+        assertEquals(1, progress.clearCount)
     }
 
     @Test
@@ -195,6 +213,8 @@ class DefaultAuthRepositoryTest {
 
         assertEquals(1, accountApi.logoutAllCalls)
         assertEquals(AuthState.Guest, subject.authState.first())
+        assertEquals(1, bookmarks.clearCount)
+        assertEquals(1, progress.clearCount)
     }
 
     @Test
@@ -204,6 +224,8 @@ class DefaultAuthRepositoryTest {
         subject.deleteAccount("secret123")
 
         assertEquals(AuthState.Guest, subject.authState.first())
+        assertEquals(1, bookmarks.clearCount)
+        assertEquals(1, progress.clearCount)
     }
 
     @Test
@@ -220,6 +242,9 @@ class DefaultAuthRepositoryTest {
         // A wrong-password 401 must stay retryable: the session is NOT cleared.
         assertIs<AuthState.Authenticated>(subject.authState.first())
         assertEquals("access", authSession.currentAccessToken())
+        // ...and local data is preserved while the account is still live.
+        assertEquals(0, bookmarks.clearCount)
+        assertEquals(0, progress.clearCount)
     }
 
     @Test
@@ -359,4 +384,40 @@ private class FakeTimeZoneMonitor(
     zone: TimeZone = TimeZone.of("Asia/Jakarta"),
 ) : TimeZoneMonitor {
     override val currentTimeZone: Flow<TimeZone> = flowOf(zone)
+}
+
+/** Records [clearLocalData] calls; every other method is unused by the auth repository. */
+private class RecordingBookmarkRepository : BookmarkRepository {
+    var clearCount = 0
+        private set
+
+    override suspend fun clearLocalData() {
+        clearCount++
+    }
+
+    override fun observeBookmarks(): Flow<List<Bookmark>> = throw NotImplementedError()
+    override fun observeBookmark(ayahKey: AyahKey): Flow<Bookmark?> = throw NotImplementedError()
+    override fun observeTags(): Flow<List<String>> = throw NotImplementedError()
+    override suspend fun addBookmark(ayahKey: AyahKey, note: String?, tags: List<String>) =
+        throw NotImplementedError()
+    override suspend fun updateBookmark(ayahKey: AyahKey, note: String?, tags: List<String>) =
+        throw NotImplementedError()
+    override suspend fun removeBookmark(ayahKey: AyahKey) = throw NotImplementedError()
+    override suspend fun pushPending() = throw NotImplementedError()
+    override suspend fun reconcile() = throw NotImplementedError()
+}
+
+/** Records [clearLocalData] calls; every other method is unused by the auth repository. */
+private class RecordingQuranProgressRepository : QuranProgressRepository {
+    var clearCount = 0
+        private set
+
+    override suspend fun clearLocalData() {
+        clearCount++
+    }
+
+    override fun observePosition(): Flow<QuranReadingPosition?> = throw NotImplementedError()
+    override suspend fun savePosition(ayahKey: AyahKey) = throw NotImplementedError()
+    override suspend fun pushPendingPosition() = throw NotImplementedError()
+    override suspend fun reconcile() = throw NotImplementedError()
 }

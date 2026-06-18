@@ -253,4 +253,68 @@ class NavigatorTest {
             navigator.goBack()
         }
     }
+
+    @Test
+    fun resetToStartThen_collapsesEveryStackAndShowsKey() {
+        // A deep stack on a non-start tab…
+        navigator.navigate(TestSecondTopLevelKey)
+        navigator.navigate(TestKeyFirst)
+        navigator.navigate(TestKeySecond)
+        // …plus an entry on the start tab.
+        navigator.navigate(TestFirstTopLevelKey)
+        navigator.navigate(TestKeyFirst)
+
+        navigator.resetToStartThen(TestKeySecond)
+
+        // Collapsed to the start tab, showing the post-sign-out key on a clean start sub stack.
+        assertThat(navigationState.currentTopLevelKey).isEqualTo(TestFirstTopLevelKey)
+        assertThat(navigationState.currentSubStack).containsExactly(
+            TestFirstTopLevelKey,
+            TestKeySecond,
+        ).inOrder()
+        // Every other tab's sub stack is back at its root — no signed-in screen left anywhere.
+        assertThat(navigationState.subStacks[TestSecondTopLevelKey]).containsExactly(
+            TestSecondTopLevelKey,
+        ).inOrder()
+        assertThat(navigationState.topLevelStack).containsExactly(TestFirstTopLevelKey).inOrder()
+    }
+
+    @Test
+    fun resetToStartThen_backLandsOnStartRoot_notAuthenticatedScreen() {
+        navigator.navigate(TestSecondTopLevelKey)
+        navigator.navigate(TestKeyFirst)
+
+        navigator.resetToStartThen(TestKeySecond)
+        navigator.goBack()
+
+        // Back from the post-sign-out key returns to the start root, never an authenticated screen.
+        assertThat(navigationState.currentKey).isEqualTo(TestFirstTopLevelKey)
+        assertThat(navigationState.currentTopLevelKey).isEqualTo(TestFirstTopLevelKey)
+    }
+
+    @Test
+    fun finishFlowTo_clearsCurrentTabFlow_switchesTopLevel_leavesOtherTabsIntact() {
+        // An auth-flow screen launched onto the second tab (e.g. Login opened from Profile).
+        navigator.navigate(TestSecondTopLevelKey)
+        navigator.navigate(TestKeyFirst)
+        // An unrelated screen deep on a third tab (e.g. a Quran reader) that must NOT be cleared.
+        navigator.navigate(TestThirdTopLevelKey)
+        navigator.navigate(TestKeySecond)
+        // The flow completes while the second tab is in front.
+        navigator.navigate(TestSecondTopLevelKey)
+
+        navigator.finishFlowTo(TestFirstTopLevelKey)
+
+        // Switched to the target top level (e.g. Home)…
+        assertThat(navigationState.currentTopLevelKey).isEqualTo(TestFirstTopLevelKey)
+        // …the flow's tab is back at its root (no stale Login lingering)…
+        assertThat(navigationState.subStacks[TestSecondTopLevelKey]).containsExactly(
+            TestSecondTopLevelKey,
+        ).inOrder()
+        // …and the unrelated tab keeps its deep screen.
+        assertThat(navigationState.subStacks[TestThirdTopLevelKey]).containsExactly(
+            TestThirdTopLevelKey,
+            TestKeySecond,
+        ).inOrder()
+    }
 }

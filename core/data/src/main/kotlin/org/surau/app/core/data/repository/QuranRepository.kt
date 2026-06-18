@@ -47,10 +47,18 @@ interface QuranRepository {
      * Ensures [surahId]'s ayahs (with [translationSourceId] translations) are cached locally,
      * fetching from the network if missing or stale.
      *
+     * On a network error: when [allowStaleOnError] is true (the on-demand reader path) an existing
+     * cache is served and the error swallowed; when false (the bulk-download path) the IOException
+     * is rethrown so the caller can retry rather than silently skip a stale surah.
+     *
      * @throws org.surau.app.core.network.model.SurauApiException on backend errors
-     * @throws java.io.IOException offline with no cache
+     * @throws java.io.IOException offline with no usable cache
      */
-    suspend fun ensureSurahCached(surahId: Int, translationSourceId: String)
+    suspend fun ensureSurahCached(
+        surahId: Int,
+        translationSourceId: String,
+        allowStaleOnError: Boolean = true,
+    )
 
     /**
      * The user's effective translation source: their preference if set, otherwise the backend

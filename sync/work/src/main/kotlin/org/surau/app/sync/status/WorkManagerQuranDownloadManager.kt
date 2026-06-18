@@ -22,8 +22,12 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import org.surau.app.core.data.repository.QuranRepository
+import org.surau.app.core.data.repository.UserDataRepository
 import org.surau.app.core.data.util.QuranDownloadManager
 import org.surau.app.core.data.util.QuranDownloadState
 import org.surau.app.sync.initializers.DOWNLOAD_WORK_NAME
@@ -35,11 +39,22 @@ import javax.inject.Inject
  */
 internal class WorkManagerQuranDownloadManager @Inject constructor(
     @ApplicationContext private val context: Context,
+    userDataRepository: UserDataRepository,
+    private val quranRepository: QuranRepository,
 ) : QuranDownloadManager {
 
+    /** The active translation source, resolved (pref → default → first); re-resolved only on change. */
+    private val currentSourceId: Flow<String> =
+        userDataRepository.userData
+            .map { it.translationSourceId }
+            .distinctUntilChanged()
+            .map { quranRepository.resolveTranslationSourceId(it) }
+
     override val downloadState: Flow<QuranDownloadState> =
-        WorkManager.getInstance(context).getWorkInfosForUniqueWorkFlow(DOWNLOAD_WORK_NAME)
-            .map { infos -> infos.firstOrNull().toDownloadState() }
+        combine(
+            WorkManager.getInstance(context).getWorkInfosForUniqueWorkFlow(DOWNLOAD_WORK_NAME),
+            currentSourceId,
+        ) { infos, sourceId -> infos.firstOrNull().toDownloadState(sourceId) }
             .conflate()
 
     override fun startDownload() {
@@ -56,10 +71,43 @@ internal class WorkManagerQuranDownloadManager @Inject constructor(
     }
 }
 
-private fun WorkInfo?.toDownloadState(): QuranDownloadState = when (this?.state) {
+private fun WorkInfo?.toDownloadState(currentSourceId: String): QuranDownloadState {
+    this ?: return resolveDownloadState(null, null, currentSourceId, 0)
+    // The target source is in the output (when finished) or the latest progress (while running).
+    val workSourceId = outputData.getString(DownloadQuranWorker.SOURCE_KEY)
+        ?: progress.getString(DownloadQuranWorker.SOURCE_KEY)
+    return resolveDownloadState(
+        state = state,
+        workSourceId = workSourceId,
+        currentSourceId = currentSourceId,
+        percent = progress.getInt(DownloadQuranWorker.PROGRESS_KEY, 0),
+    )
+}
+
+/**
+ * Maps a download job's WorkManager [state] to a [QuranDownloadState] for the **active** translation
+ * source. A job that finished/runs for a *different* source than the one now selected reads as [Idle]
+ * (the active source has no offline index yet) so the UI prompts a fresh download instead of falsely
+ * reporting "downloaded". A null [workSourceId] (legacy job / not yet published) is treated as a match.
+ */
+internal fun resolveDownloadState(
+    state: WorkInfo.State?,
+    workSourceId: String?,
+    currentSourceId: String,
+    percent: Int,
+): QuranDownloadState = when (state) {
     null, WorkInfo.State.CANCELLED -> QuranDownloadState.Idle
-    WorkInfo.State.SUCCEEDED -> QuranDownloadState.Completed
+    WorkInfo.State.SUCCEEDED ->
+        if (workSourceId == null || workSourceId == currentSourceId) {
+            QuranDownloadState.Completed
+        } else {
+            QuranDownloadState.Idle
+        }
     WorkInfo.State.FAILED -> QuranDownloadState.Failed
     WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING, WorkInfo.State.BLOCKED ->
-        QuranDownloadState.Running(progress.getInt(DownloadQuranWorker.PROGRESS_KEY, 0))
+        if (workSourceId != null && workSourceId != currentSourceId) {
+            QuranDownloadState.Idle
+        } else {
+            QuranDownloadState.Running(percent)
+        }
 }

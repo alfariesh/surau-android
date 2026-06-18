@@ -77,6 +77,26 @@ fun MacrobenchmarkScope.quranReaderJourney() {
 }
 
 /**
+ * The search journey: open search from the home app bar, type a query, wait for results, scroll
+ * them, then return home. Precompiles the offline-FTS / search path (a headline M6 feature) that
+ * [quranReaderJourney] does not exercise, so the captured profile covers it too.
+ */
+fun MacrobenchmarkScope.quranSearchJourney() {
+    // Open search from the home app bar.
+    device.waitAndFindObject(By.res("quranHome:search"), 10_000).click()
+
+    // Type a query and wait for the results list to populate.
+    device.waitAndFindObject(By.res("quranSearch:input"), 10_000).text = "Allah"
+    val results = device.waitAndFindObject(By.res("quranSearch:results"), 10_000)
+    device.flingElementDownUp(results)
+
+    // Dismiss the IME (first back) and return to the home list (second back).
+    device.pressBack()
+    device.pressBack()
+    device.waitAndFindObject(By.res("quranHome:surahList"), 10_000)
+}
+
+/**
  * Waits for and returns the `niaTopAppBar`
  */
 fun MacrobenchmarkScope.getTopAppBar(): UiObject2 {

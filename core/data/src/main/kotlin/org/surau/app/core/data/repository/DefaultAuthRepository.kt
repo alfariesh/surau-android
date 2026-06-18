@@ -55,6 +55,8 @@ internal class DefaultAuthRepository @Inject constructor(
     private val accountApi: SurauAccountApi,
     private val authSessionDataSource: AuthSessionDataSource,
     private val timeZoneMonitor: TimeZoneMonitor,
+    private val bookmarkRepository: BookmarkRepository,
+    private val quranProgressRepository: QuranProgressRepository,
 ) : AuthRepository {
 
     override val authState: Flow<AuthState> = authSessionDataSource.authState
@@ -111,6 +113,11 @@ internal class DefaultAuthRepository @Inject constructor(
         apiCall { authApi.verifyEmail(VerifyEmailRequestDto(email = email, otp = otp)) }
     }
 
+    override suspend fun verifyEmailWithToken(token: String) {
+        // Token path: the backend ignores email/otp when a token is present.
+        apiCall { authApi.verifyEmail(VerifyEmailRequestDto(token = token)) }
+    }
+
     override suspend fun resendVerification(email: String) {
         apiCall { authApi.resendVerification(ResendVerificationRequestDto(email = email)) }
     }
@@ -135,6 +142,7 @@ internal class DefaultAuthRepository @Inject constructor(
             }
         } finally {
             authSessionDataSource.clear()
+            clearLocalUserData()
         }
     }
 
@@ -173,8 +181,30 @@ internal class DefaultAuthRepository @Inject constructor(
         val pair = apiCall {
             accountApi.verifyEmailChange(ChangeEmailVerifyRequestDto(otp = otp))
         }
+        // One atomic write: a crash/cancel between the token and email persists can't leave the
+        // rotated tokens stored against the old email.
+        authSessionDataSource.updateTokensAndEmail(
+            accessToken = pair.accessToken,
+            refreshToken = pair.refreshToken,
+            expiresAtEpochSeconds = Clock.System.now().epochSeconds + pair.expiresInSeconds,
+            email = newEmail,
+            sessionId = pair.sessionId.ifEmpty { null },
+        )
+    }
+
+    override suspend fun verifyEmailChangeWithToken(token: String) {
+        val pair = apiCall {
+            accountApi.verifyEmailChange(ChangeEmailVerifyRequestDto(token = token))
+        }
+        // Install the rotated tokens first so the follow-up profile fetch uses the new session.
         persistRotatedSession(pair)
-        authSessionDataSource.updateEmail(newEmail)
+        // The new email isn't carried by the token — refresh the stored identity from the server.
+        // Best effort: the change already succeeded server-side; cancellation still propagates.
+        runCatchingExceptCancellation {
+            val account = apiCall { userApi.profile() }
+            authSessionDataSource.updateEmail(account.email)
+            authSessionDataSource.updateDisplayName(account.profile.displayName)
+        }
     }
 
     override suspend fun listSessions(): List<AccountSession> =
@@ -188,12 +218,14 @@ internal class DefaultAuthRepository @Inject constructor(
         // The current session is revoked too — only clear locally once the call succeeds.
         apiCall { accountApi.logoutAll() }
         authSessionDataSource.clear()
+        clearLocalUserData()
     }
 
     override suspend fun deleteAccount(currentPassword: String) {
         // A wrong password is a 401 the caller can retry, so clear only on success.
         apiCall { accountApi.deleteAccount(DeleteAccountRequestDto(currentPassword = currentPassword)) }
         authSessionDataSource.clear()
+        clearLocalUserData()
     }
 
     override suspend fun emailPreferences(): EmailPreferences =
@@ -205,6 +237,18 @@ internal class DefaultAuthRepository @Inject constructor(
                 EmailPreferencesPatchRequestDto(marketingOptIn = marketingOptIn),
             )
         }.toEmailPreferences()
+
+    /**
+     * Wipes identity-linked local data (bookmarks, reading position) on the way out of an account so
+     * the next user of this device can neither read the previous user's notes/tags nor have leftover
+     * unsynced rows pushed into their own backend account on the next sign-in. Best-effort and
+     * independent: a failure (or a no-op) here must never turn a successful sign-out into an error.
+     * Synced data is safe — it is re-pulled from the server when the same user signs back in.
+     */
+    private suspend fun clearLocalUserData() {
+        runCatchingExceptCancellation { bookmarkRepository.clearLocalData() }
+        runCatchingExceptCancellation { quranProgressRepository.clearLocalData() }
+    }
 
     /** Persists a token pair from a session-rotating endpoint, keeping the rotated session id. */
     private suspend fun persistRotatedSession(pair: TokenPairDto) {

@@ -54,7 +54,11 @@ class FakeQuranRepository @Inject constructor() : QuranRepository {
     /** When non-null, [ensureSurahCached] throws this to exercise the offline-refresh path. */
     var ensureSurahCachedError: Exception? = null
 
-    override suspend fun ensureSurahCached(surahId: Int, translationSourceId: String) {
+    override suspend fun ensureSurahCached(
+        surahId: Int,
+        translationSourceId: String,
+        allowStaleOnError: Boolean,
+    ) {
         ensureSurahCachedError?.let { throw it }
     }
 

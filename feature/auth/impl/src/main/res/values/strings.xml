@@ -46,16 +46,14 @@
     <string name="feature_auth_impl_resend_sent">Kode baru telah dikirim</string>
     <string name="feature_auth_impl_otp_invalid">Kode harus 6 digit angka</string>
     <string name="feature_auth_impl_forgot_title">Atur ulang kata sandi</string>
-    <string name="feature_auth_impl_forgot_subtitle">Masukkan email Anda. Kami akan mengirim tautan dan token untuk mengatur ulang kata sandi.</string>
+    <string name="feature_auth_impl_forgot_subtitle">Masukkan email Anda. Kami akan mengirim tautan untuk mengatur ulang kata sandi.</string>
     <string name="feature_auth_impl_send">Kirim</string>
-    <string name="feature_auth_impl_forgot_sent">Periksa email Anda. Setelah menerima token, lanjutkan di bawah ini.</string>
-    <string name="feature_auth_impl_enter_token">Saya sudah punya token</string>
+    <string name="feature_auth_impl_forgot_sent">Periksa email Anda lalu ketuk tautan untuk mengatur ulang kata sandi.</string>
+    <string name="feature_auth_impl_verifying">Memverifikasi email Anda…</string>
     <string name="feature_auth_impl_reset_title">Kata sandi baru</string>
-    <string name="feature_auth_impl_reset_token">Token</string>
     <string name="feature_auth_impl_new_password">Kata sandi baru</string>
     <string name="feature_auth_impl_reset">Atur ulang</string>
     <string name="feature_auth_impl_reset_done">Kata sandi berhasil diubah. Silakan masuk.</string>
-    <string name="feature_auth_impl_token_required">Token wajib diisi</string>
     <string name="feature_auth_impl_back">Kembali</string>
     <string name="feature_auth_impl_show_password">Tampilkan kata sandi</string>
     <string name="feature_auth_impl_hide_password">Sembunyikan kata sandi</string>
@@ -91,6 +89,7 @@
     <string name="feature_auth_impl_account_email_subtitle">Masukkan kata sandi dan email baru. Kami akan mengirim kode ke email baru tersebut.</string>
     <string name="feature_auth_impl_account_email_send_code">Kirim kode</string>
     <string name="feature_auth_impl_account_email_done">Email berhasil diubah menjadi %1$s.</string>
+    <string name="feature_auth_impl_account_email_changed">Email Anda berhasil diubah.</string>
 
     <string name="feature_auth_impl_account_sessions_title">Perangkat &amp; sesi</string>
     <string name="feature_auth_impl_account_sessions_subtitle">Sesi yang sedang aktif di akun Anda.</string>

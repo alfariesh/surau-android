@@ -24,12 +24,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -114,9 +116,10 @@ fun LoginScreen(
 ) {
     TrackScreenViewEvent(screenName = "Login")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
     var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(submitState) {
@@ -201,10 +204,11 @@ fun RegisterScreen(
 ) {
     TrackScreenViewEvent(screenName = "Register")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
     var displayName by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(submitState) {
@@ -284,9 +288,10 @@ fun VerifyEmailScreen(
     onBackClick: () -> Unit,
     onVerified: () -> Unit,
     modifier: Modifier = Modifier,
+    token: String? = null,
     viewModel: VerifyEmailViewModel =
         hiltViewModel<VerifyEmailViewModel, VerifyEmailViewModel.Factory>(
-            key = "verify:$email",
+            key = "verify:$email:$token",
         ) { factory ->
             factory.create(email)
         },
@@ -294,8 +299,9 @@ fun VerifyEmailScreen(
     TrackScreenViewEvent(screenName = "VerifyEmail")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
     val resendCooldown by viewModel.resendCooldownSeconds.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
-    var otp by rememberSaveable { mutableStateOf("") }
+    var otp by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     if (submitState is AuthSubmitState.Success) {
@@ -312,6 +318,24 @@ fun VerifyEmailScreen(
                     .testTag("verify:done"),
             ) {
                 Text(stringResource(R.string.feature_auth_impl_sign_in))
+            }
+        }
+        return
+    }
+
+    if (token != null) {
+        // Deep-link path: auto-verify the emailed token; no OTP entry needed.
+        LaunchedEffect(token) { viewModel.verifyWithToken(token) }
+        AuthScreenScaffold(
+            title = stringResource(R.string.feature_auth_impl_verify_title),
+            onBackClick = onBackClick,
+            subtitle = stringResource(R.string.feature_auth_impl_verifying),
+            modifier = modifier,
+        ) {
+            AuthSubmitError(submitState)
+            if (submitState !is AuthSubmitState.Error) {
+                Spacer(modifier = Modifier.size(16.dp))
+                CircularProgressIndicator(modifier = Modifier.testTag("verify:progress"))
             }
         }
         return
@@ -381,7 +405,6 @@ fun VerifyEmailScreen(
 @Composable
 fun ForgotPasswordScreen(
     onBackClick: () -> Unit,
-    onContinueToReset: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ForgotPasswordViewModel = hiltViewModel(),
 ) {
@@ -429,11 +452,6 @@ fun ForgotPasswordScreen(
         ) {
             Text(stringResource(R.string.feature_auth_impl_send))
         }
-
-        Spacer(modifier = Modifier.size(8.dp))
-        SurauTextButton(onClick = onContinueToReset) {
-            Text(stringResource(R.string.feature_auth_impl_enter_token))
-        }
     }
 }
 
@@ -447,9 +465,11 @@ fun ResetPasswordScreen(
 ) {
     TrackScreenViewEvent(screenName = "ResetPassword")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
-    var token by rememberSaveable { mutableStateOf(initialToken.orEmpty()) }
-    var password by rememberSaveable { mutableStateOf("") }
+    // The token always arrives via the emailed reset link (the nav key); the user only sets a password.
+    val token = initialToken.orEmpty()
+    var password by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     if (submitState is AuthSubmitState.Success) {
@@ -476,22 +496,6 @@ fun ResetPasswordScreen(
         onBackClick = onBackClick,
         modifier = modifier,
     ) {
-        SurauTextField(
-            value = token,
-            onValueChange = { token = it },
-            label = { Text(stringResource(R.string.feature_auth_impl_reset_token)) },
-            isError = showValidation && token.isBlank(),
-            supportingText = if (showValidation && token.isBlank()) {
-                { Text(stringResource(R.string.feature_auth_impl_token_required)) }
-            } else {
-                null
-            },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("reset:token"),
-        )
-        Spacer(modifier = Modifier.size(12.dp))
         PasswordField(
             value = password,
             onValueChange = { password = it },

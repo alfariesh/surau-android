@@ -39,8 +39,11 @@ interface AuthRepository {
     /** Registers a new account; the user must then verify their email before logging in. */
     suspend fun register(email: String, password: String, displayName: String?)
 
-    /** Confirms an email with the 6-digit OTP (or an emailed token). */
+    /** Confirms an email with the 6-digit OTP. */
     suspend fun verifyEmail(email: String, otp: String)
+
+    /** Confirms an email straight from the emailed verification link's token (no OTP needed). */
+    suspend fun verifyEmailWithToken(token: String)
 
     suspend fun resendVerification(email: String)
 
@@ -73,6 +76,13 @@ interface AuthRepository {
      * email updated to [newEmail].
      */
     suspend fun verifyEmailChange(newEmail: String, otp: String)
+
+    /**
+     * Step 2 of an email change, straight from the emailed link's token (no OTP). Requires an active
+     * session; the rotated token pair is persisted and the stored email refreshed from the server
+     * (the new address isn't carried by the token).
+     */
+    suspend fun verifyEmailChangeWithToken(token: String)
 
     /** Lists the account's active sessions/devices. */
     suspend fun listSessions(): List<AccountSession>

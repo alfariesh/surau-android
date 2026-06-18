@@ -33,9 +33,12 @@ object EditProfileNavKey : NavKey
 @Serializable
 object ChangePasswordNavKey : NavKey
 
-/** Email change: a single screen that walks request → OTP verification internally. */
+/**
+ * Email change: a single screen that walks request → OTP verification internally. When reached from
+ * the emailed change-email link, [token] auto-verifies the change (requires an active session).
+ */
 @Serializable
-object ChangeEmailNavKey : NavKey
+data class ChangeEmailNavKey(val token: String? = null) : NavKey
 
 @Serializable
 object SessionsNavKey : NavKey
@@ -52,7 +55,7 @@ fun Navigator.navigateToEditProfile() = navigate(EditProfileNavKey)
 
 fun Navigator.navigateToChangePassword() = navigate(ChangePasswordNavKey)
 
-fun Navigator.navigateToChangeEmail() = navigate(ChangeEmailNavKey)
+fun Navigator.navigateToChangeEmail() = navigate(ChangeEmailNavKey())
 
 fun Navigator.navigateToSessions() = navigate(SessionsNavKey)
 

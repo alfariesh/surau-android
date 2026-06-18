@@ -47,4 +47,11 @@ interface QuranProgressRepository {
      * by the background sync worker.
      */
     suspend fun reconcile()
+
+    /**
+     * Deletes the locally stored reading position. Called on sign-out / account deletion so the
+     * next user on this device does not inherit (or re-push) the previous account's progress.
+     * Synced positions are re-pulled from the server on the next sign-in.
+     */
+    suspend fun clearLocalData()
 }

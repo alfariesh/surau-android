@@ -120,6 +120,10 @@ internal class OfflineFirstQuranProgressRepository @Inject constructor(
         }
     }
 
+    override suspend fun clearLocalData() {
+        readingProgressDao.clear()
+    }
+
     private suspend fun isAuthenticated(): Boolean =
         authSessionDataSource.authState.first() is AuthState.Authenticated
 }

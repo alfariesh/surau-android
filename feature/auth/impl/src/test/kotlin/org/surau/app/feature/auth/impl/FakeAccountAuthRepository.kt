@@ -68,6 +68,10 @@ internal class FakeAccountAuthRepository : AuthRepository {
         lastVerifiedEmail = newEmail
     }
 
+    override suspend fun verifyEmailChangeWithToken(token: String) {
+        raise()
+    }
+
     override suspend fun listSessions(): List<AccountSession> {
         raise()
         return sessions
@@ -104,6 +108,7 @@ internal class FakeAccountAuthRepository : AuthRepository {
     override suspend fun login(email: String, password: String) = Unit
     override suspend fun register(email: String, password: String, displayName: String?) = Unit
     override suspend fun verifyEmail(email: String, otp: String) = Unit
+    override suspend fun verifyEmailWithToken(token: String) = Unit
     override suspend fun resendVerification(email: String) = Unit
     override suspend fun forgotPassword(email: String) = Unit
     override suspend fun resetPassword(token: String, newPassword: String) = Unit

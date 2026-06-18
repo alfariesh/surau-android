@@ -32,10 +32,22 @@ private const val SYNC_NOTIFICATION_ID = 0
 private const val DOWNLOAD_NOTIFICATION_ID = 1
 private const val SYNC_NOTIFICATION_CHANNEL_ID = "SyncNotificationChannel"
 
-// All sync work needs an internet connectionS
+// All sync work needs an internet connection.
 val SyncConstraints
     get() = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+
+/**
+ * Constraints for the bulk offline Qur'an download: needs a network, and defers while the battery or
+ * storage is low so a long, multi-MB job never drains the device or fails for lack of space. Kept
+ * separate from the lightweight [SyncConstraints] used by the quick startup sync.
+ */
+val DownloadConstraints
+    get() = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .setRequiresBatteryNotLow(true)
+        .setRequiresStorageNotLow(true)
         .build()
 
 /**

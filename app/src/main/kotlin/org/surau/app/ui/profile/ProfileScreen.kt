@@ -55,7 +55,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -813,7 +816,12 @@ private fun SettingsSwitchRow(
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f),
         )
-        SurauSwitch(checked = checked, onCheckedChange = onCheckedChange)
+        SurauSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            // The label sits in a sibling Text, so name the switch for TalkBack.
+            contentDescription = text,
+        )
     }
 }
 
@@ -866,22 +874,21 @@ private fun LanguageChooser(
     currentLanguageTag: String,
     onChangeLanguage: (String) -> Unit,
 ) {
-    // Endonyms (Bahasa Indonesia / English) stay in their own language so users can always find
-    // their language; only the "follow system" label is localised.
+    // A connected button group like the theme pickers. Order: System · English · Indonesia.
+    // Short labels (vs the endonym "Bahasa Indonesia") keep the three segments single-line.
     val options = listOf(
         "" to stringResource(R.string.feature_settings_impl_language_system),
-        "id" to stringResource(R.string.feature_settings_impl_language_id),
         "en" to stringResource(R.string.feature_settings_impl_language_en),
+        "id" to stringResource(R.string.feature_settings_impl_language_id),
     )
-    Column(Modifier.selectableGroup()) {
-        options.forEach { (tag, label) ->
-            SettingsChooserRow(
-                text = label,
-                selected = currentLanguageTag.substringBefore('-') == tag,
-                onClick = { onChangeLanguage(tag) },
-            )
-        }
-    }
+    val selectedIndex = options
+        .indexOfFirst { it.first == currentLanguageTag.substringBefore('-') }
+        .coerceAtLeast(0)
+    SurauButtonGroup(
+        options = options.map { it.second },
+        selectedIndex = selectedIndex,
+        onOptionSelected = { index -> onChangeLanguage(options[index].first) },
+    )
 }
 
 @Composable
@@ -912,7 +919,10 @@ private fun QuranDownloadSection(
                         state.percent,
                     ),
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f),
+                    // Announce download progress to TalkBack as it advances.
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { liveRegion = LiveRegionMode.Polite },
                 )
                 SurauOutlinedButton(
                     onClick = onCancelDownload,
@@ -947,6 +957,8 @@ private fun QuranDownloadSection(
                 text = stringResource(R.string.feature_settings_impl_download_failed),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
+                // Announce the failure to TalkBack — otherwise the long download fails silently.
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
             Spacer(modifier = Modifier.size(8.dp))
             SurauButton(

@@ -28,8 +28,8 @@ import org.surau.app.core.data.repository.QuranAudioRepository
 import org.surau.app.core.data.repository.QuranRepository
 import org.surau.app.core.data.repository.QuranSearchResult
 import org.surau.app.core.data.repository.UserRepository
+import org.surau.app.core.data.test.repository.FakeQuranDownloadManager
 import org.surau.app.core.data.util.QuranDownloadManager
-import org.surau.app.core.data.util.QuranDownloadState
 import org.surau.app.core.model.data.ThemePalette
 import org.surau.app.core.model.data.auth.AccountSession
 import org.surau.app.core.model.data.auth.AuthState
@@ -66,13 +66,34 @@ class ProfileViewModelTest {
         assertFalse(userData.useDynamicColor)
     }
 
+    @Test
+    fun startQuranDownload_delegatesToManager() = runTest {
+        val downloadManager = FakeQuranDownloadManager()
+        val viewModel = profileViewModel(TestUserDataRepository(), downloadManager)
+
+        viewModel.startQuranDownload()
+
+        assertEquals(1, downloadManager.startCount)
+    }
+
+    @Test
+    fun cancelQuranDownload_delegatesToManager() = runTest {
+        val downloadManager = FakeQuranDownloadManager()
+        val viewModel = profileViewModel(TestUserDataRepository(), downloadManager)
+
+        viewModel.cancelQuranDownload()
+
+        assertEquals(1, downloadManager.cancelCount)
+    }
+
     private fun profileViewModel(
         userDataRepository: TestUserDataRepository,
+        quranDownloadManager: QuranDownloadManager = FakeQuranDownloadManager(),
     ) = ProfileViewModel(
         userDataRepository = userDataRepository,
         authRepository = FakeAuthRepository(),
         userRepository = FakeUserRepository(),
-        quranDownloadManager = FakeQuranDownloadManager(),
+        quranDownloadManager = quranDownloadManager,
         quranRepository = FakeQuranRepository(),
         quranAudioRepository = FakeQuranAudioRepository(),
     )
@@ -91,6 +112,8 @@ private class FakeAuthRepository : AuthRepository {
     override suspend fun changePassword(currentPassword: String, newPassword: String) = Unit
     override suspend fun requestEmailChange(currentPassword: String, newEmail: String) = Unit
     override suspend fun verifyEmailChange(newEmail: String, otp: String) = Unit
+    override suspend fun verifyEmailWithToken(token: String) = Unit
+    override suspend fun verifyEmailChangeWithToken(token: String) = Unit
     override suspend fun listSessions(): List<AccountSession> = emptyList()
     override suspend fun revokeSession(sessionId: String) = Unit
     override suspend fun logoutAllDevices() = Unit
@@ -116,7 +139,11 @@ private class FakeQuranRepository : QuranRepository {
         translationSourceId: String,
     ): Flow<List<PopulatedAyah>> = flowOf(emptyList())
 
-    override suspend fun ensureSurahCached(surahId: Int, translationSourceId: String) = Unit
+    override suspend fun ensureSurahCached(
+        surahId: Int,
+        translationSourceId: String,
+        allowStaleOnError: Boolean,
+    ) = Unit
     override suspend fun resolveTranslationSourceId(preferredId: String?): String = preferredId ?: "default"
     override suspend fun search(query: String, translationSourceId: String?): List<QuranSearchResult> = emptyList()
 }
@@ -127,10 +154,4 @@ private class FakeQuranAudioRepository : QuranAudioRepository {
     override suspend fun resolveRecitationId(preferredId: String?, requiredMode: String): String? = preferredId
     override suspend fun audioManifest(surahId: Int, recitationId: String?): SurahAudioManifest =
         error("Not used in ProfileViewModelTest")
-}
-
-private class FakeQuranDownloadManager : QuranDownloadManager {
-    override val downloadState: Flow<QuranDownloadState> = flowOf(QuranDownloadState.Idle)
-    override fun startDownload() = Unit
-    override fun cancelDownload() = Unit
 }

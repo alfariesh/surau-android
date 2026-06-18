@@ -65,6 +65,10 @@ abstract class SubmittingViewModel : ViewModel() {
             try {
                 action()
                 onSuccess()
+            } catch (cancellation: CancellationException) {
+                // Navigating away / clearing the VM mid-submit is not an error — let it propagate
+                // instead of mapping it to a generic failure state.
+                throw cancellation
             } catch (exception: Exception) {
                 val state = exception.toAuthSubmitState(passwordOnly = passwordOnly, otpForm = otpForm)
                 submitStateFlow.value = state
@@ -167,6 +171,12 @@ class ChangeEmailViewModel @Inject constructor(
 
     fun verify(otp: String) =
         submit(otpForm = true) { authRepository.verifyEmailChange(_newEmail.value, otp.trim()) }
+
+    /** Auto-verifies straight from the emailed change-email link's token (requires an active session). */
+    fun verifyWithToken(token: String) {
+        if (submitState.value is AuthSubmitState.Success) return
+        submit(otpForm = true) { authRepository.verifyEmailChangeWithToken(token) }
+    }
 
     /** Returns from the OTP step to the request form (there is no resend — re-enter to restart). */
     fun restartEmailChange() {

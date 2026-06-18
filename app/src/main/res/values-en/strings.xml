@@ -96,8 +96,8 @@
     <string name="feature_settings_impl_theme_mesh">Gradient background</string>
     <string name="feature_settings_impl_theme_mesh_hint">Turns off automatically in battery saver or when animations are off.</string>
     <string name="feature_settings_impl_section_language">Language</string>
-    <string name="feature_settings_impl_language_system">Follow system</string>
-    <string name="feature_settings_impl_language_id">Bahasa Indonesia</string>
+    <string name="feature_settings_impl_language_system">System</string>
+    <string name="feature_settings_impl_language_id">Indonesia</string>
     <string name="feature_settings_impl_language_en">English</string>
     <string name="feature_settings_impl_section_reader">Reading</string>
     <string name="feature_settings_impl_reader_mode">Display mode</string>
