@@ -874,22 +874,21 @@ private fun LanguageChooser(
     currentLanguageTag: String,
     onChangeLanguage: (String) -> Unit,
 ) {
-    // Endonyms (Bahasa Indonesia / English) stay in their own language so users can always find
-    // their language; only the "follow system" label is localised.
+    // A connected button group like the theme pickers. Order: System · English · Indonesia.
+    // Short labels (vs the endonym "Bahasa Indonesia") keep the three segments single-line.
     val options = listOf(
         "" to stringResource(R.string.feature_settings_impl_language_system),
-        "id" to stringResource(R.string.feature_settings_impl_language_id),
         "en" to stringResource(R.string.feature_settings_impl_language_en),
+        "id" to stringResource(R.string.feature_settings_impl_language_id),
     )
-    Column(Modifier.selectableGroup()) {
-        options.forEach { (tag, label) ->
-            SettingsChooserRow(
-                text = label,
-                selected = currentLanguageTag.substringBefore('-') == tag,
-                onClick = { onChangeLanguage(tag) },
-            )
-        }
-    }
+    val selectedIndex = options
+        .indexOfFirst { it.first == currentLanguageTag.substringBefore('-') }
+        .coerceAtLeast(0)
+    SurauButtonGroup(
+        options = options.map { it.second },
+        selectedIndex = selectedIndex,
+        onOptionSelected = { index -> onChangeLanguage(options[index].first) },
+    )
 }
 
 @Composable

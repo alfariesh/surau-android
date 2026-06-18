@@ -17,21 +17,22 @@
 package org.surau.app.util
 
 import android.app.Activity
+import android.app.LocaleManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
+import android.os.LocaleList
 import java.util.Locale
 
 /**
  * Per-app language switching that works with a plain [androidx.activity.ComponentActivity] across
  * the whole minSdk 23 range.
  *
- * On API 33+ the framework's `LocaleManager` owns the per-app locale (and surfaces it in system
- * Settings), so we just delegate to [AppCompatDelegate]. On API < 33 there is no framework support
- * and AppCompat only auto-applies the backport to `AppCompatActivity`, so we persist the choice
- * ourselves and re-apply it in [wrap] (called from `MainActivity.attachBaseContext`).
+ * On API 33+ the framework's [LocaleManager] owns the per-app locale (surfaced in system Settings):
+ * we set it directly so the system applies it and recreates the activity. We deliberately do NOT go
+ * through `AppCompatDelegate` here — it only reliably applies locales to an `AppCompatActivity`, and
+ * this is a plain Compose `ComponentActivity`. On API < 33 there is no framework support, so we
+ * persist the choice ourselves and re-apply it in [wrap] (called from `MainActivity.attachBaseContext`).
  *
  * The empty string means "follow the system language".
  */
@@ -47,19 +48,25 @@ object AppLanguage {
     /** The currently selected language tag, or [SYSTEM_TAG] when following the system. */
     fun current(context: Context): String =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            AppCompatDelegate.getApplicationLocales().toLanguageTags().substringBefore(',')
+            context.getSystemService(LocaleManager::class.java)
+                ?.applicationLocales
+                ?.toLanguageTags()
+                ?.substringBefore(',')
+                .orEmpty()
         } else {
             prefs(context).getString(KEY_TAG, SYSTEM_TAG).orEmpty()
         }
 
-    /** Applies and persists [tag], recreating the activity on API < 33 so resources reload. */
+    /** Applies and persists [tag]. The system recreates the activity (33+) or we recreate it (<33). */
     fun apply(context: Context, tag: String) {
         if (tag == current(context)) return
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Framework per-app locale: the system stores it, applies it, and recreates the activity.
+            context.getSystemService(LocaleManager::class.java)?.applicationLocales =
+                if (tag.isEmpty()) LocaleList.getEmptyLocaleList() else LocaleList.forLanguageTags(tag)
+        } else {
+            // No framework support below 33: persist and re-apply via attachBaseContext on recreate.
             prefs(context).edit().putString(KEY_TAG, tag).apply()
-        }
-        AppCompatDelegate.setApplicationLocales(localeList(tag))
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             context.findActivity()?.recreate()
         }
     }
@@ -76,9 +83,6 @@ object AppLanguage {
         config.setLocale(Locale.forLanguageTag(tag))
         return base.createConfigurationContext(config)
     }
-
-    private fun localeList(tag: String): LocaleListCompat =
-        if (tag.isEmpty()) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(tag)
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

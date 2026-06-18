@@ -96,8 +96,8 @@
     <string name="feature_settings_impl_theme_mesh">Latar bergradien</string>
     <string name="feature_settings_impl_theme_mesh_hint">Mati otomatis saat hemat baterai atau animasi dimatikan.</string>
     <string name="feature_settings_impl_section_language">Bahasa</string>
-    <string name="feature_settings_impl_language_system">Ikuti sistem</string>
-    <string name="feature_settings_impl_language_id">Bahasa Indonesia</string>
+    <string name="feature_settings_impl_language_system">Sistem</string>
+    <string name="feature_settings_impl_language_id">Indonesia</string>
     <string name="feature_settings_impl_language_en">English</string>
     <string name="feature_settings_impl_section_reader">Bacaan</string>
     <string name="feature_settings_impl_reader_mode">Mode tampilan</string>
