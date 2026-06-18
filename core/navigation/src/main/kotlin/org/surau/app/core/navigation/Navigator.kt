@@ -100,6 +100,18 @@ class Navigator(val state: NavigationState) {
     }
 
     /**
+     * Finishes a self-contained flow (e.g. the auth flow) that was launched onto the current tab:
+     * clears the flow's screens off that tab's sub stack, then switches to [topLevelKey]. Unlike
+     * [resetToStartThen], it leaves every *other* tab's stack untouched — so signing in from Profile
+     * lands on Home without leaving a stale Login behind on Profile, and without disturbing, say, an
+     * open Quran reader on another tab.
+     */
+    fun finishFlowTo(topLevelKey: NavKey) {
+        clearSubStack()
+        navigate(topLevelKey)
+    }
+
+    /**
      * Clearing all but the root key in the current sub stack.
      */
     private fun clearSubStack() {

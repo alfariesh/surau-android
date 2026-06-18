@@ -315,7 +315,7 @@ fun SurauApp(
                     }
                     authEntries(
                         navigator = navigator,
-                        onAuthFlowDone = { navigator.navigate(HomeNavKey) },
+                        onAuthFlowDone = { navigator.finishFlowTo(HomeNavKey) },
                     )
                     accountEntries(
                         navigator = navigator,
