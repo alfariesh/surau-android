@@ -115,6 +115,7 @@ fun LoginScreen(
 ) {
     TrackScreenViewEvent(screenName = "Login")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
     var email by rememberSaveable { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -202,6 +203,7 @@ fun RegisterScreen(
 ) {
     TrackScreenViewEvent(screenName = "Register")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
     var displayName by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -295,6 +297,7 @@ fun VerifyEmailScreen(
     TrackScreenViewEvent(screenName = "VerifyEmail")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
     val resendCooldown by viewModel.resendCooldownSeconds.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
     var otp by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
@@ -448,6 +451,7 @@ fun ResetPasswordScreen(
 ) {
     TrackScreenViewEvent(screenName = "ResetPassword")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
     var token by rememberSaveable { mutableStateOf(initialToken.orEmpty()) }
     var password by remember { mutableStateOf("") }

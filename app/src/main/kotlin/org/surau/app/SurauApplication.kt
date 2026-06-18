@@ -17,6 +17,7 @@
 package org.surau.app
 
 import android.app.Application
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy.Builder
@@ -24,6 +25,7 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import dagger.hilt.android.HiltAndroidApp
 import org.surau.app.sync.initializers.Sync
+import org.surau.app.util.AppLanguage
 import org.surau.app.util.ProfileVerifierLogger
 import javax.inject.Inject
 
@@ -37,6 +39,12 @@ class SurauApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var profileVerifierLogger: ProfileVerifierLogger
+
+    // Apply the persisted per-app locale on API < 33 so the *application* context (used by e.g. the
+    // download notification's strings) is localized too — not just Activity-hosted UI. No-op on 33+.
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(AppLanguage.wrap(base))
+    }
 
     override fun onCreate() {
         super.onCreate()
