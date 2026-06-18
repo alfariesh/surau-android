@@ -16,8 +16,8 @@
 
 package org.surau.app.core.network.model
 
-import kotlinx.serialization.json.Json
 import org.junit.Test
+import org.surau.app.core.network.di.NetworkModule
 import org.surau.app.core.network.model.auth.ChangePasswordRequestDto
 import org.surau.app.core.network.model.auth.SessionsResponseDto
 import org.surau.app.core.network.model.user.ProfilePatchRequestDto
@@ -31,7 +31,9 @@ import kotlin.test.assertTrue
  */
 class AccountDtoSerializationTest {
 
-    private val json = Json { ignoreUnknownKeys = true }
+    // The PRODUCTION Json (encodeDefaults=false, explicitNulls=true) so this test actually guards the
+    // partial-PATCH contract — flipping the DI config would make these tests fail, not silently pass.
+    private val json = NetworkModule.providesNetworkJson()
 
     @Test
     fun profilePatch_omitsAbsentFields() {
@@ -56,6 +58,23 @@ class AccountDtoSerializationTest {
         assertTrue(encoded.contains("\"display_name\":\"Umar\""))
         assertTrue(encoded.contains("\"timezone\":\"Asia/Jakarta\""))
         assertTrue(encoded.contains("\"country_code\":\"ID\""))
+    }
+
+    @Test
+    fun profilePatch_allNull_encodesEmptyObject() {
+        // A fully-empty patch must serialize to "{}" so a one-field edit can never wipe the rest.
+        val encoded = json.encodeToString(ProfilePatchRequestDto.serializer(), ProfilePatchRequestDto())
+
+        assertEquals("{}", encoded)
+    }
+
+    @Test
+    fun profilePatch_encodesExplicitFalsePersonalization() {
+        // `false` is distinct from the (omitted) default, so turning personalization OFF must be sent.
+        val body = ProfilePatchRequestDto(personalizationEnabled = false)
+        val encoded = json.encodeToString(ProfilePatchRequestDto.serializer(), body)
+
+        assertEquals("""{"personalization_enabled":false}""", encoded)
     }
 
     @Test

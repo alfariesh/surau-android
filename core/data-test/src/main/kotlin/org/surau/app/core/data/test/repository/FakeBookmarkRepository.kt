@@ -78,4 +78,12 @@ class FakeBookmarkRepository @Inject constructor() : BookmarkRepository {
     override suspend fun pushPending() = Unit
 
     override suspend fun reconcile() = Unit
+
+    var clearLocalDataCount = 0
+        private set
+
+    override suspend fun clearLocalData() {
+        clearLocalDataCount++
+        bookmarks.value = emptyList()
+    }
 }

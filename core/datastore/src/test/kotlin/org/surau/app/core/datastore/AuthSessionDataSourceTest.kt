@@ -148,6 +148,34 @@ class AuthSessionDataSourceTest {
         assertTrue(store.data.first().accessToken.startsWith(AuthCrypto.CIPHER_PREFIX))
         assertEquals("access-2", encrypted.currentAccessToken())
     }
+
+    @Test
+    fun undecryptableToken_selfHealsToGuest() = testScope.runTest {
+        // Models an invalidated Keystore keyset: a non-empty stored token that can't be decrypted.
+        val store = InMemoryDataStore(AuthSession.getDefaultInstance())
+        val dataSource = AuthSessionDataSource(store, FailingCrypto())
+        dataSource.setSession(
+            session = session,
+            accessToken = "access-1",
+            refreshToken = "refresh-1",
+            expiresAtEpochSeconds = 1_000,
+        )
+        // The stored ciphertext is non-empty, so the raw record still looks authenticated…
+        assertTrue(store.data.first().accessToken.isNotEmpty())
+
+        // …but a failed decrypt self-heals to a clean Guest state instead of a "zombie" session
+        // (authenticated UI while every request silently sends no token and 401s).
+        assertNull(dataSource.currentAccessToken())
+        assertEquals(AuthState.Guest, dataSource.authState.first())
+        assertNull(dataSource.currentRefreshToken())
+        assertTrue(store.data.first().accessToken.isEmpty())
+    }
+}
+
+/** Encrypts to a non-empty blob but never decrypts — models an invalidated Keystore keyset. */
+private class FailingCrypto : AuthCrypto {
+    override fun encrypt(plaintext: String): String = AuthCrypto.CIPHER_PREFIX + plaintext
+    override fun decrypt(stored: String): String? = null
 }
 
 /** Reversible stand-in for the Keystore AEAD: prefix + reversed string, no Android dependency. */

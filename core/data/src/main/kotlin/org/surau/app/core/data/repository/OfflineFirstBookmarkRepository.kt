@@ -115,6 +115,11 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
         syncMutex.withLock { pushPendingLocked() }
     }
 
+    override suspend fun clearLocalData() {
+        // Under the sync lock so a wipe never races a concurrent reconcile/push leaving half a corpus.
+        syncMutex.withLock { bookmarkDao.clear() }
+    }
+
     private suspend fun pushPendingLocked() {
         pushPendingDeletes()
         pushPendingUpserts()

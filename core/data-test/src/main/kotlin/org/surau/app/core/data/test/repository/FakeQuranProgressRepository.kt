@@ -44,4 +44,12 @@ class FakeQuranProgressRepository @Inject constructor() : QuranProgressRepositor
     override suspend fun pushPendingPosition() = Unit
 
     override suspend fun reconcile() = Unit
+
+    var clearLocalDataCount = 0
+        private set
+
+    override suspend fun clearLocalData() {
+        clearLocalDataCount++
+        position.value = null
+    }
 }

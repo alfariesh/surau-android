@@ -62,4 +62,12 @@ interface BookmarkRepository {
      * locally what was removed server-side). Called after login and by the background sync worker.
      */
     suspend fun reconcile()
+
+    /**
+     * Deletes every locally stored bookmark. Called on sign-out / account deletion so the next user
+     * on this device can neither read the previous account's notes & tags nor have them re-pushed to
+     * their own account on login. Already-synced bookmarks are safe — they are re-pulled from the
+     * server on the next sign-in.
+     */
+    suspend fun clearLocalData()
 }

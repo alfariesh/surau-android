@@ -312,7 +312,7 @@ fun SurauApp(
                     )
                     accountEntries(
                         navigator = navigator,
-                        onSignedOut = { navigator.navigate(WelcomeNavKey) },
+                        onSignedOut = { navigator.resetToStartThen(WelcomeNavKey) },
                     )
                 }
 

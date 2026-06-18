@@ -55,7 +55,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -912,7 +915,10 @@ private fun QuranDownloadSection(
                         state.percent,
                     ),
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f),
+                    // Announce download progress to TalkBack as it advances.
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { liveRegion = LiveRegionMode.Polite },
                 )
                 SurauOutlinedButton(
                     onClick = onCancelDownload,
@@ -947,6 +953,8 @@ private fun QuranDownloadSection(
                 text = stringResource(R.string.feature_settings_impl_download_failed),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
+                // Announce the failure to TalkBack — otherwise the long download fails silently.
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
             Spacer(modifier = Modifier.size(8.dp))
             SurauButton(

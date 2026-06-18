@@ -19,13 +19,15 @@ package org.surau.app.baselineprofile
 import androidx.benchmark.macro.junit4.BaselineProfileRule
 import org.surau.app.PACKAGE_NAME
 import org.surau.app.quranReaderJourney
+import org.surau.app.quranSearchJourney
 import org.surau.app.startActivityAndAllowNotifications
 import org.junit.Rule
 import org.junit.Test
 
 /**
  * Baseline Profile for app startup plus the core reading journey (scroll home → open surah → scroll
- * reader). Capturing the journey precompiles the reader path, not just startup. Also enables
+ * reader) and the search journey (open search → query → scroll results). Capturing both precompiles
+ * the reader and offline-FTS/search paths, not just startup. Also enables
  * [Dex Layout Optimizations](https://developer.android.com/topic/performance/baselineprofiles/dex-layout-optimizations)
  * via the `includeInStartupProfile` parameter.
  */
@@ -39,5 +41,6 @@ class StartupBaselineProfile {
     ) {
         startActivityAndAllowNotifications()
         quranReaderJourney()
+        quranSearchJourney()
     }
 }

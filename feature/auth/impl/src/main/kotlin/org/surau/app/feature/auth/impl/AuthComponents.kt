@@ -16,6 +16,10 @@
 
 package org.surau.app.feature.auth.impl
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -33,13 +37,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -196,9 +205,35 @@ internal fun AuthSubmitError(state: AuthSubmitState, modifier: Modifier = Modifi
             text = message,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
-            modifier = modifier.padding(top = 8.dp),
+            // Announce errors / the rate-limit countdown to TalkBack — this inline message is the
+            // only feedback channel for a failed submit, so without a live region it is silent.
+            modifier = modifier
+                .padding(top = 8.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
         )
     }
+}
+
+/**
+ * Marks the current screen as secure for as long as it is composed: sets `FLAG_SECURE` on the host
+ * window so password / OTP / token content is blanked in the recents thumbnail and cannot be
+ * screenshot or screen-recorded, then clears it on exit. A no-op when no host Activity is found
+ * (e.g. Robolectric), so screenshot tests are unaffected.
+ */
+@Composable
+internal fun SecureScreenEffect() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val window = view.context.findActivity()?.window
+        window?.setFlags(FLAG_SECURE, FLAG_SECURE)
+        onDispose { window?.clearFlags(FLAG_SECURE) }
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 internal object AuthValidators {

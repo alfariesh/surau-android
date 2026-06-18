@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -116,7 +117,7 @@ fun LoginScreen(
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
 
     var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(submitState) {
@@ -204,7 +205,7 @@ fun RegisterScreen(
 
     var displayName by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(submitState) {
@@ -295,7 +296,7 @@ fun VerifyEmailScreen(
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
     val resendCooldown by viewModel.resendCooldownSeconds.collectAsStateWithLifecycle()
 
-    var otp by rememberSaveable { mutableStateOf("") }
+    var otp by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     if (submitState is AuthSubmitState.Success) {
@@ -449,7 +450,7 @@ fun ResetPasswordScreen(
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
 
     var token by rememberSaveable { mutableStateOf(initialToken.orEmpty()) }
-    var password by rememberSaveable { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     if (submitState is AuthSubmitState.Success) {

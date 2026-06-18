@@ -89,10 +89,26 @@ class AuthSessionDataSource @Inject constructor(
     }
 
     /**
-     * Updates the stored email after a confirmed email change.
+     * Atomically persists a rotated token pair AND the new email after a confirmed email change.
+     * Folding both writes into one [DataStore.updateData] transform means a crash or cancellation
+     * can't leave the new tokens stored against the stale email.
      */
-    suspend fun updateEmail(email: String) {
-        authSession.updateData { it.copy { this.email = email } }
+    suspend fun updateTokensAndEmail(
+        accessToken: String,
+        refreshToken: String,
+        expiresAtEpochSeconds: Long,
+        email: String,
+        sessionId: String? = null,
+    ) {
+        authSession.updateData {
+            it.copy {
+                this.accessToken = crypto.encrypt(accessToken)
+                this.refreshToken = crypto.encrypt(refreshToken)
+                this.expiresAtEpochSeconds = expiresAtEpochSeconds
+                this.email = email
+                if (sessionId != null) this.sessionId = sessionId
+            }
+        }
     }
 
     /**
@@ -109,11 +125,24 @@ class AuthSessionDataSource @Inject constructor(
         authSession.updateData { AuthSession.getDefaultInstance() }
     }
 
-    suspend fun currentAccessToken(): String? =
-        authSession.data.first().accessToken.ifEmpty { null }?.let(crypto::decrypt)
+    suspend fun currentAccessToken(): String? = decryptStoredToken { it.accessToken }
 
-    suspend fun currentRefreshToken(): String? =
-        authSession.data.first().refreshToken.ifEmpty { null }?.let(crypto::decrypt)
+    suspend fun currentRefreshToken(): String? = decryptStoredToken { it.refreshToken }
+
+    /**
+     * Decrypts a stored token. A non-empty stored value that fails to decrypt (returns null) means
+     * the Keystore keyset was invalidated (e.g. a lock-screen credential or biometric change) and the
+     * token is permanently unrecoverable. We [clear] the session so the app self-heals to a clean
+     * Guest state and prompts a fresh sign-in, rather than stranding the UI as "authenticated" (the
+     * stored ciphertext is non-empty, so [toAuthState] would otherwise keep reporting Authenticated)
+     * while every authenticated request silently sends no token and 401s.
+     */
+    private suspend fun decryptStoredToken(select: (AuthSession) -> String): String? {
+        val stored = select(authSession.data.first()).ifEmpty { return null }
+        val decrypted = crypto.decrypt(stored)
+        if (decrypted == null) clear()
+        return decrypted
+    }
 }
 
 private fun AuthSession.toAuthState(): AuthState =

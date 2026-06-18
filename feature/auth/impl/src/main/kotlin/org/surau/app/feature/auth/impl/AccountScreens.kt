@@ -231,7 +231,8 @@ fun EditProfileScreen(
                 showValidation = true
                 if (displayName.isNotBlank()) viewModel.save(displayName, countryCode)
             },
-            enabled = submitState !is AuthSubmitState.Submitting,
+            enabled = submitState !is AuthSubmitState.Submitting &&
+                submitState !is AuthSubmitState.RateLimited,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("profile:save"),
@@ -250,9 +251,11 @@ fun ChangePasswordScreen(
 ) {
     TrackScreenViewEvent(screenName = "ChangePassword")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
-    var currentPassword by rememberSaveable { mutableStateOf("") }
-    var newPassword by rememberSaveable { mutableStateOf("") }
+    // Secrets stay in plain `remember` — never serialized into the on-disk saved-state bundle.
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     if (submitState is AuthSubmitState.Success) {
@@ -320,10 +323,12 @@ fun ChangeEmailScreen(
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
     val awaitingOtp by viewModel.awaitingOtp.collectAsStateWithLifecycle()
     val newEmail by viewModel.newEmail.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
-    var currentPassword by rememberSaveable { mutableStateOf("") }
+    // Secrets (password, OTP) stay in plain `remember`; only the non-secret email is saveable.
+    var currentPassword by remember { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
-    var otp by rememberSaveable { mutableStateOf("") }
+    var otp by remember { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 
     if (submitState is AuthSubmitState.Success) {
@@ -359,7 +364,8 @@ fun ChangeEmailScreen(
                     showValidation = true
                     if (AuthValidators.isValidOtp(otp)) viewModel.verify(otp)
                 },
-                enabled = submitState !is AuthSubmitState.Submitting,
+                enabled = submitState !is AuthSubmitState.Submitting &&
+                    submitState !is AuthSubmitState.RateLimited,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("changeEmail:verify"),
@@ -530,8 +536,10 @@ fun DeleteAccountScreen(
 ) {
     TrackScreenViewEvent(screenName = "DeleteAccount")
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
+    SecureScreenEffect()
 
-    var password by rememberSaveable { mutableStateOf("") }
+    // The password stays in plain `remember`; the typed "HAPUS" confirmation is not a secret.
+    var password by remember { mutableStateOf("") }
     var confirmText by rememberSaveable { mutableStateOf("") }
     var showValidation by rememberSaveable { mutableStateOf(false) }
 

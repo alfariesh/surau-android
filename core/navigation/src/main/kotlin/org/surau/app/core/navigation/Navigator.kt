@@ -81,6 +81,25 @@ class Navigator(val state: NavigationState) {
     }
 
     /**
+     * Resets navigation after a sign-out: collapses every tab's sub stack back to its root and the
+     * top-level stack back to the start destination, then shows [key] (e.g. Welcome). This guarantees
+     * no screen from the signed-in session (account hub, delete form, …) stays reachable via Back.
+     */
+    fun resetToStartThen(key: NavKey) {
+        // Drop every non-root entry from every tab's sub stack.
+        state.subStacks.values.forEach { stack ->
+            if (stack.size > 1) stack.subList(1, stack.size).clear()
+        }
+        // Collapse the top-level stack back to the start destination only.
+        state.topLevelStack.apply {
+            clear()
+            add(state.startKey)
+        }
+        // Show the post-sign-out destination on the (now clean) start sub stack.
+        goToKey(key)
+    }
+
+    /**
      * Clearing all but the root key in the current sub stack.
      */
     private fun clearSubStack() {

@@ -65,6 +65,10 @@ abstract class SubmittingViewModel : ViewModel() {
             try {
                 action()
                 onSuccess()
+            } catch (cancellation: CancellationException) {
+                // Navigating away / clearing the VM mid-submit is not an error — let it propagate
+                // instead of mapping it to a generic failure state.
+                throw cancellation
             } catch (exception: Exception) {
                 val state = exception.toAuthSubmitState(passwordOnly = passwordOnly, otpForm = otpForm)
                 submitStateFlow.value = state

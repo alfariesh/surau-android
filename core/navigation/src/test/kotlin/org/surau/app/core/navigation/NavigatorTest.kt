@@ -253,4 +253,42 @@ class NavigatorTest {
             navigator.goBack()
         }
     }
+
+    @Test
+    fun resetToStartThen_collapsesEveryStackAndShowsKey() {
+        // A deep stack on a non-start tab…
+        navigator.navigate(TestSecondTopLevelKey)
+        navigator.navigate(TestKeyFirst)
+        navigator.navigate(TestKeySecond)
+        // …plus an entry on the start tab.
+        navigator.navigate(TestFirstTopLevelKey)
+        navigator.navigate(TestKeyFirst)
+
+        navigator.resetToStartThen(TestKeySecond)
+
+        // Collapsed to the start tab, showing the post-sign-out key on a clean start sub stack.
+        assertThat(navigationState.currentTopLevelKey).isEqualTo(TestFirstTopLevelKey)
+        assertThat(navigationState.currentSubStack).containsExactly(
+            TestFirstTopLevelKey,
+            TestKeySecond,
+        ).inOrder()
+        // Every other tab's sub stack is back at its root — no signed-in screen left anywhere.
+        assertThat(navigationState.subStacks[TestSecondTopLevelKey]).containsExactly(
+            TestSecondTopLevelKey,
+        ).inOrder()
+        assertThat(navigationState.topLevelStack).containsExactly(TestFirstTopLevelKey).inOrder()
+    }
+
+    @Test
+    fun resetToStartThen_backLandsOnStartRoot_notAuthenticatedScreen() {
+        navigator.navigate(TestSecondTopLevelKey)
+        navigator.navigate(TestKeyFirst)
+
+        navigator.resetToStartThen(TestKeySecond)
+        navigator.goBack()
+
+        // Back from the post-sign-out key returns to the start root, never an authenticated screen.
+        assertThat(navigationState.currentKey).isEqualTo(TestFirstTopLevelKey)
+        assertThat(navigationState.currentTopLevelKey).isEqualTo(TestFirstTopLevelKey)
+    }
 }
