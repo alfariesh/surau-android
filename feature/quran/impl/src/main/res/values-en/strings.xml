@@ -22,6 +22,7 @@
     <string name="feature_quran_impl_juz_number">Juz %1$d</string>
     <string name="feature_quran_impl_juz_range">%1$s %2$d – %3$s %4$d</string>
     <string name="feature_quran_impl_surah_meta">%1$s • %2$d verses</string>
+    <string name="feature_quran_impl_surah_progress">Reading progress %1$d%%</string>
     <string name="feature_quran_impl_revelation_makkiyah">Meccan</string>
     <string name="feature_quran_impl_revelation_madaniyah">Medinan</string>
     <string name="feature_quran_impl_loading">Loading…</string>

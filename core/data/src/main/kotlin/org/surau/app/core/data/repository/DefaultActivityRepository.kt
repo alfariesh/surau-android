@@ -16,11 +16,15 @@
 
 package org.surau.app.core.data.repository
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.LocalDate
 import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
+import org.surau.app.core.data.util.NetworkMonitor
 import org.surau.app.core.datastore.AuthSessionDataSource
 import org.surau.app.core.model.data.activity.ReadingActivity
 import org.surau.app.core.model.data.activity.ReadingActivityDay
@@ -39,6 +43,7 @@ import javax.inject.Inject
 internal class DefaultActivityRepository @Inject constructor(
     private val meApi: SurauMeApi,
     private val authSessionDataSource: AuthSessionDataSource,
+    private val networkMonitor: NetworkMonitor,
 ) : ActivityRepository {
 
     override suspend fun getActivity(from: LocalDate, to: LocalDate): ReadingActivity =
@@ -47,15 +52,30 @@ internal class DefaultActivityRepository @Inject constructor(
     override suspend fun getStreak(today: LocalDate): ReadingStreak =
         apiCall { meApi.streak(today = today.toString()) }.asExternalModel()
 
-    override fun observeSurahProgress(): Flow<Map<Int, Float>> = flow {
-        emit(emptyMap())
-        if (authSessionDataSource.authState.first() !is AuthState.Authenticated) return@flow
-        val map = runCatchingExceptCancellation { apiCall { meApi.surahProgress() } }
+    override suspend fun getSurahProgress(): Map<Int, Float> {
+        if (authSessionDataSource.authState.first() !is AuthState.Authenticated) return emptyMap()
+        return runCatchingExceptCancellation { apiCall { meApi.surahProgress() } }
             .getOrNull()
             ?.items
             ?.associate { it.surahId to ((it.positionPercent ?: 0.0) / 100.0).toFloat() }
-        if (map != null) emit(map)
+            ?: emptyMap()
     }
+
+    // Re-fetches whenever connectivity returns, so a first fetch that failed offline doesn't leave
+    // the badges empty for the whole subscription. Still emits a placeholder first for instant UI.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observeSurahProgress(): Flow<Map<Int, Float>> =
+        networkMonitor.isOnline
+            .flatMapLatest { online ->
+                flow {
+                    emit(emptyMap())
+                    if (online) {
+                        val map = getSurahProgress()
+                        if (map.isNotEmpty()) emit(map)
+                    }
+                }
+            }
+            .distinctUntilChanged()
 }
 
 private fun ReadingStreakDto.asExternalModel() = ReadingStreak(

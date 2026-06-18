@@ -71,6 +71,7 @@ import org.surau.app.core.model.data.quran.JuzSegment
 import org.surau.app.core.model.data.quran.RevelationType
 import org.surau.app.core.model.data.quran.Surah
 import org.surau.app.core.ui.TrackScreenViewEvent
+import kotlin.math.roundToInt
 
 @Composable
 fun QuranHomeScreen(
@@ -250,12 +251,17 @@ private fun SurahListItem(
                 // 4.3: thin reading-progress badge (signed-in users only; absent otherwise).
                 if (progress != null && progress > 0f) {
                     Spacer(modifier = Modifier.size(4.dp))
+                    val progressDescription = stringResource(
+                        R.string.feature_quran_impl_surah_progress,
+                        (progress.coerceIn(0f, 1f) * 100).roundToInt(),
+                    )
                     LinearProgressIndicator(
                         progress = { progress.coerceIn(0f, 1f) },
                         modifier = Modifier
                             .width(72.dp)
                             .height(4.dp)
                             .clip(MaterialTheme.shapes.extraSmall)
+                            .semantics { contentDescription = progressDescription }
                             .testTag("quranHome:progress:${surah.surahId}"),
                     )
                 }

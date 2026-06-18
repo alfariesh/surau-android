@@ -100,7 +100,9 @@ class SurahReaderViewModel @AssistedInject constructor(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = false,
+                // Matches UserData's effective default (reader_keep_screen_on_disabled unset = on),
+                // so a cold reader open doesn't momentarily clear keepScreenOn before DataStore loads.
+                initialValue = true,
             )
 
     /** Bookmarks in this surah keyed by ayah number — drives the per-ayah toggle and the editor. */

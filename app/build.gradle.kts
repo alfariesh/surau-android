@@ -48,8 +48,8 @@ android {
         applicationId = "org.surau.app"
         // versionCode = epoch-day (hari sejak 1970-01-01): auto-monoton, satu kode per hari.
         // Tiap rilis, hitung ulang: `date -ju -f "%Y-%m-%d %H:%M:%S" "<tgl> 00:00:00" +%s` / 86400.
-        versionCode = 20622 // 2026-06-17 (+1 over 20621: second release the same day)
-        versionName = "1.0.2" // X.Y.Z; X = Major, Y = minor, Z = Patch level
+        versionCode = 20623 // 2026-06-18 (+1 over 20622; today's epoch-day was already used)
+        versionName = "1.0.3" // X.Y.Z; X = Major, Y = minor, Z = Patch level
 
         // Custom test runner to set up Hilt dependency graph
         testInstrumentationRunner = "org.surau.app.core.testing.SurauTestRunner"

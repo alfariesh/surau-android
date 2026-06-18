@@ -16,7 +16,10 @@
 
 package org.surau.app.feature.activity.impl
 
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -40,6 +43,8 @@ class ActivityHeatmapModelTest {
         assertEquals(dates.sorted(), dates)
         // HEATMAP_WEEKS * 7 consecutive days, no gaps/dupes.
         assertEquals(dates.size, dates.toSet().size)
+        // Each cell is exactly one day after the previous — no gaps or jumps across week columns.
+        dates.zipWithNext().forEach { (a, b) -> assertEquals(a.plus(1, DateTimeUnit.DAY), b) }
     }
 
     @Test
@@ -77,5 +82,37 @@ class ActivityHeatmapModelTest {
     fun futureCellHasZeroLevel() {
         assertEquals(0, HeatmapCell(today, count = 12, isFuture = true).level)
         assertEquals(HEATMAP_MAX_LEVEL, HeatmapCell(today, count = 12, isFuture = false).level)
+    }
+
+    // --- Week-boundary edges: catches an off-by-one in the Sunday-first `% 7` offset. ---
+
+    @Test
+    fun sundayToday_isFirstCellOfLastColumn_restOfColumnIsFuture() {
+        val sunday = LocalDate(2026, 6, 14) // a Sunday (offset 0)
+        val lastColumn = buildHeatmapColumns(sunday, emptyMap()).last()
+        assertEquals(sunday, lastColumn.first().date)
+        assertFalse(lastColumn.first().isFuture)
+        assertTrue(lastColumn.drop(1).all { it.isFuture }) // the other six days are still to come
+    }
+
+    @Test
+    fun saturdayToday_isLastCellOfLastColumn_noFutureInColumn() {
+        val saturday = LocalDate(2026, 6, 13) // a Saturday (offset 6)
+        val lastColumn = buildHeatmapColumns(saturday, emptyMap()).last()
+        assertEquals(saturday, lastColumn.last().date)
+        assertTrue(lastColumn.none { it.isFuture })
+    }
+
+    @Test
+    fun lastColumnAlwaysStartsOnSunday() {
+        listOf(
+            LocalDate(2026, 6, 14), // Sun
+            LocalDate(2026, 6, 15), // Mon
+            LocalDate(2026, 6, 17), // Wed
+            LocalDate(2026, 6, 20), // Sat
+        ).forEach { day ->
+            val firstOfLastColumn = buildHeatmapColumns(day, emptyMap()).last().first().date
+            assertEquals(7, firstOfLastColumn.dayOfWeek.isoDayNumber, "last column must start on Sunday for $day")
+        }
     }
 }

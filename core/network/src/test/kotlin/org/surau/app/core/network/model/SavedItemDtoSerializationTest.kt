@@ -16,8 +16,8 @@
 
 package org.surau.app.core.network.model
 
-import kotlinx.serialization.json.Json
 import org.junit.Test
+import org.surau.app.core.network.di.NetworkModule
 import org.surau.app.core.network.model.me.CreateSavedItemRequestDto
 import org.surau.app.core.network.model.me.PatchSavedItemRequestDto
 import org.surau.app.core.network.model.me.SavedItemsResponseDto
@@ -28,11 +28,12 @@ import kotlin.test.assertTrue
 /**
  * Locks down the trickiest saved-items contract detail: POST must NOT clear absent metadata
  * (omit null), while PATCH MUST clear via an explicit null. Both rely on the app's network [Json]
- * configuration (`encodeDefaults` off, `explicitNulls` on), reproduced here.
+ * configuration (`encodeDefaults` off, `explicitNulls` on); this uses the REAL production instance
+ * so the test breaks if that config ever drifts.
  */
 class SavedItemDtoSerializationTest {
 
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = NetworkModule.providesNetworkJson()
 
     @Test
     fun createRequest_omitsNullMetadata_soUpsertNeverClears() {

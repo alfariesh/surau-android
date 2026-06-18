@@ -37,6 +37,7 @@ import org.surau.app.core.network.model.me.PatchSavedItemRequestDto
 import org.surau.app.core.network.model.me.SavedItemDto
 import org.surau.app.core.network.retrofit.SurauMeApi
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 internal class OfflineFirstBookmarkRepository @Inject constructor(
     private val bookmarkDao: BookmarkDao,
@@ -63,14 +64,16 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
     override suspend fun addBookmark(ayahKey: AyahKey, note: String?, tags: List<String>) {
         val existing = bookmarkDao.getByAyahKey(ayahKey.value)
         val now = Clock.System.now()
+        val cleanNote = sanitizeNote(note)
+        val cleanTags = sanitizeTags(tags)
         bookmarkDao.upsert(
             BookmarkEntity(
                 id = existing?.id ?: 0,
                 ayahKey = ayahKey.value,
                 surahId = ayahKey.surahId,
                 label = existing?.label,
-                note = note ?: existing?.note,
-                tags = tags.ifEmpty { existing?.tags.orEmpty() },
+                note = cleanNote ?: existing?.note,
+                tags = cleanTags.ifEmpty { existing?.tags.orEmpty() },
                 createdAt = existing?.createdAt ?: now,
                 updatedAt = now,
                 // Keep any server id (revives an edited/tombstoned row) so we PATCH, not duplicate.
@@ -86,8 +89,8 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
         val existing = bookmarkDao.getByAyahKey(ayahKey.value) ?: return
         bookmarkDao.upsert(
             existing.copy(
-                note = note,
-                tags = tags,
+                note = sanitizeNote(note),
+                tags = sanitizeTags(tags),
                 updatedAt = Clock.System.now(),
                 pendingSync = true,
                 pendingDelete = false,
@@ -126,6 +129,8 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
                 // Already gone server-side — reconcile the local tombstone away too.
                 if (exception.httpStatus == 404) bookmarkDao.deleteById(tombstone.id)
                 // Otherwise keep the tombstone; the next push retries.
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
                 // Connectivity — keep the tombstone.
             }
@@ -136,6 +141,18 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
         for (pending in bookmarkDao.pendingUpserts()) {
             try {
                 if (pending.serverId == null) pushCreate(pending) else pushEdit(pending)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (exception: SurauApiException) {
+                // A validation rejection (400/422) will never succeed on retry — stop retrying so a
+                // single malformed row can't wedge the sync queue forever. Other API errors
+                // (401/403/429/5xx) stay pending and retry. Input is clamped on write, so this is a
+                // defensive backstop rather than the primary guard.
+                if (exception.httpStatus == 400 || exception.httpStatus == 422) {
+                    bookmarkDao.getByAyahKey(pending.ayahKey)?.let {
+                        if (it.id == pending.id) bookmarkDao.upsert(it.copy(pendingSync = false))
+                    }
+                }
             } catch (_: Exception) {
                 // Keep pending; the sync worker or next push retries.
             }
@@ -186,8 +203,11 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
                 bookmarkDao.getByAyahKey(pending.ayahKey)?.let {
                     bookmarkDao.upsert(it.copy(serverId = null))
                 }
+                return
             }
-            return
+            // Other API errors (incl. a terminal 400/422) bubble to pushPendingUpserts, which
+            // decides whether to keep the row pending or stop retrying it.
+            throw exception
         }
         val current = bookmarkDao.getByAyahKey(pending.ayahKey) ?: return
         if (current.id == pending.id && current.updatedAt == pending.updatedAt && !current.pendingDelete) {
@@ -202,6 +222,8 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
                 pullAllSavedItems()
             } catch (exception: SurauApiException) {
                 if (exception.httpStatus == 404) emptyList() else return
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (_: Exception) {
                 return
             }
@@ -235,11 +257,10 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
             local == null ->
                 dto.toEntity()?.let { bookmarkDao.upsert(it) }
 
-            local.pendingDelete ->
-                // Local tombstone wins unless the remote copy is strictly newer (then resurrect).
-                if (remoteUpdated != null && remoteUpdated > local.updatedAt) {
-                    dto.toEntity(localId = local.id)?.let { bookmarkDao.upsert(it) }
-                }
+            local.pendingDelete -> {
+                // Local tombstone always wins (Option B): an explicit local delete is honored even
+                // when the remote copy is newer. pushPendingLocked() then deletes the server item.
+            }
 
             remoteUpdated != null && remoteUpdated > local.updatedAt ->
                 dto.toEntity(localId = local.id)?.let { bookmarkDao.upsert(it) }
@@ -290,8 +311,30 @@ internal class OfflineFirstBookmarkRepository @Inject constructor(
     private suspend fun isAuthenticated(): Boolean =
         authSessionDataSource.authState.first() is AuthState.Authenticated
 
+    /** Mirrors the backend note limit (<= 2000 runes); chars >= runes, so a char cap is always safe. */
+    private fun sanitizeNote(note: String?): String? =
+        note?.trim()?.take(MAX_NOTE_LENGTH)?.ifEmpty { null }
+
+    /**
+     * Mirrors the backend tag normalization (trim + lowercase + drop-empty + dedupe + caps) so a
+     * valid local edit never round-trips to a 400 and local/remote tags converge without churn.
+     */
+    private fun sanitizeTags(tags: List<String>): List<String> =
+        tags.asSequence()
+            .map { it.trim().lowercase() }
+            .filter { it.isNotEmpty() }
+            .map { it.take(MAX_TAG_LENGTH) }
+            .distinct()
+            .take(MAX_TAGS)
+            .toList()
+
     private companion object {
         const val ITEM_TYPE_QURAN_AYAH = "quran_ayah"
         const val PAGE_LIMIT = 50
+
+        // Mirror the backend's saved-item validation limits (internal/usecase/personal).
+        const val MAX_NOTE_LENGTH = 2000
+        const val MAX_TAG_LENGTH = 64
+        const val MAX_TAGS = 20
     }
 }

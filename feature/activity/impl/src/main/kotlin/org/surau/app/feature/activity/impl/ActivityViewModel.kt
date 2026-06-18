@@ -33,10 +33,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
 import kotlinx.datetime.todayIn
 import org.surau.app.core.common.coroutines.runCatchingExceptCancellation
 import org.surau.app.core.data.repository.ActivityRepository
@@ -95,7 +93,9 @@ class ActivityViewModel @Inject constructor(
         _uiState.value = ActivityUiState.Loading
         loadJob = viewModelScope.launch {
             val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-            val from = today.minus(FETCH_DAYS, DateTimeUnit.DAY)
+            // Fetch exactly the window the heatmap grid displays, so the server-aggregated summary
+            // (active days / ayahs) matches the visible cells.
+            val from = heatmapGridStart(today)
             val result = try {
                 coroutineScope {
                     val streak = async { activityRepository.getStreak(today) }
@@ -225,7 +225,9 @@ class ActivityViewModel @Inject constructor(
     private suspend fun loadSurahProgress(): List<SurahReadProgress> {
         val surahs = quranRepository.observeSurahs().first()
         if (surahs.isEmpty()) return emptyList()
-        val progress = activityRepository.observeSurahProgress().first()
+        // One-shot read: observeSurahProgress() emits an empty placeholder first, so first() on it
+        // would always be empty. getSurahProgress() resolves to the fetched value.
+        val progress = activityRepository.getSurahProgress()
         return surahs
             .mapNotNull { surah ->
                 val fraction = progress[surah.surahId] ?: 0f
@@ -236,9 +238,6 @@ class ActivityViewModel @Inject constructor(
     }
 
     private companion object {
-        // Fetch ten weeks of activity; the heatmap displays the most recent nine (~two months).
-        const val FETCH_DAYS = 70
-
         // Cap the "surah progress" list so the section stays compact.
         const val SURAH_PROGRESS_LIMIT = 6
     }

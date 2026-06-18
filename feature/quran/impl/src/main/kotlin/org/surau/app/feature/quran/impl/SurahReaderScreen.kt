@@ -796,11 +796,15 @@ private fun ReaderSettingsSheet(
                 text = stringResource(R.string.feature_quran_impl_reader_display),
                 style = MaterialTheme.typography.titleMedium,
             )
-            ReaderSwitchRow(
-                label = stringResource(R.string.feature_quran_impl_reader_transliteration),
-                checked = showTransliteration,
-                onCheckedChange = onShowTransliterationChange,
-            )
+            // Transliteration renders under the Arabic line, so it's only meaningful when Arabic is
+            // shown. Hide the toggle in translation-only mode rather than leaving a dead control.
+            if (readerMode != ReaderMode.TRANSLATION_ONLY) {
+                ReaderSwitchRow(
+                    label = stringResource(R.string.feature_quran_impl_reader_transliteration),
+                    checked = showTransliteration,
+                    onCheckedChange = onShowTransliterationChange,
+                )
+            }
             ReaderSwitchRow(
                 label = stringResource(R.string.feature_quran_impl_reader_show_translation),
                 checked = showTranslation,

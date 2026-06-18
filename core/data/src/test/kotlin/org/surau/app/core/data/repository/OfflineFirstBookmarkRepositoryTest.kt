@@ -45,6 +45,7 @@ import org.surau.app.core.network.model.me.SavedItemsTagsResponseDto
 import org.surau.app.core.network.retrofit.SurauMeApi
 import retrofit2.HttpException
 import retrofit2.Response
+import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -57,6 +58,12 @@ private class FakeBookmarkApi : SurauMeApi {
     val patched = mutableListOf<Pair<String, PatchSavedItemRequestDto>>()
     val deleted = mutableListOf<String>()
     var listThrows404 = false
+
+    /** When true, deleteSavedItem fails as if offline (before recording), so a tombstone survives. */
+    var deleteThrows = false
+
+    /** When true, createSavedItem fails with a terminal 400 (validation rejection). */
+    var createThrows400 = false
     private var nextId = 1
 
     fun seed(dto: SavedItemDto) {
@@ -81,6 +88,7 @@ private class FakeBookmarkApi : SurauMeApi {
 
     override suspend fun createSavedItem(body: CreateSavedItemRequestDto): SavedItemDto {
         created += body
+        if (createThrows400) throw http400()
         // Upsert by target: reuse the existing id for the same ayah, else mint a new one.
         val existing = store.values.firstOrNull { it.ayahKey == body.ayahKey }
         val id = existing?.id ?: "server-${nextId++}"
@@ -108,6 +116,7 @@ private class FakeBookmarkApi : SurauMeApi {
     }
 
     override suspend fun deleteSavedItem(id: String) {
+        if (deleteThrows) throw IOException("offline")
         deleted += id
         if (store.remove(id) == null) throw http404()
     }
@@ -130,6 +139,10 @@ private class FakeBookmarkApi : SurauMeApi {
 
     private fun http404() = HttpException(
         Response.error<Any>(404, ResponseBody.create(null, """{"code":"NOT_FOUND"}""")),
+    )
+
+    private fun http400() = HttpException(
+        Response.error<Any>(400, ResponseBody.create(null, """{"code":"INVALID_SAVED_ITEM"}""")),
     )
 }
 
@@ -303,6 +316,42 @@ class OfflineFirstBookmarkRepositoryTest {
     }
 
     @Test
+    fun reconcile_localTombstone_winsOverOlderRemote_andDeletesServerItem() = runTest {
+        signIn()
+        subject.addBookmark(AyahKey("73:4")) // creates server-1, synced
+        // The delete push fails (offline), so the local tombstone survives and server-1 remains.
+        meApi.deleteThrows = true
+        subject.removeBookmark(AyahKey("73:4"))
+        meApi.deleteThrows = false
+        // Remote copy is OLDER than the local tombstone → the local delete must win.
+        meApi.store["server-1"] =
+            seededDto("server-1", "73:4", note = "stale", updatedAt = Instant.fromEpochSeconds(10))
+
+        subject.reconcile()
+
+        assertNull(subject.observeBookmark(AyahKey("73:4")).first())
+        assertTrue(meApi.deleted.contains("server-1"))
+    }
+
+    @Test
+    fun reconcile_localTombstone_winsEvenOverStrictlyNewerRemote_optionB() = runTest {
+        signIn()
+        subject.addBookmark(AyahKey("73:4")) // creates server-1, synced
+        meApi.deleteThrows = true
+        subject.removeBookmark(AyahKey("73:4"))
+        meApi.deleteThrows = false
+        // Even though the remote copy is strictly NEWER, an explicit local delete still wins
+        // (Option B): the tombstone is kept and the server item is deleted, never resurrected.
+        meApi.store["server-1"] =
+            seededDto("server-1", "73:4", note = "edited elsewhere", updatedAt = future())
+
+        subject.reconcile()
+
+        assertNull(subject.observeBookmark(AyahKey("73:4")).first())
+        assertTrue(meApi.deleted.contains("server-1"))
+    }
+
+    @Test
     fun reconcile_listReturns404_treatedAsEmpty_pushesGuestLocal() = runTest {
         subject.addBookmark(AyahKey("73:4")) // guest, pending
         signIn()
@@ -321,6 +370,33 @@ class OfflineFirstBookmarkRepositoryTest {
         subject.addBookmark(AyahKey("2:255"), tags = listOf("a", "c"))
 
         assertEquals(listOf("a", "b", "c"), subject.observeTags().first())
+    }
+
+    @Test
+    fun addBookmark_clampsNoteLength_andNormalizesTags() = runTest {
+        subject.addBookmark(
+            AyahKey("73:4"),
+            note = "a".repeat(3000),
+            tags = listOf(" Tafsir ", "tafsir", "", "B", "B"),
+        )
+
+        val bookmark = subject.observeBookmark(AyahKey("73:4")).first()!!
+        assertEquals(2000, bookmark.note!!.length) // capped to the backend's max note length
+        assertEquals(listOf("tafsir", "b"), bookmark.tags) // trimmed + lower-cased + de-duped
+    }
+
+    @Test
+    fun pushUpsert_validationRejection400_stopsRetrying() = runTest {
+        signIn()
+        meApi.createThrows400 = true
+
+        subject.addBookmark(AyahKey("73:4"), note = "x") // create -> terminal 400
+
+        // The bookmark stays locally but is no longer pending, so it can't wedge the queue forever.
+        assertFalse(subject.observeBookmark(AyahKey("73:4")).first()!!.pendingSync)
+        meApi.created.clear()
+        subject.pushPending()
+        assertTrue(meApi.created.isEmpty()) // not re-attempted
     }
 
     private fun future(): Instant = Clock.System.now() + kotlin.time.Duration.parse("1h")

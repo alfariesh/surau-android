@@ -52,6 +52,17 @@ internal fun intensityLevel(count: Int): Int = when {
 }
 
 /**
+ * The earliest day shown by [buildHeatmapColumns]: the Sunday that begins the first column. Useful
+ * for fetching activity over exactly the window the grid will display, so a summary aggregated by
+ * the backend matches the visible cells.
+ */
+internal fun heatmapGridStart(today: LocalDate, weeks: Int = HEATMAP_WEEKS): LocalDate {
+    val sundayOffset = today.dayOfWeek.isoDayNumber % 7 // Sun -> 0 … Sat -> 6
+    val lastColumnStart = today.minus(sundayOffset, DateTimeUnit.DAY)
+    return lastColumnStart.minus((weeks - 1) * HEATMAP_DAYS_PER_WEEK, DateTimeUnit.DAY)
+}
+
+/**
  * Builds [weeks] columns × 7 rows (Sunday…Saturday) ending at the column that contains [today].
  * Cells after [today] are marked [HeatmapCell.isFuture]. Counts come from [countsByDate].
  */
@@ -60,9 +71,7 @@ internal fun buildHeatmapColumns(
     countsByDate: Map<LocalDate, Int>,
     weeks: Int = HEATMAP_WEEKS,
 ): List<List<HeatmapCell>> {
-    val sundayOffset = today.dayOfWeek.isoDayNumber % 7 // Sun -> 0 … Sat -> 6
-    val lastColumnStart = today.minus(sundayOffset, DateTimeUnit.DAY)
-    val gridStart = lastColumnStart.minus((weeks - 1) * HEATMAP_DAYS_PER_WEEK, DateTimeUnit.DAY)
+    val gridStart = heatmapGridStart(today, weeks)
     return (0 until weeks).map { col ->
         (0 until HEATMAP_DAYS_PER_WEEK).map { row ->
             val date = gridStart.plus(col * HEATMAP_DAYS_PER_WEEK + row, DateTimeUnit.DAY)
