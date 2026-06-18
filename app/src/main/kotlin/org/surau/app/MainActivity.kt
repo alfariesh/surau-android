@@ -210,6 +210,7 @@ class MainActivity : ComponentActivity() {
                         appState = appState,
                         shouldShowWelcome = uiState.shouldShowWelcome,
                         resetPasswordToken = deepLinkResetToken,
+                        onResetPasswordTokenConsumed = { deepLinkResetToken = null },
                         appVersionName = BuildConfig.VERSION_NAME,
                     )
                 }

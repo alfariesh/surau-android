@@ -134,6 +134,7 @@ fun SurauApp(
     appVersionName: String,
     modifier: Modifier = Modifier,
     resetPasswordToken: String? = null,
+    onResetPasswordTokenConsumed: () -> Unit = {},
 ) {
     SurauBackground(modifier = modifier) {
         val snackbarHostState = remember { SnackbarHostState() }
@@ -171,6 +172,9 @@ fun SurauApp(
                 appState.navigationState.currentKey == HomeNavKey
             ) {
                 navigator.navigate(ResetPasswordNavKey(resetPasswordToken))
+                // Consume the token so an activity recreation (e.g. a language switch) doesn't
+                // re-trigger this navigation with a stale token. The reset screen keeps its own copy.
+                onResetPasswordTokenConsumed()
             }
         }
 

@@ -137,7 +137,11 @@ private class FakeQuranRepository : QuranRepository {
         translationSourceId: String,
     ): Flow<List<PopulatedAyah>> = flowOf(emptyList())
 
-    override suspend fun ensureSurahCached(surahId: Int, translationSourceId: String) = Unit
+    override suspend fun ensureSurahCached(
+        surahId: Int,
+        translationSourceId: String,
+        allowStaleOnError: Boolean,
+    ) = Unit
     override suspend fun resolveTranslationSourceId(preferredId: String?): String = preferredId ?: "default"
     override suspend fun search(query: String, translationSourceId: String?): List<QuranSearchResult> = emptyList()
 }

@@ -68,7 +68,7 @@ internal class DownloadQuranWorker @AssistedInject constructor(
             for (surahId in 1..SURAH_COUNT) {
                 if (isStopped) return@traceAsync Result.failure()
                 try {
-                    quranRepository.ensureSurahCached(surahId, sourceId)
+                    quranRepository.ensureSurahCached(surahId, sourceId, allowStaleOnError = false)
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (_: IOException) {

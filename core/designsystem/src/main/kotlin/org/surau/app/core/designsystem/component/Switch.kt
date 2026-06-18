@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -39,6 +40,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import org.surau.app.core.designsystem.theme.LocalSurauColors
@@ -54,6 +57,9 @@ import org.surau.app.core.designsystem.theme.LocalSurauColors
  * @param modifier Modifier applied to the switch.
  * @param enabled When `false`, the switch is dimmed (opacity 0.5) and not toggleable.
  * @param thumbContent Optional content centred inside the thumb.
+ * @param contentDescription Accessible name announced by TalkBack. Pass the label of the setting the
+ *   switch controls when the switch is a standalone control (no merged label row), so it isn't read
+ *   as just "Switch, on".
  */
 @Composable
 fun SurauSwitch(
@@ -62,6 +68,7 @@ fun SurauSwitch(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     thumbContent: @Composable (() -> Unit)? = null,
+    contentDescription: String? = null,
 ) {
     val colors = LocalSurauColors.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -97,14 +104,18 @@ fun SurauSwitch(
     )
 
     val toggleModifier = if (onCheckedChange != null) {
-        Modifier.toggleable(
-            value = checked,
-            enabled = enabled,
-            role = Role.Switch,
-            interactionSource = interactionSource,
-            indication = null,
-            onValueChange = onCheckedChange,
-        )
+        // minimumInteractiveComponentSize expands the touch target to 48dp (the 48x24 pill alone is
+        // half the minimum height) without changing the visual.
+        Modifier
+            .minimumInteractiveComponentSize()
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Switch,
+                interactionSource = interactionSource,
+                indication = null,
+                onValueChange = onCheckedChange,
+            )
     } else {
         Modifier
     }
@@ -117,6 +128,11 @@ fun SurauSwitch(
                 alpha = if (enabled) 1f else 0.5f
             }
             .then(toggleModifier)
+            .then(
+                contentDescription?.let { description ->
+                    Modifier.semantics { this.contentDescription = description }
+                } ?: Modifier,
+            )
             .size(width = SurauSwitchDefaults.TrackWidth, height = SurauSwitchDefaults.TrackHeight)
             .clip(CircleShape)
             .background(trackColor),

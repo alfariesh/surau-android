@@ -520,6 +520,7 @@ fun EmailPreferencesScreen(
                 SurauSwitch(
                     checked = state.marketingOptIn,
                     onCheckedChange = viewModel::setMarketingOptIn,
+                    contentDescription = stringResource(R.string.feature_auth_impl_account_email_marketing),
                     modifier = Modifier.testTag("emailPrefs:marketing"),
                 )
             }

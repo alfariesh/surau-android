@@ -49,7 +49,9 @@ class OfflineFirstQuranRepositoryTest {
 
     private lateinit var db: SurauDatabase
     private lateinit var quranApi: FakeSurauQuranApi
-    private lateinit var subject: OfflineFirstQuranRepository
+
+    // Typed as the interface so calls use the `allowStaleOnError = true` default (the reader path).
+    private lateinit var subject: QuranRepository
 
     private val sourceId = "kemenag-id-translation"
 
@@ -99,6 +101,24 @@ class OfflineFirstQuranRepositoryTest {
         subject.ensureSurahCached(surahId = 1, translationSourceId = sourceId)
 
         assertEquals(1, quranApi.ayahsCallCount)
+    }
+
+    @Test
+    fun ensureSurahCached_strict_offlineWithStaleCache_rethrows() = runTest {
+        // The bulk-download path (allowStaleOnError = false) must NOT silently serve a stale cache —
+        // it rethrows so the worker retries rather than reporting success with a gap in the index.
+        db.ayahDao().upsertFetchMetadata(
+            AyahFetchMetadataEntity(
+                surahId = 1,
+                translationSourceId = sourceId,
+                fetchedAt = Clock.System.now() - 60.days,
+            ),
+        )
+        quranApi.ayahsError = IOException("offline")
+
+        assertFailsWith<IOException> {
+            subject.ensureSurahCached(surahId = 1, translationSourceId = sourceId, allowStaleOnError = false)
+        }
     }
 
     @Test

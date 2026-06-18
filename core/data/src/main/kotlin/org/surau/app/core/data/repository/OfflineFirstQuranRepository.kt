@@ -92,7 +92,11 @@ internal class OfflineFirstQuranRepository @Inject constructor(
         ayahDao.observePopulatedAyahs(surahId, translationSourceId)
             .map { rows -> rows.map(PopulatedAyahRow::asExternalModel) }
 
-    override suspend fun ensureSurahCached(surahId: Int, translationSourceId: String) {
+    override suspend fun ensureSurahCached(
+        surahId: Int,
+        translationSourceId: String,
+        allowStaleOnError: Boolean,
+    ) {
         val metadata = ayahDao.fetchMetadata(surahId, translationSourceId)
         val isFresh = metadata != null &&
             metadata.fetchedAt > Clock.System.now() - AYAH_CACHE_TTL
@@ -109,8 +113,10 @@ internal class OfflineFirstQuranRepository @Inject constructor(
                 )
             }
         } catch (exception: IOException) {
-            // Offline: serve whatever is cached, only fail when there is nothing at all.
-            if (metadata != null) return else throw exception
+            // Offline. Reader path: serve whatever is cached. Bulk-download path
+            // (allowStaleOnError == false): a stale surah must not be silently skipped — rethrow so
+            // the worker retries it instead of reporting success with a gap in the offline index.
+            if (metadata != null && allowStaleOnError) return else throw exception
         }
 
         val now = Clock.System.now()

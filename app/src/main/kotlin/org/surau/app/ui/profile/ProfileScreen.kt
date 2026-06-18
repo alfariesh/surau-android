@@ -816,7 +816,12 @@ private fun SettingsSwitchRow(
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f),
         )
-        SurauSwitch(checked = checked, onCheckedChange = onCheckedChange)
+        SurauSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            // The label sits in a sibling Text, so name the switch for TalkBack.
+            contentDescription = text,
+        )
     }
 }
 
